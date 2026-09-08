@@ -30,9 +30,10 @@ describe('question bank', () => {
     }
   });
 
-  test('every round has at least 20 questions', () => {
+  test('every round has its expected exact question count', () => {
+    const expected: Record<string, number> = { hr: 26, hm: 50, case: 35, debrief: 33, hoe: 31 };
     for (const id of ROUND_IDS) {
-      expect(questions.filter((q) => q.round === id).length, id).toBeGreaterThanOrEqual(20);
+      expect(questions.filter((q) => q.round === id).length, id).toBe(expected[id]);
     }
   });
 });

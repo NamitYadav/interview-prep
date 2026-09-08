@@ -8,13 +8,15 @@ export function ExportImport({ state, dispatch }: { state: Persisted; dispatch: 
   const [error, setError] = useState<string | null>(null);
 
   const exportJson = () => {
+    setError(null);
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = backupFilename();
     a.click();
-    URL.revokeObjectURL(url);
+    // Safari can drop the download if the blob URL is revoked synchronously.
+    setTimeout(() => URL.revokeObjectURL(url), 0);
   };
 
   const importJson = async (file: File | undefined) => {

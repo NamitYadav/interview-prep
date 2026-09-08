@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
@@ -65,7 +65,6 @@ describe('Practice', () => {
   });
 
   test('empty state when no questions', () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
     render(<Practice questions={[]} state={EMPTY} dispatch={() => {}} />);
     expect(screen.getByText(/no questions match/i)).toBeInTheDocument();
   });

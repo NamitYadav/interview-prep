@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type Dispatch } from 'react';
+import { useEffect, useMemo, useRef, useState, type Dispatch } from 'react';
 import type { Persisted, Question, Rating } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { nextQuestion } from '../lib/queue';
@@ -14,15 +14,6 @@ export function Practice({ questions, state, dispatch }: { questions: Question[]
   const [skipped, setSkipped] = useState<Set<string>>(() => new Set());
 
   const current = useMemo(() => questions.find((q) => q.id === currentId), [questions, currentId]);
-
-  // If the filter changed and the current question is no longer in the list, pick a new one.
-  useEffect(() => {
-    if (!current) {
-      setCurrentId(nextQuestion(questions, state.progress)?.id);
-      setRevealed(false);
-      setSkipped(new Set());
-    }
-  }, [current, questions, state.progress]);
 
   const advance = (progress: Persisted['progress'], exclude: Set<string>) => {
     let ordered = nextQuestion(questions, progress, exclude);
@@ -49,17 +40,24 @@ export function Practice({ questions, state, dispatch }: { questions: Question[]
     advance(state.progress, new Set([...skipped, current.id]));
   };
 
+  // Keydown handler is registered once; latest closures are read through this ref
+  // so skip/rate/revealed never go stale without re-subscribing on every render.
+  const latest = useRef({ skip, rate, revealed });
+  useEffect(() => {
+    latest.current = { skip, rate, revealed };
+  });
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
       const isButton = e.target instanceof HTMLElement && e.target.tagName === 'BUTTON';
       if (e.key === ' ') { if (isButton) return; e.preventDefault(); setRevealed(true); }
-      else if (e.key === 'n' || e.key === 'N') skip();
-      else if (revealed && (e.key === '1' || e.key === '2' || e.key === '3')) rate(Number(e.key) as Rating);
+      else if (e.key === 'n' || e.key === 'N') latest.current.skip();
+      else if (latest.current.revealed && (e.key === '1' || e.key === '2' || e.key === '3')) latest.current.rate(Number(e.key) as Rating);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  });
+  }, []);
 
   if (!current) {
     return <p className="rounded border border-dashed p-6 text-center text-zinc-500 dark:text-zinc-400">No questions match this filter.</p>;

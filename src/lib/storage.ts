@@ -44,7 +44,7 @@ export function parseBackup(text: string): Persisted {
 }
 
 export function load(storage: Storage = localStorage): Persisted {
-  let text: string | null = null;
+  let text: string | null;
   try {
     text = storage.getItem(STORAGE_KEY);
   } catch {

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { EMPTY, STORAGE_KEY } from '../lib/storage';
 import { reducer, useAppState } from '../hooks/useAppState';
@@ -58,4 +58,17 @@ describe('useAppState', () => {
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).progress.b).toEqual({ rating: 3, seen: 1, lastSeen: 5 });
     expect(result.current.saveFailed).toBe(false);
   });
+
+  test('flags saveFailed when the underlying storage write throws', () => {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('quota exceeded');
+    });
+    const { result } = renderHook(() => useAppState());
+    act(() => result.current.dispatch({ type: 'rate', id: 'a', rating: 1, now: 1 }));
+    expect(result.current.saveFailed).toBe(true);
+  });
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });

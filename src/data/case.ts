@@ -621,7 +621,7 @@ export const caseStudy: Question[] = [
       'Be clear about what does not transfer at this scale: a full consolidation effort involves migration tooling, cross-team rollout, and deprecation of old implementations — none of which apply to a single take-home table, so avoid over-claiming the analogy.',
     ],
     keyPoints: [
-      'Names the transferable principle generically: stable API over ad hoc special-casing',
+      'Names the transferable principle: stable API over ad hoc special-casing',
       'Points to a concrete, present example in the actual submission',
       'Clearly scopes what does and does not transfer at take-home scale',
       'Avoids over-claiming a large consolidation effort onto a small table',

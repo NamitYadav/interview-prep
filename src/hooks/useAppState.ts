@@ -38,6 +38,9 @@ export function useAppState() {
   const [saveFailed, setSaveFailed] = useState(false);
 
   useEffect(() => {
+    // save() is a synchronous write to localStorage (the external system); saveFailed
+    // is derived from its result and can't be computed during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSaveFailed(!save(state));
   }, [state]);
 

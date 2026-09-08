@@ -45,7 +45,7 @@ export const debrief: Question[] = [
     question: 'Why client-side filtering instead of server-side (or vice versa)?',
     answer: [
       'Anchor the answer in the actual data volume and API shape given in the brief: client-side filtering is the right default when the dataset is small and already fully fetched, since it avoids extra round-trips and keeps the UI snappy; server-side becomes necessary once the dataset is large enough that shipping it all to the client is wasteful or slow.',
-      'State plainly which one you picked and the specific signal in the brief or mock data that justified it (e.g. "[the dataset size / lack of pagination in the API] pointed at client-side for this scope]").',
+      'State plainly which one you picked and the specific signal in the brief or mock data that justified it (e.g. "[the dataset size / lack of pagination in the API] pointed at client-side for this scope").',
       'Name the point at which you would flip the decision — a stated or implied data volume, a real backend with query support, or a requirement for filters to be shareable via URL — and what would change in the code to get there (moving filter logic into query params sent to an endpoint).',
     ],
     keyPoints: [
@@ -99,7 +99,7 @@ export const debrief: Question[] = [
     question: 'You skipped Y, walk me through that decision',
     answer: [
       'Confirm the omission directly and without deflecting — restating what "[Y]" is and confirming it is indeed not in the submission signals you know your own work rather than being caught off guard.',
-      'Give the actual reason: usually a time-box trade-off against something else you prioritised higher (a core flow, error handling, or tests), and name what that higher-priority thing was so the decision reads as deliberate sequencing, not an oversight.',
+      'Give the actual reason: usually a time-box trade-off against something else you prioritized higher (a core flow, error handling, or tests), and name what that higher-priority thing was so the decision reads as deliberate sequencing, not an oversight.',
       'State concretely what adding "[Y]" would take — roughly how much effort and what it would touch — to show you scoped it out with intent rather than simply running out of time and hoping no one asked.',
     ],
     keyPoints: [
@@ -116,12 +116,12 @@ export const debrief: Question[] = [
     category: 'Trade-off probes',
     question: 'How did you decide what to test?',
     answer: [
-      'Describe the prioritisation, generically: core business logic and anything with a nontrivial branch or edge case first, then the critical user-facing flows end to end, then leave thin UI wiring and trivial pass-through code untested since it adds little coverage value per unit of time.',
+      'Describe the prioritization, generically: core business logic and anything with a nontrivial branch or edge case first, then the critical user-facing flows end to end, then leave thin UI wiring and trivial pass-through code untested since it adds little coverage value per unit of time.',
       'Give one concrete example of something you did test because it had real risk (a calculation, a filter edge case, an error path) and one thing you deliberately left untested because the cost-to-value ratio was poor under the time-box.',
       'Be explicit that this is the same triage you would apply on a real team, just compressed: test the parts that are likely to break silently or are expensive to get wrong, not everything uniformly.',
     ],
     keyPoints: [
-      'States the prioritisation order: risky logic and flows first, thin wiring last',
+      'States the prioritization order: risky logic and flows first, thin wiring last',
       'Gives one concrete tested example and one concrete deliberately-untested example',
       'Frames the approach as risk-based triage, not blanket coverage',
       'Connects it to how the same judgment would apply on a real team, just compressed',
@@ -134,12 +134,12 @@ export const debrief: Question[] = [
     category: 'Trade-off probes',
     question: 'Why this folder structure?',
     answer: [
-      'Name the organising principle plainly — by feature, by layer (components/hooks/utils), or a hybrid — and connect it to the project\'s actual size: a small take-home usually favors a flatter, easier-to-scan structure over deep feature folders that only pay off at larger scale.',
+      'Name the organizing principle plainly — by feature, by layer (components/hooks/utils), or a hybrid — and connect it to the project\'s actual size: a small take-home usually favors a flatter, easier-to-scan structure over deep feature folders that only pay off at larger scale.',
       'Give one concrete example of a file placement decision that followed the principle, and one place where you made a pragmatic exception (e.g. one shared util that does not cleanly belong to a single feature) and why that was fine at this size.',
       'Name explicitly what you would restructure first if the project grew to many more features or contributors, so the answer shows awareness of where the current structure stops scaling rather than presenting it as final.',
     ],
     keyPoints: [
-      'States the organising principle and why it matched project size',
+      'States the organizing principle and why it matched project size',
       'Gives one concrete example following the principle and one pragmatic exception',
       'Names the first restructuring step for a larger version of the project',
       'Avoids presenting the current structure as the permanently correct answer',
@@ -154,15 +154,15 @@ export const debrief: Question[] = [
     category: 'Scale & failure',
     question: 'What breaks first at 10x data?',
     answer: [
-      'Name the specific mechanism, not just "it would be slow": e.g. an unmemoised render that re-computes a derived list on every keystroke, a full-array filter or sort running on every render, or a DOM list rendered without virtualization once row count crosses a few hundred.',
+      'Name the specific mechanism, not just "it would be slow": e.g. an unmemoized render that re-computes a derived list on every keystroke, a full-array filter or sort running on every render, or a DOM list rendered without virtualization once row count crosses a few hundred.',
       'Point to where in the actual code this lives — which component, which render path — so the answer is concrete rather than theoretical, and describe the visible symptom (input lag, a frozen frame, slow initial paint).',
-      'Give the specific fix in order of effort: memoising the derived computation first, then windowing/virtualizing the list, then moving filtering or pagination server-side if data keeps growing beyond what the client should hold at all.',
+      'Give the specific fix in order of effort: memoizing the derived computation first, then windowing/virtualizing the list, then moving filtering or pagination server-side if data keeps growing beyond what the client should hold at all.',
     ],
     keyPoints: [
       'Names the specific mechanism that breaks, not a vague "performance issue"',
       'Points to the actual location in the submission where it would occur',
       'Describes the concrete visible symptom at 10x scale',
-      'Gives fixes in order of effort: memoise, then virtualize, then move server-side',
+      'Gives fixes in order of effort: memoize, then virtualize, then move server-side',
     ],
     followUps: ['At what row count would you actually notice this in practice?', 'How would you measure this before assuming it is a problem?'],
   },
@@ -178,7 +178,7 @@ export const debrief: Question[] = [
     ],
     keyPoints: [
       'Honestly states current behavior rather than overclaiming coverage',
-      'Describes the correct loading/error/timeout/retry states generically',
+      'Describes the correct loading/error/timeout/retry states',
       'Names the concrete next change to close the gap',
       'Addresses the stale-data-versus-blank-screen decision explicitly',
     ],
@@ -224,7 +224,7 @@ export const debrief: Question[] = [
     id: 'debrief-013',
     round: 'debrief',
     category: 'Scale & failure',
-    question: 'How would this make this real-time?',
+    question: 'How would you make this real-time?',
     answer: [
       'Name the mechanism generically: polling on an interval as the simplest option, versus a push mechanism (websockets or server-sent events) once update frequency or fan-out makes polling wasteful — and state plainly which one fits this scope and why.',
       'Point to what would actually need to change in the current code to support it: where fetched data currently lives, how it would be updated in place without a full re-fetch, and how the UI would visually indicate a live update landed (a subtle highlight, not a jarring reflow).',
@@ -264,12 +264,12 @@ export const debrief: Question[] = [
     category: 'Quality & security',
     question: 'What security issues exist in your submission?',
     answer: [
-      'Go through the concrete categories rather than a blanket "none that I know of": unescaped or unsanitised content rendered into the DOM (an XSS vector if any user-controlled string is rendered as HTML rather than text), any place user input flows into a query or command unsanitised, and any secret or key that should never live in client-side code or a committed file.',
+      'Go through the concrete categories rather than a blanket "none that I know of": unescaped or unsanitized content rendered into the DOM (an XSS vector if any user-controlled string is rendered as HTML rather than text), any place user input flows into a query or command unsanitized, and any secret or key that should never live in client-side code or a committed file.',
       'State plainly which of these apply here and which do not, and for anything that does apply, name the specific fix (rendering as text by default, escaping, moving a secret to a server boundary).',
       'Add the dependency-risk angle: whether any library pulled in carries known vulnerabilities or is unnecessarily broad in scope for what it is used for, and how you would check that in a real repo (an automated dependency scan in CI).',
     ],
     keyPoints: [
-      'Covers XSS/unsanitised rendering, injection via user input, and secrets handling specifically',
+      'Covers XSS/unsanitized rendering, injection via user input, and secrets handling specifically',
       'States plainly which risks actually apply to this submission and which do not',
       'Names the concrete fix for anything that does apply',
       'Addresses dependency/supply-chain risk and how it would be checked in CI',
@@ -339,12 +339,14 @@ export const debrief: Question[] = [
       'Separate the layers: client-side error tracking to catch uncaught exceptions and rejected promises with enough context to reproduce them, performance monitoring for the metrics that actually affect the user (initial load, time-to-interactive for the main flow), and product analytics on the key actions to know if the feature is actually being used as intended.',
       'Name one or two specific events or errors from this submission that would be worth instrumenting first — e.g. "[a failed fetch on the main data load, or a filter action]" — rather than a generic "add logging everywhere."',
       'Address alerting explicitly: what threshold would actually page someone versus what belongs in a dashboard only, since undifferentiated alerting is itself a production risk (alert fatigue).',
+      'For EU users, note the GDPR angle on client-side monitoring: error and analytics tooling can capture personal data (IP address, session identifiers) even unintentionally, so scrub or avoid capturing anything beyond what is needed to debug, and know whether the tool is covered by an existing data processing agreement or needs consent to fire.',
     ],
     keyPoints: [
       'Separates error tracking, performance monitoring, and product analytics as distinct layers',
       'Names one or two specific events from the submission worth instrumenting first',
       'Distinguishes alert-worthy thresholds from dashboard-only metrics',
       'Avoids a generic "add more logging" non-answer',
+      'Flags the GDPR angle on personal data captured by monitoring tools',
     ],
     followUps: ['What would you actually want to be paged for here at 3am?', 'How would you know if this feature was being used at all?'],
   },
@@ -355,7 +357,7 @@ export const debrief: Question[] = [
     question: 'What did you not test and why?',
     answer: [
       'Name the specific gap plainly — a visual/CSS layout concern, a genuine race condition, cross-browser behavior, or a rarely-hit error branch — rather than implying full coverage exists.',
-      'Give the real reason, which is almost always time-box prioritisation against something judged higher risk, and name that higher-priority thing explicitly so the trade-off reads as deliberate.',
+      'Give the real reason, which is almost always time-box prioritization against something judged higher risk, and name that higher-priority thing explicitly so the trade-off reads as deliberate.',
       'State what kind of test you would add first if given more time, and be specific about the test type (a targeted unit test for the edge case, an integration test for the flow, a manual cross-browser pass) rather than a vague "more tests."',
     ],
     keyPoints: [
@@ -374,17 +376,17 @@ export const debrief: Question[] = [
     category: 'Reflection',
     question: 'What would you change with one more day?',
     answer: [
-      'Give a short, prioritised list rather than everything you can think of — two or three concrete items, ordered by impact: closing the biggest known gap first (a missing error state, a specific untested edge case), then a structural improvement (a refactor you noted but skipped), then polish last.',
+      'Give a short, prioritized list rather than everything you can think of — two or three concrete items, ordered by impact: closing the biggest known gap first (a missing error state, a specific untested edge case), then a structural improvement (a refactor you noted but skipped), then polish last.',
       'For each item, be specific about what "done" would look like, not just the topic — "[add a retry-with-backoff on the failed fetch path]" reads as far stronger than "improve error handling."',
       'Make clear this list came from genuine self-review during the time-box, not from the panel\'s questions just now — referencing something you already flagged in the README\'s known-limitations section, if you wrote one, reinforces that.',
     ],
     keyPoints: [
-      'Gives two or three concrete items, prioritised by impact',
+      'Gives two or three concrete items, prioritized by impact',
       'States specifically what "done" looks like for each item, not just a topic',
       'Reads as genuine prior self-review, not a reaction to being asked',
       'References any known-limitations note already written, if applicable',
     ],
-    followUps: ['Which of these would you actually tackle first if given the day right now?', 'What made you stop where you did instead of doing this already?'],
+    followUps: ['What made you stop where you did instead of doing this already?', 'If you had a full week instead of one more day, what would change on that list?'],
   },
   {
     id: 'debrief-022',
@@ -411,7 +413,7 @@ export const debrief: Question[] = [
     question: 'What did you learn building it?',
     answer: [
       'Name something concrete and specific to this submission, not a generic platitude — a pattern you had not used in a while and had to re-derive, an assumption you made that turned out to need revisiting once you started building, or a constraint in the brief that shaped the design more than expected once you got into it.',
-      'Connect the learning to how it changed the actual approach mid-build, if it did — e.g. "[realising partway through that the data shape implied a different filtering strategy than I first assumed, and adjusting]" — since a static, unchanged learning reads as less credible than one that visibly shaped a decision.',
+      'Connect the learning to how it changed the actual approach mid-build, if it did — e.g. "[realizing partway through that the data shape implied a different filtering strategy than I first assumed, and adjusting]" — since a static, unchanged learning reads as less credible than one that visibly shaped a decision.',
       'Keep it short: this is a lightweight closing question, not an invitation for a long narrative — one specific, well-told example beats three vague ones.',
     ],
     keyPoints: [
@@ -433,8 +435,8 @@ export const debrief: Question[] = [
       'Name the extra scrutiny you would apply to AI-assisted output specifically, if any was used — closer review on logic-heavy or security-sensitive sections, and never accepting "the assistant wrote it" as an explanation for why something works.',
     ],
     keyPoints: [
-      'States specifically what was and was not AI-assisted, if anything',
-      'Applies the same full review-and-understand standard regardless of origin',
+      'Does not get defensive about the question, treats it as a normal check',
+      'Distinguishes AI-assisted scaffolding from hand-written core logic and architecture',
       'Is ready to explain any specific piece of code live, unprompted',
       'Never treats AI origin as an acceptable excuse for not understanding the code',
     ],
@@ -549,5 +551,61 @@ export const debrief: Question[] = [
       'Keeps the tone declarative and job-real, not a generic template',
     ],
     followUps: ['What would make you revisit this decision later?', 'Which alternative came closest to being chosen instead?'],
+  },
+
+  // Pushback & pressure (3)
+  {
+    id: 'debrief-031',
+    round: 'debrief',
+    category: 'Pushback & pressure',
+    question: 'I think that decision was wrong. Convince me otherwise.',
+    answer: [
+      'Do not fold immediately or get defensive — take the challenge seriously and re-state the actual reasoning briefly: the constraint that drove it, the alternative considered, and why the trade-off was accepted, since a real defense requires restating the logic, not just repeating the conclusion.',
+      'If the reasoning genuinely holds up, say so plainly and hold the position with evidence, while naming the condition under which you would change your mind — a good defense is not stubbornness, it comes with a stated falsification condition.',
+      'If the challenge actually reveals a real gap once you think it through out loud, say so directly and update in real time: "you are right, I did not weigh [X] enough" reads as far stronger to a staff-level panel than defending a position past the point it holds up, since staff engineers are expected to update on good evidence, not just defend their prior calls.',
+    ],
+    keyPoints: [
+      'Restates the actual reasoning rather than just repeating the conclusion',
+      'Holds the position with evidence if it genuinely holds up, not just confidence',
+      'Names a real condition that would change their mind',
+      'Updates openly and specifically if the challenge reveals a genuine gap',
+    ],
+    followUps: ['What would it take for you to actually change this decision today?', 'Was there a moment while building this where you almost chose the other way?'],
+  },
+  {
+    id: 'debrief-032',
+    round: 'debrief',
+    category: 'Pushback & pressure',
+    question: 'Two of us on this panel disagree about your approach here — one thinks it is fine, one thinks it is a problem. How do you respond?',
+    answer: [
+      'Do not try to pick a side to please one interviewer or split the difference to avoid conflict — engage with the substance of both views: ask (or infer from context) what specifically each position is worried about, since "fine" and "a problem" usually rest on different unstated assumptions about scale, risk, or priorities.',
+      'Give your own honest assessment once the substance is on the table, including which concern you weight more heavily and why, rather than deflecting responsibility for a view back onto the panel ("whatever you all think is best").',
+      'If there is a real, reasonable case for the concerned interviewer\'s position, acknowledge it specifically rather than dismissing it because it is inconvenient — showing you can hold a considered position while still taking a genuine counterargument seriously is exactly the staff-level signal this scenario is testing for.',
+    ],
+    keyPoints: [
+      'Engages with the substance behind both positions rather than picking a side to please someone',
+      'Gives an honest, specific personal assessment rather than deflecting back to the panel',
+      'Acknowledges a reasonable counterargument specifically rather than dismissing it',
+      'Does not simply split the difference to avoid conflict',
+    ],
+    followUps: ['What evidence would resolve this disagreement one way or the other?', 'How would you handle it if this disagreement surfaced with your own team after shipping?'],
+  },
+  {
+    id: 'debrief-033',
+    round: 'debrief',
+    category: 'Pushback & pressure',
+    question: 'You just got a technical detail wrong in front of the panel. What do you do?',
+    answer: [
+      'Correct it immediately and plainly the moment you notice, without over-apologizing or spiraling into justifying how the mistake happened — "actually, I misspoke, the correct behavior is [X]" is a complete response; a long explanation of why you said the wrong thing reads worse than the original error.',
+      'If you realize it later in the conversation rather than immediately, raise it yourself rather than hoping it was not noticed: "earlier I said [X], I want to correct that to [Y]" — proactively fixing it is a stronger signal than being caught not knowing.',
+      'If you genuinely do not know the answer to a follow-up, say so directly rather than guessing with false confidence: "I do not know that off the top of my head, here is how I would find out" is a legitimate staff-level answer, since staff engineers are expected to know the limits of their own knowledge, not to know everything.',
+    ],
+    keyPoints: [
+      'Corrects the error immediately and plainly, without over-apologizing',
+      'Proactively raises a mistake noticed later rather than hoping it passed unnoticed',
+      'Says "I do not know" directly when true, rather than guessing with false confidence',
+      'Pairs "I do not know" with a concrete plan for finding the answer',
+    ],
+    followUps: ['Has this actually happened to you in a real interview or review? What did you do?', 'How is admitting a mistake here different from doing it in front of your own team?'],
   },
 ];
