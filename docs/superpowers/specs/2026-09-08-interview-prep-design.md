@@ -23,12 +23,14 @@ questions first. Public repo; no employer-internal or personal data committed.
 
 Total ≈ 170 questions. Each round includes a `From your CV` category
 (~30 questions overall) with probes derived from the candidate's resume
-bullets: React 17→18 migration across 6 apps, Snyk findings 734→215,
-feature-flag infra (Firebase Remote Config, GA4), tanstack-table ADR for 95+
-grids, visual regression + CI quality gates, Slack code-review bot, Module
-Federation micro-frontend, legally operative document generation, Cypress
-introduction, 3.5 years in Berlin at a prior employer, relocation Nov 2026 with
-no sponsorship needed.
+bullets, generalized to the same abstraction level used in the shipped
+question data (`src/data/*.ts`): a major framework version migration across
+several apps, a large reduction in a security vulnerability count, feature-flag
+infrastructure with automatic fallback, a data-grid consolidation ADR for 95+
+grids, visual regression + CI quality gates, a code-review automation bot, a
+Module Federation micro-frontend, legally operative document generation,
+introducing e2e testing, several years in Berlin at a prior employer, and a
+relocation back to Berlin with no sponsorship needed.
 
 ## Content stance
 
