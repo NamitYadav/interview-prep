@@ -29,4 +29,10 @@ describe('question bank', () => {
       }
     }
   });
+
+  test('every round has at least 20 questions', () => {
+    for (const id of ROUND_IDS) {
+      expect(questions.filter((q) => q.round === id).length, id).toBeGreaterThanOrEqual(20);
+    }
+  });
 });

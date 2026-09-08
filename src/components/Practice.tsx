@@ -1,0 +1,86 @@
+import { useEffect, useMemo, useState, type Dispatch } from 'react';
+import type { Persisted, Question, Rating } from '../types';
+import type { Action } from '../hooks/useAppState';
+import { nextQuestion } from '../lib/queue';
+import { QuestionCard } from './QuestionCard';
+
+const isTyping = (target: EventTarget | null) =>
+  target instanceof HTMLElement && (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT');
+
+export function Practice({ questions, state, dispatch }: { questions: Question[]; state: Persisted; dispatch: Dispatch<Action> }) {
+  const [currentId, setCurrentId] = useState<string | undefined>(() => nextQuestion(questions, state.progress)?.id);
+  const [revealed, setRevealed] = useState(false);
+  const [skipped, setSkipped] = useState<Set<string>>(() => new Set());
+
+  const current = useMemo(() => questions.find((q) => q.id === currentId), [questions, currentId]);
+
+  // If the filter changed and the current question is no longer in the list, pick a new one.
+  useEffect(() => {
+    if (!current) {
+      setCurrentId(nextQuestion(questions, state.progress)?.id);
+      setRevealed(false);
+      setSkipped(new Set());
+    }
+  }, [current, questions, state.progress]);
+
+  const advance = (progress: Persisted['progress'], exclude: Set<string>) => {
+    let ordered = nextQuestion(questions, progress, exclude);
+    const exhausted = ordered !== undefined && exclude.has(ordered.id);
+    if (exhausted) {
+      // Every question has been seen this lap. Restart the lap (skipped clears) but still
+      // don't just redisplay the question we're leaving - exclude only that one.
+      ordered = nextQuestion(questions, progress, current ? new Set([current.id]) : new Set());
+    }
+    setSkipped(exhausted ? new Set() : exclude);
+    setCurrentId(ordered?.id);
+    setRevealed(false);
+  };
+
+  const rate = (rating: Rating) => {
+    if (!current) return;
+    const now = Date.now();
+    dispatch({ type: 'rate', id: current.id, rating, now });
+    const progress = { ...state.progress, [current.id]: { rating, seen: (state.progress[current.id]?.seen ?? 0) + 1, lastSeen: now } };
+    advance(progress, new Set([...skipped, current.id]));
+  };
+
+  const skip = () => {
+    if (!current) return;
+    advance(state.progress, new Set([...skipped, current.id]));
+  };
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
+      const isButton = e.target instanceof HTMLElement && e.target.tagName === 'BUTTON';
+      if (e.key === ' ') { if (isButton) return; e.preventDefault(); setRevealed(true); }
+      else if (e.key === 'n' || e.key === 'N') skip();
+      else if (revealed && (e.key === '1' || e.key === '2' || e.key === '3')) rate(Number(e.key) as Rating);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
+  if (!current) {
+    return <p className="rounded border border-dashed p-6 text-center text-zinc-500">No questions match this filter.</p>;
+  }
+
+  return (
+    <div className="space-y-3">
+      <QuestionCard
+        question={current}
+        revealed={revealed}
+        note={state.notes[current.id] ?? ''}
+        rating={state.progress[current.id]?.rating}
+        onReveal={() => setRevealed(true)}
+        onNote={(text) => dispatch({ type: 'note', id: current.id, text })}
+        onRate={rate}
+      />
+      <div className="flex justify-end">
+        <button type="button" onClick={skip} className="text-sm text-zinc-500 hover:underline">
+          Skip <kbd className="ml-1 text-xs">N</kbd>
+        </button>
+      </div>
+    </div>
+  );
+}
