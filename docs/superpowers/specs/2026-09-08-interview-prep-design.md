@@ -101,7 +101,7 @@ Content lives in `src/data/<round>.ts`, one file per round, exported as
   (`rated 3 / total`), counts of weak/ok/unrated. Click → round view.
 
 ### Round view
-Tabs: **Practice** | **Browse**. Category filter chips (multi-select, "All"
+Tabs: **Practice** | **Browse**. Category filter chips (single-select, "All"
 default) apply to both tabs. Back link to Home.
 
 **Practice**
