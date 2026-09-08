@@ -961,7 +961,7 @@ export const hm: Question[] = [
     id: 'hm-050',
     round: 'hm',
     category: 'From your CV',
-    question: 'You built legally operative document generation: how did you make sure a data error could not slip through?',
+    question: 'You built a document-generation feature where an output error carried real contractual or compliance consequences: how did you make sure a data error could not slip through?',
     answer: [
       'Start with why this is different from ordinary feature work: the output is a document with real legal effect, so a data error is not just a bug, it is a correctness-critical failure with consequences outside the software itself — that framing should drive every choice described next.',
       'Describe the layered defense generically: [validation at data entry, a second independent validation pass immediately before document generation using the same rules expressed separately so a single bug cannot pass both], and a mandatory human review step for the fields that carry the most legal weight before the document is finalized.',

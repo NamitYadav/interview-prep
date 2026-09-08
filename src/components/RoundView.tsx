@@ -20,10 +20,10 @@ export function RoundView({ roundId, state, dispatch }: { roundId: RoundId; stat
     () => (selected === null ? all : all.filter((q) => q.category === selected)),
     [all, selected],
   );
-  const stats = roundStats(all, state.progress);
+  const stats = roundStats(filtered, state.progress);
 
   const chip = (active: boolean) =>
-    `rounded-full border px-3 py-1 text-xs ${active ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950' : 'border-zinc-300 dark:border-zinc-700'}`;
+    `rounded-full border px-3 py-1 text-xs ${active ? 'border-emerald-500 bg-emerald-50 font-medium dark:bg-emerald-950' : 'border-zinc-300 dark:border-zinc-700'}`;
   const tabBtn = (active: boolean) =>
     `border-b-2 px-3 py-2 text-sm ${active ? 'border-emerald-500 font-medium' : 'border-transparent text-zinc-500 dark:text-zinc-400'}`;
 

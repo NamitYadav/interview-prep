@@ -3,24 +3,6 @@ import type { Question } from '../types';
 export const hr: Question[] = [
   // Motivation & fit (7)
   {
-    id: 'hr-026',
-    round: 'hr',
-    category: 'Motivation & fit',
-    question: 'Tell me about yourself — walk me through your CV.',
-    answer: [
-      'Keep it under two minutes and structure it as a short arc, not a full recitation: where you are now (current scope, generically), one or two prior steps that explain how you got to staff-level scope, and why that arc points at this specific role next.',
-      'Weight it toward the recent and relevant: spend most of the time on your current or most recent role and its scope, compress earlier career history into a sentence each, and skip anything not relevant to a staff frontend role at this company.',
-      'End by handing control back to the interviewer: close with a one-sentence bridge into why you are interested in this move, which naturally opens into the "why this company" follow-up rather than trailing off.',
-    ],
-    keyPoints: [
-      'Stays under roughly two minutes, not a full career recitation',
-      'Weighted toward recent, relevant scope over early career history',
-      'Clear narrative arc: where you are, how you got here, why this is next',
-      'Ends with a deliberate bridge into motivation, not a trailing-off stop',
-    ],
-    followUps: ['What would you cut if I gave you only thirty seconds?', 'Which part of that story most directly prepared you for this role?'],
-  },
-  {
     id: 'hr-001',
     round: 'hr',
     category: 'Motivation & fit',
@@ -478,5 +460,23 @@ export const hr: Question[] = [
       'One team-level or risk-awareness angle included',
     ],
     followUps: ['Where would you say AI assistance should not be trusted?', 'How do you evaluate whether AI-generated code is safe to merge?'],
+  },
+  {
+    id: 'hr-026',
+    round: 'hr',
+    category: 'Motivation & fit',
+    question: 'Tell me about yourself — walk me through your CV.',
+    answer: [
+      'Keep it under two minutes and structure it as a short arc, not a full recitation: where you are now (current scope, generically), one or two prior steps that explain how you got to staff-level scope, and why that arc points at this specific role next.',
+      'Weight it toward the recent and relevant: spend most of the time on your current or most recent role and its scope, compress earlier career history into a sentence each, and skip anything not relevant to a staff frontend role at this company.',
+      'End by handing control back to the interviewer: close with a one-sentence bridge into why you are interested in this move, which naturally opens into the "why this company" follow-up rather than trailing off.',
+    ],
+    keyPoints: [
+      'Stays under roughly two minutes, not a full career recitation',
+      'Weighted toward recent, relevant scope over early career history',
+      'Clear narrative arc: where you are, how you got here, why this is next',
+      'Ends with a deliberate bridge into motivation, not a trailing-off stop',
+    ],
+    followUps: ['What would you cut if I gave you only thirty seconds?', 'Which part of that story most directly prepared you for this role?'],
   },
 ];
