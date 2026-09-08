@@ -51,6 +51,22 @@ describe('RoundView', () => {
     expect(screen.getByText(new RegExp(`of ${questionsByRound('hr').length}$`))).toBeInTheDocument();
   });
 
+  test('categories are single-select: choosing a second one deselects the first', async () => {
+    const [first, second] = hrCategories;
+    if (!first || !second) throw new Error('HR round needs at least two categories');
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /browse/i }));
+
+    await userEvent.click(screen.getByRole('button', { name: first }));
+    await userEvent.click(screen.getByRole('button', { name: second }));
+    expect(screen.getByRole('button', { name: second })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: first })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'false');
+
+    const expected = questionsByRound('hr').filter((q) => q.category === second).length;
+    expect(screen.getByText(new RegExp(`^${expected} of `))).toBeInTheDocument();
+  });
+
   test('switching tabs swaps Practice for Browse', async () => {
     render(<Harness />);
     expect(screen.getByRole('button', { name: /reveal/i })).toBeInTheDocument();

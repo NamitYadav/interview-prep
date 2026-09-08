@@ -13,21 +13,14 @@ export function RoundView({ roundId, state, dispatch }: { roundId: RoundId; stat
   const round = rounds.find((r) => r.id === roundId)!;
   const all = useMemo(() => questionsByRound(roundId), [roundId]);
   const categories = useMemo(() => [...new Set(all.map((q) => q.category))], [all]);
-  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const [selected, setSelected] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('practice');
 
   const filtered = useMemo(
-    () => (selected.size === 0 ? all : all.filter((q) => selected.has(q.category))),
+    () => (selected === null ? all : all.filter((q) => q.category === selected)),
     [all, selected],
   );
   const stats = roundStats(all, state.progress);
-
-  const toggle = (c: string) =>
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(c)) next.delete(c); else next.add(c);
-      return next;
-    });
 
   const chip = (active: boolean) =>
     `rounded-full border px-3 py-1 text-xs ${active ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950' : 'border-zinc-300 dark:border-zinc-700'}`;
@@ -43,9 +36,9 @@ export function RoundView({ roundId, state, dispatch }: { roundId: RoundId; stat
       <p className="mb-4 mt-1 text-xs text-zinc-500 dark:text-zinc-400">{stats.solid}/{stats.total} solid · {stats.ok} ok · {stats.weak} weak · {stats.unrated} unrated</p>
 
       <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filter by category">
-        <button type="button" className={chip(selected.size === 0)} aria-pressed={selected.size === 0} onClick={() => setSelected(new Set())}>All</button>
+        <button type="button" className={chip(selected === null)} aria-pressed={selected === null} onClick={() => setSelected(null)}>All</button>
         {categories.map((c) => (
-          <button key={c} type="button" className={chip(selected.has(c))} aria-pressed={selected.has(c)} onClick={() => toggle(c)}>{c}</button>
+          <button key={c} type="button" className={chip(selected === c)} aria-pressed={selected === c} onClick={() => setSelected(c)}>{c}</button>
         ))}
       </div>
 
@@ -55,7 +48,7 @@ export function RoundView({ roundId, state, dispatch }: { roundId: RoundId; stat
       </div>
 
       {tab === 'practice'
-        ? <Practice key={[...selected].sort().join('|')} questions={filtered} state={state} dispatch={dispatch} />
+        ? <Practice key={selected ?? ''} questions={filtered} state={state} dispatch={dispatch} />
         : <Browse questions={filtered} state={state} dispatch={dispatch} />}
     </main>
   );
