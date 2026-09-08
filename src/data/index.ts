@@ -1,4 +1,4 @@
-import type { Question, Round, RoundId } from '../types';
+import type { Question, Round, RoundId, Route } from '../types';
 import { hr } from './hr';
 import { hm } from './hm';
 import { coding } from './coding';
@@ -7,6 +7,8 @@ import { debrief } from './debrief';
 import { hoe } from './hoe';
 
 export const ROUND_IDS = ['hr', 'hm', 'coding', 'case', 'debrief', 'hoe'] as const satisfies readonly RoundId[];
+
+export const ROUTES = [...ROUND_IDS, 'weak', 'notes'] as const satisfies readonly Route[];
 
 export const rounds: Round[] = [
   { id: 'hr', title: 'HR screen', blurb: 'Motivation, logistics, compensation framing, German employment basics.' },
