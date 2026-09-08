@@ -40,11 +40,11 @@ interview-prep/
     setupTests.ts                     Task 1   jest-dom matchers
     types.ts                          Task 2   RoundId, Round, Question, Rating, Progress, Notes, Persisted
     data/index.ts                     Task 2   rounds[], questions[], questionsByRound()
-    data/hr.ts                        Task 10  25 questions
-    data/hm.ts                        Task 11  50 questions
-    data/case.ts                      Task 12  35 questions
-    data/debrief.ts                   Task 13  30 questions
-    data/hoe.ts                       Task 14  30 questions
+    data/hr.ts                        Task 9   25 questions
+    data/hm.ts                        Task 10  50 questions
+    data/case.ts                      Task 11  35 questions
+    data/debrief.ts                   Task 12  30 questions
+    data/hoe.ts                       Task 13  30 questions
     lib/storage.ts                    Task 3   load/save/parseBackup/backupFilename
     lib/queue.ts                      Task 4   orderQueue/nextQuestion/roundStats
     hooks/useAppState.ts              Task 5   reducer + persisted hook
@@ -57,7 +57,7 @@ interview-prep/
     components/Practice.tsx           Task 7   queue-driven single card + keyboard
     components/Browse.tsx             Task 8   search + expandable list
     components/RoundView.tsx          Task 8   tabs + category filter + back
-    __tests__/data.test.ts            Task 2, extended Task 14
+    __tests__/data.test.ts            Task 2, extended Task 13
     __tests__/storage.test.ts         Task 3
     __tests__/queue.test.ts           Task 4
     __tests__/store.test.ts           Task 5
