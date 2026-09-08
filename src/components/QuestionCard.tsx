@@ -35,6 +35,12 @@ export function QuestionCard({
       </div>
       <h2 ref={headingRef} tabIndex={-1} className="mb-4 text-lg font-medium outline-none">{question.question}</h2>
 
+      {question.code && (
+        <pre className="mb-4 overflow-x-auto rounded bg-zinc-100 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-800">
+          <code>{question.code}</code>
+        </pre>
+      )}
+
       {!revealed ? (
         <button
           type="button"
