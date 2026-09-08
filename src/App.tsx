@@ -5,7 +5,7 @@ import { RoundView } from './components/RoundView';
 
 export default function App() {
   const { state, dispatch, saveFailed } = useAppState();
-  const [route, navigate] = useHashRoute();
+  const [route] = useHashRoute();
 
   return (
     <>
@@ -15,9 +15,9 @@ export default function App() {
         </div>
       )}
       {route === null ? (
-        <Home state={state} dispatch={dispatch} onOpen={navigate} />
+        <Home state={state} dispatch={dispatch} />
       ) : (
-        <RoundView roundId={route} state={state} dispatch={dispatch} onBack={() => navigate(null)} />
+        <RoundView roundId={route} state={state} dispatch={dispatch} />
       )}
     </>
   );

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type Dispatch } from 'react';
 import type { Persisted, Question, Rating } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { nextQuestion } from '../lib/queue';
+import { reducer } from '../hooks/useAppState';
 import { QuestionCard } from './QuestionCard';
 
 const isTyping = (target: EventTarget | null) =>
@@ -38,10 +39,9 @@ export function Practice({ questions, state, dispatch }: { questions: Question[]
 
   const rate = (rating: Rating) => {
     if (!current) return;
-    const now = Date.now();
-    dispatch({ type: 'rate', id: current.id, rating, now });
-    const progress = { ...state.progress, [current.id]: { rating, seen: (state.progress[current.id]?.seen ?? 0) + 1, lastSeen: now } };
-    advance(progress, new Set([...skipped, current.id]));
+    const action = { type: 'rate' as const, id: current.id, rating, now: Date.now() };
+    dispatch(action);
+    advance(reducer(state, action).progress, new Set([...skipped, current.id]));
   };
 
   const skip = () => {
@@ -62,7 +62,7 @@ export function Practice({ questions, state, dispatch }: { questions: Question[]
   });
 
   if (!current) {
-    return <p className="rounded border border-dashed p-6 text-center text-zinc-500">No questions match this filter.</p>;
+    return <p className="rounded border border-dashed p-6 text-center text-zinc-500 dark:text-zinc-400">No questions match this filter.</p>;
   }
 
   return (
@@ -77,7 +77,7 @@ export function Practice({ questions, state, dispatch }: { questions: Question[]
         onRate={rate}
       />
       <div className="flex justify-end">
-        <button type="button" onClick={skip} className="text-sm text-zinc-500 hover:underline">
+        <button type="button" onClick={skip} className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">
           Skip <kbd className="ml-1 text-xs">N</kbd>
         </button>
       </div>
