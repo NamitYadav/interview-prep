@@ -52,7 +52,8 @@ export function Practice({ questions, state, dispatch }: { questions: Question[]
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key === ' ') { e.preventDefault(); setRevealed(true); }
+      const isButton = e.target instanceof HTMLElement && e.target.tagName === 'BUTTON';
+      if (e.key === ' ') { if (isButton) return; e.preventDefault(); setRevealed(true); }
       else if (e.key === 'n' || e.key === 'N') skip();
       else if (revealed && (e.key === '1' || e.key === '2' || e.key === '3')) rate(Number(e.key) as Rating);
     };

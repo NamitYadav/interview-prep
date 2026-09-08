@@ -55,6 +55,15 @@ describe('Practice', () => {
     expect(screen.getByText('First question?')).toBeInTheDocument();
   });
 
+  test('space activates a focused button instead of being swallowed by the global reveal shortcut', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    await user.click(screen.getByRole('button', { name: /reveal/i }));
+    screen.getByRole('button', { name: /solid/i }).focus();
+    await user.keyboard(' ');
+    expect(screen.getByText('Second question?')).toBeInTheDocument();
+  });
+
   test('empty state when no questions', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     render(<Practice questions={[]} state={EMPTY} dispatch={() => {}} />);

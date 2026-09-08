@@ -40,7 +40,7 @@ export function RoundView({ roundId, state, dispatch, onBack }: { roundId: Round
       <h1 className="text-2xl font-semibold">{round.title}</h1>
       <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">{round.blurb}</p>
       <ProgressBar value={stats.solid} max={stats.total} label={`${round.title} progress`} />
-      <p className="mb-4 mt-1 text-xs text-zinc-500">{stats.solid}/{stats.total} solid · {stats.weak} weak · {stats.unrated} unrated</p>
+      <p className="mb-4 mt-1 text-xs text-zinc-500">{stats.solid}/{stats.total} solid · {stats.ok} ok · {stats.weak} weak · {stats.unrated} unrated</p>
 
       <div className="mb-4 flex flex-wrap gap-2" aria-label="Filter by category">
         <button type="button" className={chip(selected.size === 0)} onClick={() => setSelected(new Set())}>All</button>
