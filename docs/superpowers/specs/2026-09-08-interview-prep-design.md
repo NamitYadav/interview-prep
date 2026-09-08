@@ -1,7 +1,7 @@
 # Staff Frontend Interview Prep — Design
 
 **Date:** 2026-09-08
-**Repo:** `~/Sites/interview-prep` → `github.com/NamitYadav/interview-prep`
+**Repo:** `/Users/namit/personal/interview-prep` → `github.com/NamitYadav/interview-prep`
 **Deploy:** GitHub Pages at `https://namityadav.github.io/interview-prep/`
 
 ## Purpose

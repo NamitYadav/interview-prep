@@ -12,7 +12,7 @@ Spec: `docs/superpowers/specs/2026-09-08-interview-prep-design.md`
 
 ## Global Constraints
 
-- Repo root is `~/Sites/interview-prep`. Every command in this plan runs from there.
+- Repo root is `/Users/namit/personal/interview-prep`. Every command in this plan runs from there.
 - Package manager: `npm`. Pin `typescript` to `~5.9.0` (v7 is the Go compiler; do not use it).
 - No additional runtime dependencies beyond `react`, `react-dom`. No router, no state lib, no markdown lib, no UI kit.
 - Vite `base` is `/interview-prep/`.
@@ -78,7 +78,7 @@ interview-prep/
 - [ ] **Step 1: Scaffold with Vite and install deps**
 
 ```bash
-cd ~/Sites/interview-prep
+cd /Users/namit/personal/interview-prep
 npm create vite@latest . -- --template react-ts
 npm install
 npm install -D typescript@~5.9.0 tailwindcss @tailwindcss/vite vitest@^5 jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event
@@ -1714,20 +1714,19 @@ git commit -m "ci: deploy to GitHub Pages; add README"
 
 ---
 
-### Task 16: Push to GitHub (needs user action first)
+### Task 16: Enable GitHub Pages and verify deploy
 
-**User prerequisites** (cannot be done by the agent):
-1. `ssh-add ~/.ssh/id_ed25519` and confirm the public key is listed at github.com/settings/keys. Verify with `ssh -T git@github.com` → "Hi NamitYadav!".
-2. Create an empty **public** repo named `interview-prep` on GitHub with no README/license/gitignore.
-3. After first push: Settings → Pages → Source: **GitHub Actions**.
+The repo already exists at `github.com/NamitYadav/interview-prep`, is cloned to
+`/Users/namit/personal/interview-prep`, and the `origin` remote is HTTPS with
+working cached credentials. Pushing needs no extra setup.
 
-- [ ] **Step 1:** Verify auth: `ssh -T git@github.com` prints a greeting.
-- [ ] **Step 2:**
-```bash
-git remote add origin git@github.com:NamitYadav/interview-prep.git
-git push -u origin main
-```
-- [ ] **Step 3:** Confirm the Actions run is green and `https://namityadav.github.io/interview-prep/` loads (may take a minute after Pages source is set).
+**User prerequisite:** on GitHub, Settings → Pages → Source: **GitHub Actions**.
+Do this once, before or right after the Task 15 push.
+
+- [ ] **Step 1:** `git push` (each earlier task can also push as it goes).
+- [ ] **Step 2:** Confirm the Actions run on `main` is green.
+- [ ] **Step 3:** Open `https://namityadav.github.io/interview-prep/` and confirm
+      the five round cards render and a round opens.
 
 ---
 
