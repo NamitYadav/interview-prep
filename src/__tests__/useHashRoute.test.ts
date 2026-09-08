@@ -13,6 +13,16 @@ describe('useHashRoute', () => {
     expect(result.current[0]).toBe('hm');
   });
 
+  test('reads the drill routes from the hash', () => {
+    window.location.hash = '#weak';
+    const weak = renderHook(() => useHashRoute());
+    expect(weak.result.current[0]).toBe('weak');
+
+    window.location.hash = '#notes';
+    const notes = renderHook(() => useHashRoute());
+    expect(notes.result.current[0]).toBe('notes');
+  });
+
   test('falls back to null for an invalid hash', () => {
     window.location.hash = '#not-a-round';
     const { result } = renderHook(() => useHashRoute());

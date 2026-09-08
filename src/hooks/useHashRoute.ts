@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ROUND_IDS } from '../data';
-import type { RoundId } from '../types';
+import { ROUTES } from '../data';
+import type { Route } from '../types';
 
-const fromHash = (): RoundId | null => {
+const fromHash = (): Route | null => {
   const h = window.location.hash.replace(/^#/, '');
-  return (ROUND_IDS as readonly string[]).includes(h) ? (h as RoundId) : null;
+  return (ROUTES as readonly string[]).includes(h) ? (h as Route) : null;
 };
 
-export function useHashRoute(): [RoundId | null, (id: RoundId | null) => void] {
-  const [route, setRoute] = useState<RoundId | null>(fromHash);
+export function useHashRoute(): [Route | null, (id: Route | null) => void] {
+  const [route, setRoute] = useState<Route | null>(fromHash);
 
   useEffect(() => {
     const onChange = () => setRoute(fromHash());
@@ -16,7 +16,7 @@ export function useHashRoute(): [RoundId | null, (id: RoundId | null) => void] {
     return () => window.removeEventListener('hashchange', onChange);
   }, []);
 
-  const navigate = useCallback((id: RoundId | null) => {
+  const navigate = useCallback((id: Route | null) => {
     window.location.hash = id ?? '';
     setRoute(id);
   }, []);
