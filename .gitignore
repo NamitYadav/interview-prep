@@ -1,0 +1,9 @@
+
+# SDD scratch
+.superpowers/
+
+# Build artifacts
+node_modules
+dist
+*.local
+.DS_Store
