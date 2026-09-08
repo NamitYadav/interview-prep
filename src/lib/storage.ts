@@ -4,6 +4,11 @@ export const STORAGE_KEY = 'interview-prep:v1';
 export const CORRUPT_KEY = 'interview-prep:v1:corrupt';
 export const EMPTY: Persisted = { version: 1, progress: {}, notes: {} };
 
+// ponytail: EMPTY is a shared singleton (kept for Task 5 + existing tests' toEqual
+// checks); load() must never hand callers that exact reference, or an in-place
+// mutation would pollute every future empty load. Return a fresh deep copy instead.
+const emptyState = (): Persisted => ({ version: 1, progress: {}, notes: {} });
+
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
@@ -43,9 +48,9 @@ export function load(storage: Storage = localStorage): Persisted {
   try {
     text = storage.getItem(STORAGE_KEY);
   } catch {
-    return EMPTY;
+    return emptyState();
   }
-  if (text === null) return EMPTY;
+  if (text === null) return emptyState();
   try {
     return parseBackup(text);
   } catch {
@@ -55,7 +60,7 @@ export function load(storage: Storage = localStorage): Persisted {
     } catch {
       /* nothing else to do */
     }
-    return EMPTY;
+    return emptyState();
   }
 }
 

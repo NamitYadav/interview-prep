@@ -24,6 +24,21 @@ describe('load', () => {
     expect(load()).toEqual(EMPTY);
     expect(localStorage.getItem(CORRUPT_KEY)).not.toBeNull();
   });
+  test('survives setItem and removeItem also throwing during corrupt recovery', () => {
+    const stub = {
+      getItem: () => '{not json',
+      setItem: () => { throw new Error('quota'); },
+      removeItem: () => { throw new Error('denied'); },
+    } as unknown as Storage;
+    expect(() => load(stub)).not.toThrow();
+    expect(load(stub)).toEqual(EMPTY);
+  });
+  test('mutating a loaded EMPTY does not affect later loads', () => {
+    const first = load();
+    (first.progress as Record<string, unknown>)['x'] = { rating: 1, seen: 1, lastSeen: 1 };
+    (first.notes as Record<string, unknown>)['x'] = 'mutated';
+    expect(load()).toEqual(EMPTY);
+  });
 });
 
 describe('save', () => {
