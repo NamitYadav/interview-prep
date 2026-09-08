@@ -31,32 +31,28 @@ export function Browse({ questions, state, dispatch }: { questions: Question[]; 
           const open = openId === q.id;
           return (
             <li key={q.id}>
-              {open ? (
-                <div>
-                  <QuestionCard
-                    question={q}
-                    revealed
-                    note={state.notes[q.id] ?? ''}
-                    rating={rating}
-                    onReveal={() => {}}
-                    onNote={(text) => dispatch({ type: 'note', id: q.id, text })}
-                    onRate={(r) => dispatch({ type: 'rate', id: q.id, rating: r, now: Date.now() })}
-                  />
-                  <button type="button" onClick={() => setOpenId(null)} className="mt-1 text-sm text-zinc-500 dark:text-zinc-400 hover:underline">Collapse</button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  aria-expanded={false}
-                  onClick={() => setOpenId(q.id)}
-                  className="flex w-full items-start justify-between gap-3 rounded border border-zinc-200 bg-white p-3 text-left text-sm hover:border-emerald-500 dark:border-zinc-800 dark:bg-zinc-900"
-                >
-                  <span>
-                    <span className="mr-2 text-xs text-zinc-500 dark:text-zinc-400">{q.category}</span>
-                    {q.question}
-                  </span>
-                  <span className="shrink-0 text-xs text-zinc-500 dark:text-zinc-400">{rating ? RATING_LABEL[rating] : '—'}</span>
-                </button>
+              <button
+                type="button"
+                aria-expanded={open}
+                onClick={() => setOpenId(open ? null : q.id)}
+                className={`flex w-full items-start justify-between gap-3 rounded border p-3 text-left text-sm hover:border-emerald-500 dark:bg-zinc-900 ${open ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950' : 'border-zinc-200 bg-white dark:border-zinc-800'}`}
+              >
+                <span>
+                  <span className="mr-2 text-xs text-zinc-500 dark:text-zinc-400">{q.category}</span>
+                  {q.question}
+                </span>
+                <span className="shrink-0 text-xs text-zinc-500 dark:text-zinc-400">{rating ? RATING_LABEL[rating] : '—'}</span>
+              </button>
+              {open && (
+                <QuestionCard
+                  question={q}
+                  revealed
+                  note={state.notes[q.id] ?? ''}
+                  rating={rating}
+                  onReveal={() => {}}
+                  onNote={(text) => dispatch({ type: 'note', id: q.id, text })}
+                  onRate={(r) => dispatch({ type: 'rate', id: q.id, rating: r, now: Date.now() })}
+                />
               )}
             </li>
           );

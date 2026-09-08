@@ -21,16 +21,11 @@ questions first. Public repo; no employer-internal or personal data committed.
 | `debrief` | Case Study Debrief             | Panel grills the presentation: trade-offs, edge cases, what to change | 30           |
 | `hoe`     | Head of Engineering            | Vision, org impact, strategy, culture, questions to ask them          | 30           |
 
-Total ≈ 170 questions. Each round includes a `From your CV` category
-(~30 questions overall) with probes derived from the candidate's resume
-bullets, generalized to the same abstraction level used in the shipped
-question data (`src/data/*.ts`): a major framework version migration across
-several apps, a large reduction in a security vulnerability count, feature-flag
-infrastructure with automatic fallback, a data-grid consolidation ADR for 95+
-grids, visual regression + CI quality gates, a code-review automation bot, a
-Module Federation micro-frontend, legally operative document generation,
-introducing e2e testing, several years in Berlin at a prior employer, and a
-relocation back to Berlin with no sponsorship needed.
+Total ≈ 180 questions. Each round includes a `From your CV` category
+(~30 questions overall) with probes derived from the candidate's resume,
+generalized to the same abstraction level as the shipped question data
+(`src/data/*.ts`). The resume bullets themselves are deliberately not
+itemized here: the repo is public.
 
 ## Content stance
 
@@ -40,6 +35,12 @@ relocation back to Berlin with no sponsorship needed.
   Probezeit, Kündigungsfrist, Anmeldung timing, salary framing in EUR,
   works-council culture, English-first teams. HR round assumes someone
   re-entering Germany, not a first-timer.
+- German employment-law specifics are threaded through hm/hoe/debrief where a
+  staff engineer would meet them (Betriebsrat co-determination under
+  §87(1) Nr. 6 BetrVG, GDPR/BDSG, TDDDG consent), hedged on whether a works
+  council exists and on figures that change yearly.
+- The `Questions to ask them` category is phrased "Why is '<question>' a good
+  question to ask…" so the candidate can practice answering it aloud.
 - Case Study round assumes a take-home + presentation format. Debrief round
   assumes a panel grilling that presentation.
 - Each question has: model answer paragraphs, key points a staff-level answer

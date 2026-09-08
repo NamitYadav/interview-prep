@@ -38,21 +38,24 @@ describe('Browse', () => {
     expect(screen.getByText('1 of 2')).toBeInTheDocument();
   });
 
-  test('expanding a row reveals the answer and collapse restores the list', async () => {
+  test('the row button toggles the answer and reports aria-expanded', async () => {
     render(<Harness />);
-    await userEvent.click(screen.getByRole('button', { name: /debounce/i }));
+    const row = screen.getByRole('button', { name: /debounce/i });
+    await userEvent.click(row);
     expect(screen.getByText('Answer one.')).toBeInTheDocument();
+    expect(row).toHaveAttribute('aria-expanded', 'true');
 
-    await userEvent.click(screen.getByRole('button', { name: /collapse/i }));
+    await userEvent.click(row);
     expect(screen.queryByText('Answer one.')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /debounce/i })).toBeInTheDocument();
+    expect(row).toHaveAttribute('aria-expanded', 'false');
   });
 
   test('rating a question updates its badge in the collapsed row', async () => {
     render(<Harness />);
-    await userEvent.click(screen.getByRole('button', { name: /debounce/i }));
+    const row = screen.getByRole('button', { name: /debounce/i });
+    await userEvent.click(row);
     await userEvent.click(screen.getByRole('button', { name: /^solid/i }));
-    await userEvent.click(screen.getByRole('button', { name: /collapse/i }));
-    expect(screen.getByRole('button', { name: /debounce/i })).toHaveTextContent('Solid');
+    await userEvent.click(row);
+    expect(row).toHaveTextContent('Solid');
   });
 });

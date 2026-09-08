@@ -83,7 +83,7 @@ export const hoe: Question[] = [
     category: 'Vision & strategy',
     question: 'How do you balance innovation and stability on a frontend platform teams depend on?',
     answer: [
-      'Separate the surface areas explicitly: a stable, well-supported core (the parts most teams touch daily — shared components, the build pipeline, core state patterns) versus an innovation edge (a smaller, clearly labelled area where new approaches are tried, opt-in, with an explicit blast radius).',
+      'Separate the surface areas explicitly: a stable, well-supported core (the parts most teams touch daily — shared components, the build pipeline, core state patterns) versus an innovation edge (a smaller, clearly labeled area where new approaches are tried, opt-in, with an explicit blast radius).',
       'Name the mechanism that keeps the two from bleeding into each other: nothing graduates from the innovation edge into the stable core without a defined bar (usage evidence, a migration plan, documented trade-offs), so novelty does not silently become an unmaintained standard.',
       'Give one generic example of the trade-off in practice: "[running two state-management approaches side by side deliberately for a bounded period while evidence accumulated on which to standardize on]" rather than forcing a premature single answer.',
     ],
@@ -101,9 +101,9 @@ export const hoe: Question[] = [
     category: 'Vision & strategy',
     question: 'Leadership asks you to justify a frontend rewrite. How do you approach that?',
     answer: [
-      'Start skeptical of the premise: a rewrite is rarely the actual fix, so first separate the real underlying problems (slow delivery, a specific class of recurring bugs, a hiring/skill mismatch) from the symptom that got labelled "we need a rewrite," since most of those are solvable incrementally.',
+      'Start skeptical of the premise: a rewrite is rarely the actual fix, so first separate the real underlying problems (slow delivery, a specific class of recurring bugs, a hiring/skill mismatch) from the symptom that got labeled "we need a rewrite," since most of those are solvable incrementally.',
       'If a rewrite genuinely is warranted, insist on framing it as a series of independently valuable, reversible steps (a strangler-fig style migration behind the existing surface) rather than a multi-quarter big-bang effort with no shippable value until the end.',
-      'Bring the actual cost honestly: opportunity cost in feature work foregone, the risk window where two systems coexist, and a concrete success metric decided up front (not vibes) — and be willing to say no to a full rewrite if a narrower, less risky fix solves the real problem leadership is reacting to.',
+      'Bring the actual cost honestly: opportunity cost in feature work foregone, the risk window where two systems coexist, and a concrete success metric agreed before the work starts — and be willing to say no to a full rewrite if a narrower, less risky fix solves the real problem leadership is reacting to.',
     ],
     keyPoints: [
       'Challenges the rewrite premise first and separates real problems from labels',
@@ -122,14 +122,14 @@ export const hoe: Question[] = [
       'Use a small set of paired metrics rather than one number: a speed indicator (lead time for a typical change, build/deploy time) paired with a quality indicator (defect escape rate, incident count tied to frontend changes), since either alone can be gamed or misleading on its own.',
       'Weight qualitative signal deliberately alongside the numbers: regular, structured input from engineers on where friction actually lives (a tooling gap, a flaky test suite, an unclear ownership boundary), since the dashboard rarely surfaces the thing engineers already know is the real bottleneck.',
       'Be explicit about what you would never use as a primary metric — lines of code, commit count, or story points completed — and why: they measure activity, not outcome, and optimizing for them actively degrades the things that matter.',
-      'In Germany, be explicit that these metrics stay team-level, not per-engineer: a system that could be used to evaluate individual employees triggers the works council\'s co-determination right (§87 BetrVG), so anything with individual attribution needs Betriebsrat agreement before it is rolled out.',
+      'In Germany, where a works council exists, be explicit that these metrics stay team-level: a system objectively suitable for evaluating individual employees triggers co-determination under §87(1) Nr. 6 BetrVG regardless of intent, and small-team aggregates can still be individually attributable — so anything with individual attribution needs Betriebsrat agreement before rollout, and GDPR/§26 BDSG data minimization applies whether or not a works council exists.',
     ],
     keyPoints: [
       'Uses paired speed and quality metrics rather than a single number',
       'Deliberately weights structured qualitative engineer input alongside metrics',
       'Names metrics explicitly rejected (LOC, commit count) and why',
       'Frames effectiveness as outcome-based, not activity-based',
-      'Keeps metrics team-level and names the Betriebsrat/§87 BetrVG constraint on individual attribution',
+      'Keeps metrics team-level and names the §87(1) Nr. 6 BetrVG constraint (where a works council exists) plus BDSG',
     ],
     followUps: ['Which single metric would you drop first if you had to simplify?', 'How do you avoid a metric being gamed once teams know it is tracked?'],
   },
@@ -142,14 +142,16 @@ export const hoe: Question[] = [
       'Name where it genuinely helps today: fast first drafts of boilerplate and tests, exploring an unfamiliar part of a codebase quickly, drafting documentation, and reviewing a diff for an initial pass of obvious issues — all cases where a human still reviews and owns the result.',
       'Name where it is genuinely risky and be specific, not alarmist: security-sensitive code accepted without the same review rigor as human-written code, subtle logic errors that look plausible and pass a quick glance, and over-reliance eroding a junior engineer\'s ability to build real understanding over time.',
       'Describe governance as a small number of concrete rules rather than a blanket ban or free-for-all: the same review bar applies regardless of authorship, no AI-authored change to a security-sensitive path skips the same scrutiny, and a stated expectation that any engineer can explain and defend any line they submit, AI-assisted or not.',
-      'If governance includes tracking individual AI tool usage, flag the same German employment-law constraint that applies to any per-person monitoring: usage data tied to named engineers falls under the works council\'s co-determination right (§87 BetrVG) and needs Betriebsrat sign-off; aggregate, team-level adoption metrics do not.',
+      'If governance includes tracking individual AI tool usage, flag the same constraint that applies to any per-person monitoring: where a works council exists, usage data tied to named engineers falls under §87(1) Nr. 6 BetrVG and needs Betriebsrat agreement, and it is employee personal data under GDPR/§26 BDSG either way; team-level adoption metrics carry far less of both.',
+      'Know the EU AI Act is now part of this conversation: Article 4 AI-literacy duties for staff using AI tools have applied since February 2025, and AI used to evaluate or manage workers is classified high-risk under Annex III with obligations phasing in from 2026 — the timelines were still being adjusted through 2025-26, so state the direction and say you would check the current dates rather than quote them.',
     ],
     keyPoints: [
       'Names concrete, current cases where AI assistance genuinely helps',
       'Names concrete, specific risks rather than a vague or alarmist take',
       'States governance as a small number of enforceable rules, not a blanket policy',
       'Insists on equal review rigor and personal accountability regardless of authorship',
-      'Flags the Betriebsrat/§87 BetrVG constraint if usage tracking is per-individual',
+      'Flags the §87(1) Nr. 6 BetrVG / BDSG constraint if usage tracking is per-individual',
+      'Names the EU AI Act (literacy duties, high-risk worker-management use) with dates hedged',
     ],
     followUps: ['How would you detect over-reliance on AI assistance on a team?', 'What would make you restrict AI tooling for a specific class of change?'],
   },
@@ -197,7 +199,7 @@ export const hoe: Question[] = [
     category: 'Org & impact',
     question: 'Tell me about a time you changed an org-wide practice.',
     answer: [
-      'Structure it around the actual friction that motivated the change, generically: name the recurring problem (e.g. "[inconsistent PR review turnaround, or a recurring class of production bug]") rather than starting from "I wanted to introduce X practice" as the premise.',
+      'Structure it around the actual friction that motivated the change, generically: name the recurring problem (e.g. "[inconsistent PR review turnaround, or a recurring class of production bugs]") rather than starting from "I wanted to introduce X practice" as the premise.',
       'Describe how you built buy-in rather than mandating it: a small pilot with one team, visible results, then a deliberate rollout with input from the teams adopting it, since a practice imposed top-down without proof rarely survives contact with day-to-day pressure.',
       'Be honest about the actual adoption curve: name one place resistance showed up and how you addressed it directly (not by escalating authority, but by adjusting the practice or making the case again with better evidence), and where the practice stands today.',
     ],
@@ -282,7 +284,7 @@ export const hoe: Question[] = [
     followUps: ['What would tell you within three months that this was not working?', 'What do you not need from leadership that some staff hires ask for?'],
   },
 
-  // Culture & values (6)
+  // Culture & values (7; hoe-030 sits at the end of the file)
   {
     id: 'hoe-015',
     round: 'hoe',
@@ -401,7 +403,7 @@ export const hoe: Question[] = [
     answer: [
       'This question is worth asking because the answer tells you whether frontend platform investment is a real, resourced priority or an afterthought bolted onto feature teams — the difference matters enormously for whether a staff FE hire will have room to do platform-level work at all.',
       'A strong reply names a specific direction (even a tentative one) and a specific owning structure — a dedicated platform team, a rotating group of staff engineers, or an explicit statement that this role is meant to help define that ownership — showing the question has actually been thought about.',
-      'A concerning reply is vague ("it will just kind of evolve") or reveals that ownership is genuinely nobody\'s job today, which is a real signal worth weighing, not necessarily disqualifying, but something to probe further on before accepting an offer.',
+      'A concerning reply is vague ("it will just kind of evolve") or reveals that ownership is genuinely nobody\'s job today, which is a real signal worth weighing, not necessarily disqualifying, but something to probe further on before the loop ends.',
     ],
     keyPoints: [
       'Explains why this question matters: reveals whether platform work is resourced or an afterthought',
@@ -445,7 +447,7 @@ export const hoe: Question[] = [
       'Names the concerning pattern: evasiveness, or an incident with no real follow-through',
       'Frames this as one of the highest-signal questions available to ask',
     ],
-    followUps: ['What would you ask next if the answer felt rehearsed?', 'How does this compare to what you would ask a peer instead of the Head of Engineering?'],
+    followUps: ['Which kind of incident would you expect a healthy org to name without hesitation?', 'How does this compare to what you would ask a peer instead of the Head of Engineering?'],
   },
   {
     id: 'hoe-024',
@@ -481,17 +483,17 @@ export const hoe: Question[] = [
       'Names the concerning patterns: deflection, or a failure mode revealing unrealistic scope',
       'Frames the answer as directly informative about how well-defined the role is',
     ],
-    followUps: ['How would you use this answer to shape your own 90-day plan?', 'What would you ask as a follow-up if the answer felt too generic?'],
+    followUps: ['How would you use this answer to shape your own 90-day plan?', 'What would you do if the answer named a failure mode you already recognize in yourself?'],
   },
 
-  // From your CV (5)
+  // From your CV (4)
   {
     id: 'hoe-026',
     round: 'hoe',
     category: 'From your CV',
-    question: 'You went from a Berlin scale-up to a lead role abroad and now back: what did each context teach you about engineering orgs?',
+    question: 'You have worked in more than one engineering culture and market: what did each context teach you about how orgs work?',
     answer: [
-      'Structure the answer around one genuine lesson per context, kept generic: the Berlin scale-up likely taught something about operating with less process and more ambiguity at speed; the lead role abroad likely taught something about scaling a team or process, or operating with more organizational layers and distance from leadership; name these in the shape of "[what changed about how decisions got made / how much autonomy existed / how communication had to adapt]" without inventing specific company facts.',
+      'Structure the answer around one genuine lesson per context, kept generic: a smaller, faster-moving org likely taught something about operating with less process and more ambiguity; a larger or more distributed one likely taught something about scaling a team or process, or operating with more organizational layers and distance from leadership; name these in the shape of "[what changed about how decisions got made / how much autonomy existed / how communication had to adapt]" without inventing specific company facts.',
       'Be explicit that the value is comparative: naming one thing each context did better than the other, generically, so the answer shows real synthesis rather than two disconnected anecdotes — e.g. "[one context favored speed and informal decision-making, the other required more deliberate documentation given distance and scale, and I now default to more documentation than I used to]".',
       'Close by connecting it to what this means for a Head of Engineering hiring at staff level: you bring a genuinely broader base of "how orgs work" than someone who has only seen one context, and you can name which practices you would deliberately bring from each without assuming either is universally correct.',
     ],
@@ -501,31 +503,31 @@ export const hoe: Question[] = [
       'States a concrete practice adopted as a result of the comparison',
       'Connects the answer to added value for a staff-level hire specifically',
     ],
-    followUps: ['Which practice from that other market would you push for here?', 'What surprised you most moving back to a Berlin-style org?'],
+    followUps: ['Which practice from the other context would you push for here?', 'What surprised you most about the differences between the two?'],
   },
   {
     id: 'hoe-027',
     round: 'hoe',
     category: 'From your CV',
-    question: 'You have been a Technical Lead more than once: why is Staff IC the right shape for you now, and would you take a management role again?',
+    question: 'Would you take a people-management role again, and what would have to be true?',
     answer: [
-      'Separate the two Technical Lead experiences generically by what they actually involved day to day — likely a mix of technical direction and some people-facing responsibility (mentoring, coordination, maybe informal management) — and state plainly what you found energizing versus draining in the people-management-adjacent parts specifically.',
-      'Make the IC choice sound deliberate, not a retreat: staff IC lets you maximize hands-on technical depth and cross-team influence without the day-to-day people-management load (1:1s, performance cycles, headcount planning) that competes for the same hours technical depth requires — name that trade-off honestly rather than avoiding it.',
-      'Answer the "would you again" part directly and honestly rather than dodging it: if genuinely open to management later under the right conditions, say so and name the condition (e.g. "[a stage or team where the org specifically needed that from me]"); if not currently interested, say that plainly too — waffling here reads worse than a clear, honest answer either way.',
+      'Answer directly first, then explain: a plain "yes, under [condition]" or "not at this point" reads better than a hedge, since the Head of Engineering is checking whether the staff IC track is a deliberate choice or a holding pattern until a management slot opens.',
+      'Ground it in what past lead roles actually involved day to day — mentoring, coordination, some informal people responsibility — and name, generically, what was energizing versus draining in the people-management-adjacent parts, so the answer rests on experience rather than theory.',
+      'If open to it later, name the condition concretely (e.g. "[a stage where the org needs a manager who has done the technical work, and the IC scope has plateaued]") and say how you would want the transition handled; if not, say what you would need from the org to keep growing on the IC track instead.',
     ],
     keyPoints: [
-      'Names concretely what the Technical Lead roles actually involved day to day',
-      'States honestly what was energizing versus draining about people-management-adjacent work',
-      'Frames the IC choice as a deliberate trade-off, not an implicit retreat',
-      'Answers the "would you manage again" question directly, not evasively',
+      'Answers directly rather than hedging, either way',
+      'Grounds the answer in what past lead roles actually involved',
+      'Names a concrete condition, or a concrete IC growth need',
+      'Frames the IC track as a deliberate choice, not a holding pattern',
     ],
-    followUps: ['What would have to be true for you to take a management role again?', 'What do you miss about having direct reports, if anything?'],
+    followUps: ['What do you miss about having direct reports, if anything?', 'How would you react if this role drifted toward management within a year?'],
   },
   {
     id: 'hoe-028',
     round: 'hoe',
     category: 'From your CV',
-    question: 'You introduced multiple process changes (a review bot, quality gates, ADRs): how do you avoid becoming "the process person"?',
+    question: 'You have introduced several process changes: how do you avoid becoming "the process person"?',
     answer: [
       'Acknowledge the real risk directly rather than deflecting it: introducing several process changes can genuinely earn a reputation as someone who reaches for process first, and the way to avoid that is being visibly selective — naming, generically, the process changes you considered and deliberately did not introduce because the underlying problem did not justify the overhead.',
       'Tie every process change you did introduce back to a specific, named pain it solved (e.g. "[the review bot existed because a specific class of mistake kept reaching production, not as a default habit]"), and be equally willing to retire a process once the pain it solved is gone or a lighter alternative emerges.',
@@ -547,23 +549,23 @@ export const hoe: Question[] = [
     answer: [
       'Describe a loop shaped around real signal rather than trivia: a practical, scoped coding exercise closer to real work than an abstract algorithm puzzle, a system/architecture discussion appropriate to the level being hired for, and a values/collaboration conversation, kept to a small number of stages so it respects the candidate\'s time.',
       'Name what you would deliberately avoid: whiteboard algorithm puzzles disconnected from the actual job, an excessive number of rounds that mostly tests a candidate\'s patience, and unstructured interviews where each interviewer free-forms their own bar with no shared rubric.',
-      'Be specific about calibration: interviewers trained and calibrated against the same rubric so a "strong hire" means the same thing across the panel, and a debrief process where evidence is discussed before a final call is made, not just gut scores compared.',
+      'Be specific about how you would know the loop works: offer-accept rate and candidate feedback on time cost, plus a periodic check of whether each stage produced signal that changed a decision — a stage that never changes the outcome is candidate time spent for nothing and should be cut or merged.',
     ],
     keyPoints: [
       'Describes a loop built around realistic, job-relevant signal',
       'Names specific practices deliberately avoided, with reasons',
-      'Emphasizes interviewer calibration against a shared rubric',
-      'Describes an evidence-based debrief process, not just gut-score comparison',
+      'Names how the loop\'s effectiveness would be measured, including candidate time cost',
+      'Cuts stages that never change the hiring decision',
     ],
-    followUps: ['How many rounds do you think is too many?', 'How would you evaluate whether the loop is actually working after a few hiring cycles?'],
+    followUps: ['How many rounds do you think is too many?', 'Which stage of a typical loop would you cut first, and what signal would you lose?'],
   },
   {
     id: 'hoe-030',
     round: 'hoe',
-    category: 'From your CV',
+    category: 'Culture & values',
     question: 'What is the most contrarian technical opinion you hold, and where has it cost you?',
     answer: [
-      'Pick a genuine, currently-debated topic in frontend engineering (not a settled or trivial one) where reasonable senior engineers actually disagree — e.g. how much a team should invest in a given testing layer, how aggressively to adopt a new framework paradigm, or how much process/structure a given team size actually needs — and state a clear position rather than a wishy-washy "it depends."',
+      'Pick a genuine, currently debated topic in frontend engineering (not a settled or trivial one) where reasonable senior engineers actually disagree — e.g. how much a team should invest in a given testing layer, how aggressively to adopt a new framework paradigm, or how much process/structure a given team size actually needs — and state a clear position rather than a wishy-washy "it depends."',
       'Explain the reasoning behind the position concretely: what evidence or experience shaped it, and what the mainstream view gets wrong or overweights in your assessment — a strong contrarian opinion is argued with reasoning, not just asserted as a preference.',
       'Be honest and specific about the real cost of holding it: a time it made a discussion harder, a decision that went the other way anyway, or a team that was not persuaded — naming a genuine cost is what makes the opinion credible as something actually held, rather than a rehearsed talking point designed to sound edgy without any downside.',
     ],

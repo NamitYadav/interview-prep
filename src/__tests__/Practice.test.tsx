@@ -28,6 +28,13 @@ describe('Practice', () => {
     expect(screen.getByText('Follow one')).toBeInTheDocument();
   });
 
+  test('reveal moves focus into the answer instead of dropping it to body', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    const answer = screen.getByText('Answer one.').parentElement?.parentElement;
+    expect(answer).toHaveFocus();
+  });
+
   test('rating advances to the next question and hides the answer', async () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('button', { name: /reveal/i }));

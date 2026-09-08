@@ -1,7 +1,7 @@
 import type { Question } from '../types';
 
 export const caseStudy: Question[] = [
-  // Scoping & approach (8)
+  // Scoping & approach (9)
   {
     id: 'case-001',
     round: 'case',
@@ -76,10 +76,28 @@ export const caseStudy: Question[] = [
     followUps: ['What stack would you never use for a take-home, even if you knew it well?', 'When would you deliberately pick something less familiar?'],
   },
   {
+    id: 'case-036',
+    round: 'case',
+    category: 'Scoping & approach',
+    question: 'Would you reach for a full-stack framework with server components, or a client-only SPA, for this brief — and why?',
+    answer: [
+      'Decide from the brief, not from habit: a take-home behind a mock API, with no SEO requirement, judged on client-side interaction and state handling, is a client-only SPA by default — a framework with server components adds a server runtime, a build setup and a server/client boundary the reviewer then has to understand, for a win (smaller client bundle, fewer round trips) the brief does not reward.',
+      'Name the signals that would flip it: the brief supplies a real backend or database access, asks for SEO or a fast first paint on a content-heavy page, or explicitly wants to see how you draw the server/client boundary — then the framework is the honest answer and the SPA would be under-delivering.',
+      'Whatever you pick, show you know the other side: one sentence on what a React 19 server-component setup would change here (data fetching moves to the server, interactive parts become explicit client components, form submissions can use Actions) tells the panel the choice was a judgment call, not a knowledge gap.',
+    ],
+    keyPoints: [
+      'Derives the choice from the brief\'s actual requirements, not a preferred stack',
+      'Names the concrete signals that would flip the decision the other way',
+      'Shows fluency with the server-component model even when not using it',
+      'Frames the trade-off as reviewer comprehension cost versus a win the brief does not reward',
+    ],
+    followUps: ['What would the server/client boundary look like in this app if you had gone the other way?', 'Which part of your submission would move to the server first?'],
+  },
+  {
     id: 'case-005',
     round: 'case',
     category: 'Scoping & approach',
-    question: 'What does "production quality" mean for you in a 4-hour prototype?',
+    question: 'What does "production quality" mean to you in a 4-hour prototype?',
     answer: [
       'Define it narrowly and honestly: it does not mean production-scale performance, full test coverage, or handling every edge case — it means the core path is correct, typed, has basic error/loading/empty states, and the code would not embarrass you in a real review.',
       'Separate "quality of craft" from "completeness of scope": a small feature set built cleanly, with clear naming and a sensible file structure, demonstrates production quality better than a large feature set with shortcuts throughout.',
@@ -148,7 +166,7 @@ export const caseStudy: Question[] = [
     followUps: ['How would you design the adapter layer so a wrong assumption is cheap to fix?', 'What would make you stop and ask instead of assuming?'],
   },
 
-  // Building the take-home (10)
+  // Building the take-home (11)
   {
     id: 'case-009',
     round: 'case',
@@ -176,11 +194,13 @@ export const caseStudy: Question[] = [
       'Default to local component state and plain props for anything scoped to one feature — reaching for a global store or a heavy state library in a small take-home is a common over-engineering tell that panels notice.',
       'Introduce context only where state is genuinely shared across a few components with no natural common parent, and keep it narrow (one concern per context) rather than one big app-wide store.',
       'If the brief involves server data, separate that from UI state explicitly even at small scale — a simple fetch-and-cache pattern for server state, plain state for UI concerns — since conflating the two is a bad habit worth demonstrating you do not have, even in miniature.',
+      'Name the concrete server-state options and the rule between them: a fetch in an effect is fine for one resource with no caching needs; a query library earns its place once several resources need caching, invalidation, or retries; Suspense with use() is the React 19 way to read a promise declaratively — pick the lightest one the brief needs and say why.',
     ],
     keyPoints: [
       'Defaults to local state/props before reaching for anything global',
       'Uses context narrowly and only where genuinely shared',
       'Separates server state from UI state even at small scale',
+      'Names the server-state options (effect fetch, query library, Suspense + use()) and a rule for choosing',
       'Avoids introducing a state library as a default reflex',
     ],
     followUps: ['When would a take-home actually justify a global store?', 'How do you decide state belongs in context versus prop drilling one level?'],
@@ -201,7 +221,7 @@ export const caseStudy: Question[] = [
       'Explicitly calls this out in the presentation as a deliberate choice',
       'Treats their absence as a known red flag to avoid',
     ],
-    followUps: ['Show me your empty state for the main list.', 'How would you handle a partial failure — some data loaded, some did not?'],
+    followUps: ['Describe what your empty state for the main list says, and why.', 'How would you handle a partial failure — some data loaded, some did not?'],
   },
   {
     id: 'case-012',
@@ -211,13 +231,13 @@ export const caseStudy: Question[] = [
     answer: [
       'Semantic HTML first: real buttons and form elements instead of styled divs with click handlers, correct heading hierarchy, and labels properly associated with inputs — these are nearly free if you reach for them from the start and expensive to retrofit.',
       'Keyboard operability on anything interactive: every action reachable via keyboard alone, with a visible focus indicator — this is the single fastest thing a reviewer can check and the one most often missing under time pressure.',
-      'Sufficient color contrast on text and interactive states, and never conveying information (an error, a status) by color alone — pair it with text or an icon.',
+      'Sufficient color contrast on text and interactive states (4.5:1 for normal text is the WCAG 2.2 AA bar), and never conveying information (an error, a status) by color alone — pair it with text or an icon.',
       'Skip the deeper accessibility work (full screen-reader audit, exhaustive ARIA) under a real time-box, but name in the README that you know it is out of scope rather than implying full coverage.',
     ],
     keyPoints: [
       'Semantic HTML and correct label associations from the start',
       'Full keyboard operability with visible focus states',
-      'Adequate contrast and never color-only signaling',
+      'Adequate contrast (4.5:1, WCAG 2.2 AA) and never color-only signaling',
       'Honest about deeper accessibility work being out of scope under time pressure',
     ],
     followUps: ['How would you check keyboard operability quickly?', 'What would you add first if given one more hour purely for accessibility?'],
@@ -241,10 +261,28 @@ export const caseStudy: Question[] = [
     followUps: ['What would change if the brief explicitly said mobile-first?', 'How do you verify a breakpoint quickly without a real device lab?'],
   },
   {
+    id: 'case-037',
+    round: 'case',
+    category: 'Building the take-home',
+    question: 'How do you decide on a styling approach, and whether to pull in a UI component library?',
+    answer: [
+      'Pick the styling approach you can execute cleanly inside the time-box and that a reviewer can read without setup: [a utility framework, CSS modules, or plain CSS] all pass — the failure mode is mixing two approaches inconsistently, so choose one and state it in the README.',
+      'Treat a UI library as a scoping decision, not a taste decision: it earns its place when the brief needs an accessible complex primitive (a combobox, dialog, or menu) you could not get right by hand in the time available; it costs bundle size, a learning curve for a reviewer unfamiliar with it, and a weaker signal about your own component and accessibility instincts.',
+      'Whichever way you go, be able to name the specific gap the library closed or the specific thing you built by hand instead — the debrief panel will ask, and "it is what I always use" is the weakest possible answer.',
+    ],
+    keyPoints: [
+      'Chooses one styling approach, applies it consistently, and states it in the README',
+      'Frames the UI-library decision around accessible primitives the time-box cannot cover by hand',
+      'Names the concrete cost of a library: bundle, reviewer learning curve, weaker instinct signal',
+      'Can name the exact gap the library closed, or the exact thing hand-built instead',
+    ],
+    followUps: ['Which single component would you never hand-roll under a time-box, and why?', 'How would this decision change if the brief were a design-system component?'],
+  },
+  {
     id: 'case-014',
     round: 'case',
     category: 'Building the take-home',
-    question: 'What is your testing strategy for a take-home — coverage theatre or something else?',
+    question: 'What is your testing strategy for a take-home — coverage theater or something else?',
     answer: [
       'Write a small number of meaningful tests targeting the logic most likely to have a subtle bug — data transformation, a tricky conditional, a hook with real branching — rather than chasing a coverage percentage or testing trivial render output.',
       'Prefer one solid integration-style test of the core user flow over ten shallow unit tests of implementation details, since it proves the feature actually works end to end and survives refactors better.',
@@ -256,7 +294,7 @@ export const caseStudy: Question[] = [
       'States the testing strategy explicitly as a deliberate scope choice',
       'Avoids testing trivial render output as a proxy for real coverage',
     ],
-    followUps: ['Which single test would you write first if you only had time for one?', 'How do you decide integration versus unit for a given piece of logic?'],
+    followUps: ['Which piece of logic in a typical take-home is most likely to hide a bug worth testing?', 'How do you decide integration versus unit for a given piece of logic?'],
   },
   {
     id: 'case-015',
@@ -284,7 +322,7 @@ export const caseStudy: Question[] = [
     answer: [
       'Avoid obvious waste rather than chasing premature optimization: no unnecessary re-renders of an expensive component, no re-fetching data that has not changed, no accidentally quadratic loop over a small-but-visible dataset — these are cheap to avoid and visible to a reviewer who checks.',
       'Do not add virtualization, memoization layers, or code-splitting for a dataset and app size that clearly does not need it — that reads as premature optimization and, at staff level, misapplied judgment about where effort belongs.',
-      'If the brief hints at scale (e.g. "assume this could be [10,000 rows]"), say explicitly what you would add at that scale and why you are not adding it now given the actual data size provided — this shows the judgment without the wasted implementation time.',
+      'If the brief hints at scale (e.g. "assume this could be [10,000 rows]"), say explicitly what you would add at that scale — memoize the derived computation first, then virtualize the list, then move filtering server-side — and why you are not adding it now given the actual data size provided; this shows the judgment without the wasted implementation time.',
     ],
     keyPoints: [
       'Avoids obvious waste: unnecessary re-renders, redundant fetches, naive loops',
@@ -320,10 +358,12 @@ export const caseStudy: Question[] = [
     answer: [
       'Never commit a real secret or API key, even a low-stakes one for a demo — use an `.env` file excluded via `.gitignore` and a committed `.env.example` showing what variables are needed, exactly as you would on a real team.',
       'If the brief provides you a key or credential, treat it with the same discipline you would a production secret: do not log it, do not put it in client-exposed code if it should stay server-side, and mention in the README how a reviewer supplies their own.',
+      'Know the bundler trap: variables prefixed VITE_ or NEXT_PUBLIC_ are inlined into the client bundle by design, so putting a server-side key in one of them ships it to every user regardless of .gitignore — keep real secrets in unprefixed variables read only on a server or mock layer, and grep the built output for the value before submitting.',
       'Calling this out explicitly in the presentation is a cheap, high-signal moment — it shows security hygiene is a habit, not something you only do when someone is enforcing it.',
     ],
     keyPoints: [
       'Never commits real secrets, uses .env plus a committed .env.example',
+      'Knows prefixed env vars (VITE_, NEXT_PUBLIC_) are public and checks the built bundle',
       'Applies the same discipline to a demo secret as a production one',
       'States clearly in the README how a reviewer supplies their own config',
       'Treats this as a habit worth naming, not an assumed given',
@@ -338,7 +378,7 @@ export const caseStudy: Question[] = [
     category: 'Presentation',
     question: 'What is your structure for a 20-minute take-home presentation?',
     answer: [
-      'Use a clear five-part shape and roughly time-box each: context and interpretation of the brief ([2 min]), key decisions and why ([6 min]), a live demo ([6 min]), trade-offs and what is weak ([3 min]), and next steps with more time ([3 min]) — leaving buffer for questions throughout rather than only at the end.',
+      'Use a clear five-part shape and roughly time-box each: context and interpretation of the brief ([2 min]), key decisions and why ([6 min]), a live demo ([5 min]), trade-offs and what is weak ([3 min]), and next steps with more time ([2 min]) — which leaves [2 min] of buffer for questions that come mid-way rather than only at the end.',
       'Front-load the parts most likely to differentiate a staff-level candidate: the decisions section is where judgment shows, so do not let the demo eat time meant for explaining why you built it that way.',
       'Rehearse the transitions, not just the content — a presentation that flows confidently between sections reads as more prepared than one with equally good content delivered haltingly.',
     ],
@@ -384,7 +424,7 @@ export const caseStudy: Question[] = [
       'Avoids burying a real, spottable weakness',
       'Avoids fake, harmless "weaknesses" that read as evasive',
     ],
-    followUps: ['What is the weakest part of this specific submission?', 'How do you decide which weakness to lead with?'],
+    followUps: ['How do you keep the weaknesses section from sounding like an excuse list?', 'How do you decide which weakness to lead with?'],
   },
   {
     id: 'case-022',
@@ -408,7 +448,7 @@ export const caseStudy: Question[] = [
     id: 'case-023',
     round: 'case',
     category: 'Presentation',
-    question: 'Walk me through explaining a decision you are not proud of.',
+    question: 'How do you phrase a decision you regret without over-apologizing or making excuses?',
     answer: [
       'State the decision and the real constraint that drove it plainly — usually time — without over-apologizing or spending too long on it; one clear sentence of context is enough before moving to what you would do differently.',
       'Be specific about the better alternative you would have chosen with more time or information, since a vague "I would do it better" is less convincing than naming the actual approach you would take instead and why.',
@@ -462,19 +502,19 @@ export const caseStudy: Question[] = [
     id: 'case-026',
     round: 'case',
     category: 'Presentation',
-    question: 'How do you close a take-home presentation — what would you do with another week?',
+    question: 'How do you close a take-home presentation so the last impression is strong?',
     answer: [
-      'Give a short, prioritized list rather than an unbounded wish list: two or three concrete next items, ordered by actual impact (e.g. "[add server-side pagination properly, add a visual regression check on the table component, harden the error-recovery path]"), not a laundry list that dilutes the strongest ones.',
-      'Connect each item back to something you already flagged as a trade-off earlier in the presentation, so the closing reinforces the coherence of your judgment rather than introducing new, unrelated ideas at the last minute.',
-      'End on a confident, forward-looking note rather than trailing off — a clear final sentence about why you are glad to walk through trade-offs like this leaves a stronger last impression than an apologetic wrap-up.',
+      'End with a one-sentence restatement of the single decision that most shaped the submission and the trade-off you accepted for it — the panel remembers the last thing said, so make it the judgment call, not the feature list.',
+      'Point to the next steps rather than reciting them: "the README lists the two things I would do next and why" is enough, since the debrief will go there anyway and a long wish list at the end dilutes the close.',
+      'Hand control back deliberately: a clear final sentence that invites the hard questions ("I would rather spend the remaining time on the parts you are skeptical of") signals confidence and gives the panel the transition they need, instead of an apologetic trail-off.',
     ],
     keyPoints: [
-      'Names two or three prioritized next steps, not an unbounded list',
-      'Ties each next step back to a trade-off already raised earlier',
-      'Orders items by actual impact, not ease or recency',
-      'Closes on a confident note rather than trailing off',
+      'Closes on the key judgment call and its accepted trade-off, not a feature recap',
+      'Points to the README for next steps instead of reciting a list',
+      'Hands control back with a deliberate invitation for hard questions',
+      'Avoids an apologetic or trailing-off ending',
     ],
-    followUps: ['Which of those would you actually do first if given the week?', 'What would you explicitly still not do, even with a full week?'],
+    followUps: ['What do you do if the panel has no questions after your close?', 'How do you close if you ran out of time before finishing the demo?'],
   },
 
   // Common prompts (4)
@@ -505,7 +545,7 @@ export const caseStudy: Question[] = [
     answer: [
       'Model the multi-step flow as an explicit state machine (current step, per-step validity, overall completion) rather than a pile of booleans, so moving forward/backward and jumping to an invalid step behaves predictably.',
       'Separate per-field validation (immediate feedback) from step-level and whole-form validation (gating progression and submission), and make sure a user can navigate back to fix an earlier step without losing later steps\' data.',
-      'Implement draft saving concretely — even a simple debounced local-storage save is enough for a take-home — and be explicit about what "saved" means to the user (a visible, honest indicator) rather than an invisible background save they have to trust blindly.',
+      'Implement draft saving concretely — even a simple debounced local-storage save is enough for a take-home — and be explicit about what "saved" means to the user (a visible, honest indicator) rather than an invisible background save they have to trust blindly; on React 19, a form action with useActionState is the natural home for the submit pending/error state instead of hand-rolled booleans.',
       'Handle the awkward edge case explicitly: what happens if a user reloads mid-flow — does the draft restore them to the same step with the same data, and is that behavior demonstrated in the demo.',
     ],
     keyPoints: [
@@ -522,7 +562,7 @@ export const caseStudy: Question[] = [
     category: 'Common prompts',
     question: '"Build a real-time dashboard from a websocket feed." What do you focus on?',
     answer: [
-      'Separate connection lifecycle from data handling explicitly: a clear connect/reconnect/backoff strategy for the socket itself, independent from how incoming messages update the UI, so a flaky connection does not corrupt displayed state.',
+      'Separate connection lifecycle from data handling explicitly: a clear connect/reconnect/backoff strategy for the socket itself, independent from how incoming messages update the UI, so a flaky connection does not corrupt displayed state — and say why websockets over server-sent events (or the reverse): SSE is simpler and enough for a one-directional feed, websockets earn their place when the client also sends.',
       'Design the update strategy deliberately: for a fast-moving feed, decide whether every message updates the UI immediately or whether you batch/throttle renders to avoid overwhelming the browser — state which you chose and why.',
       'Make connection state visible to the user honestly — connected, reconnecting, disconnected — rather than silently showing stale data with no indication it may no longer be live.',
       'Cover the disconnect/reconnect edge case in the demo deliberately (e.g. by killing the mock connection), since this is the single most likely thing a panel will ask you to show if you do not show it yourself.',
@@ -614,7 +654,7 @@ export const caseStudy: Question[] = [
     id: 'case-034',
     round: 'case',
     category: 'From your CV',
-    question: 'How would you apply your data-grid consolidation thinking to the table in this assignment?',
+    question: 'How would you apply your experience consolidating a widely-used shared component to the table in this assignment?',
     answer: [
       'Name the core lesson generically and apply it at the right scale: consolidation work is fundamentally about a stable, well-scoped public API (columns, cell renderers, row actions) that hides implementation churn underneath — even a small take-home table benefits from that same discipline of a clean prop surface over ad hoc special-casing.',
       'Point to a concrete, present-in-the-submission example: how the column/cell configuration is expressed generically rather than hard-coded per column, which is the same principle that makes a consolidated grid maintainable across many consumers, just applied to one small table instead of many apps.',
@@ -626,24 +666,24 @@ export const caseStudy: Question[] = [
       'Clearly scopes what does and does not transfer at take-home scale',
       'Avoids over-claiming a large consolidation effort onto a small table',
     ],
-    followUps: ['Show me the column configuration in your table and how it stays generic.', 'What would the first step of a real consolidation effort look like, versus this table?'],
+    followUps: ['Describe how the column configuration in your table stays generic.', 'What would the first step of a real consolidation effort look like, versus this table?'],
   },
   {
     id: 'case-035',
     round: 'case',
     category: 'From your CV',
-    question: 'You list agent-assisted development: did you use AI on this take-home, and how do you vouch for the code?',
+    question: 'You list AI-assisted development: how do you disclose AI use in a take-home, and what if the brief forbids it?',
     answer: [
-      'Answer plainly and specifically about what was used, if anything: scaffolding boilerplate, generating a first draft of a test, or exploring an unfamiliar API quickly — and be equally clear about what was not delegated, such as the core logic and architectural decisions.',
-      'State the review standard applied without exception: every line, AI-assisted or not, was read, understood, and is something you can explain and defend line by line — the same bar as any code you would put your name on in a real PR.',
-      'Address the risk angle directly since it is what the question is really probing: you would apply extra scrutiny to AI-assisted output in security-sensitive or data-integrity-sensitive code specifically, and you treat "the AI wrote it" as never being an acceptable answer if asked why a piece of code works a certain way.',
+      'Disclose proactively and specifically in the README rather than waiting to be asked: a short "tooling" note naming what an assistant was used for (scaffolding, a first-draft test, exploring an unfamiliar API) and what was decided and written by hand (architecture, core logic) — the panel will ask in the debrief regardless, and undisclosed use found later reads worse than any amount of disclosed use.',
+      'If the brief forbids AI assistance, comply and say so in the README: the brief is a constraint like any other, and a staff candidate treats a stated rule as non-negotiable rather than as a judgment call about whether it is reasonable.',
+      'If the brief is silent, state your assumption explicitly ("[assumed AI assistance is acceptable with full disclosure]") the same way you would any other unstated requirement, so the decision is visible and the panel can weigh it rather than guess.',
     ],
     keyPoints: [
-      'States specifically what was and was not AI-assisted, if anything',
-      'Applies the same full review-and-understand standard regardless of origin',
-      'Names the extra scrutiny appropriate for security/data-integrity-sensitive code',
-      'Never treats "the AI wrote it" as an acceptable explanation for unclear code',
+      'Discloses AI use proactively and specifically in the README',
+      'Treats a brief that forbids AI as a hard constraint, not a judgment call',
+      'States the assumption explicitly when the brief is silent',
+      'Separates what was assisted from what was decided and written by hand',
     ],
-    followUps: ['Walk me through one specific piece of code and explain exactly why it works.', 'Where would you never use AI assistance, even to save time?'],
+    followUps: ['What would you write in the README if you used no AI at all?', 'How does your disclosure change if the role is explicitly about AI-assisted engineering?'],
   },
 ];
