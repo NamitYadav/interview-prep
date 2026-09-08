@@ -14,6 +14,14 @@ export function QuestionCard({
   onReveal: () => void; onNote: (text: string) => void; onRate: (r: Rating) => void;
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const answerRef = useRef<HTMLDivElement>(null);
+
+  // Declared before the heading effect so that on mount (Browse renders revealed) the
+  // heading wins; on a Practice reveal only this one re-runs and focus lands on the answer
+  // instead of falling to <body> when the Reveal button unmounts.
+  useEffect(() => {
+    if (revealed) answerRef.current?.focus();
+  }, [revealed]);
 
   useEffect(() => {
     headingRef.current?.focus();
@@ -36,7 +44,7 @@ export function QuestionCard({
           Reveal <kbd className="ml-2 text-xs opacity-70">Space</kbd>
         </button>
       ) : (
-        <div className="space-y-4 text-sm">
+        <div ref={answerRef} tabIndex={-1} className="space-y-4 text-sm outline-none">
           <section className="space-y-2">
             {question.answer.map((p, i) => <p key={i}>{p}</p>)}
           </section>

@@ -27,7 +27,7 @@ export const hr: Question[] = [
     question: 'Why are you looking to move, and why this company?',
     answer: [
       'Lead with pull, not push: name two concrete things about the company (product domain, engineering culture signal, a public engineering post) and connect them to what you want to do next at staff scope.',
-      'Keep the push side short and neutral: "[your current role] has been a great run; I have shipped [scope] and I am now looking for a larger platform surface / a Berlin-based team." Never criticize the current employer.',
+      'Keep the push side short and neutral: "[your current role] has been a great run; I have shipped [scope] and I am now looking for a larger platform surface or a Berlin-based team." Never criticize the current employer.',
       'Close by naming what you would own in the first year so the recruiter can map you to the open role.',
     ],
     keyPoints: [
@@ -116,7 +116,7 @@ export const hr: Question[] = [
     category: 'Motivation & fit',
     question: 'What would make you decline an offer from us?',
     answer: [
-      'Answer honestly but professionally: name one or two real dealbreakers relevant to a staff hire — e.g. compensation materially below [your researched band], unclear scope for the role, or a mismatch on remote/relocation terms discovered late in the process.',
+      'Answer honestly but professionally: name one or two real dealbreakers relevant to a staff hire — e.g. compensation materially below [your researched band] (see the salary expectations question), unclear scope for the role, or a mismatch on remote/relocation terms discovered late in the process.',
       'Avoid vague non-answers ("if it does not feel right") — recruiters read specificity as a sign you have thought this through and are not just collecting offers.',
       'End on a positive note: reiterate that absent those specific issues, you are genuinely motivated to join.',
     ],
@@ -154,12 +154,12 @@ export const hr: Question[] = [
     category: 'Logistics & relocation',
     question: 'Walk me through your relocation timeline and what support you would need.',
     answer: [
-      'Lay out the sequence: notice period, then visa/permit application (Blue Card or the applicable category), then Anmeldung (address registration) and housing search, then the actual move — and give a realistic total window, typically [2-4 months] end to end.',
-      'Name the concrete support that materially speeds this up: relocation agency access, a temporary housing allowance, and help with the Anmeldung appointment backlog in Berlin, which is often the longest pole in the timeline.',
-      'Make clear you have researched the process yourself (permit type, health insurance switch from private to statutory or vice versa) rather than expecting the company to explain German bureaucracy from scratch.',
+      'Lay out the sequence: notice period, then visa/permit application (Blue Card or the applicable category), then the move into housing, then Anmeldung (address registration) within 14 days of moving in — it needs the landlord\'s Wohnungsgeberbestätigung, so it cannot happen before you have an address — and give a realistic total window, typically [2-4 months] end to end.',
+      'Name the concrete support that materially speeds this up: relocation agency access for the permit appointment (usually the longest pole), a temporary housing allowance so Anmeldung is possible on arrival, and help booking the Bürgeramt slot.',
+      'Make clear you have researched the process yourself — permit type, and whether your salary sits above the current Jahresarbeitsentgeltgrenze (it changes yearly; check the current figure), which decides whether statutory health insurance is mandatory or private is an option — rather than expecting the company to explain German bureaucracy from scratch.',
     ],
     keyPoints: [
-      'Correct sequence: notice, permit, Anmeldung, move',
+      'Correct sequence: notice, permit, move into housing, Anmeldung within 14 days',
       'Realistic total timeline window stated',
       'Specific, reasonable asks: relocation support, temporary housing',
       'Shows own research into the German relocation process',
@@ -174,7 +174,8 @@ export const hr: Question[] = [
     answer: [
       'State your status factually and concisely: nationality/permit category and whether you already hold or qualify for an EU work authorization (e.g. an EU Blue Card given your salary band and degree, or an existing permit) — avoid vague answers that make the recruiter guess.',
       'If no sponsorship is required, say so explicitly and early: "No sponsorship required — I am eligible for [permit type, stated generically]." This is one of the fastest ways to de-risk yourself as a candidate.',
-      'If sponsorship is required, name the specific route (Blue Card is the common one for skilled non-EU hires in Germany) and note that the process is well-established and typically employer-supported, to preempt hesitation.',
+      'If sponsorship is required, name the specific route (Blue Card is the common one for skilled non-EU hires in Germany; since the 2023 reform, IT specialists can also qualify on around three years of relevant experience without a degree) and note that the process is well-established and typically employer-supported, to preempt hesitation.',
+      'Know that the Blue Card minimum salary threshold is reset every year, with a lower figure for shortage occupations including IT — quote it as "above the current threshold" rather than a number you may have memorized from a previous year.',
     ],
     keyPoints: [
       'Clear, factual statement of current permit status',
@@ -190,7 +191,7 @@ export const hr: Question[] = [
     category: 'Logistics & relocation',
     question: 'What are your expectations around remote versus hybrid work?',
     answer: [
-      'Answer with the company\'s stated policy in mind (research it beforehand) and state your own preference as a range rather than a hard line, e.g. "comfortable with [2-3 days/week] in-office, flexible on the exact split."',
+      'Answer with the company\'s stated policy in mind (research it beforehand) and state your own preference as a range rather than a hard line, e.g. "comfortable with [two to three days a week] in-office, flexible on the exact split."',
       'If you are relocating, acknowledge that being in-office more often early on helps you build relationships and ramp up faster, which reads well for a staff hire who needs cross-team trust.',
       'If there is a genuine constraint (e.g. a fixed personal commitment), name it briefly and neutrally rather than leaving it implicit.',
     ],
@@ -210,13 +211,13 @@ export const hr: Question[] = [
     answer: [
       'Confirm the willingness plainly if true, and pair it with a concrete cadence you can commit to once relocated (e.g. "[3 days a week]" or "full-time for the first few months to ramp up, then per team norm").',
       'If your commitment depends on something (housing secured, permit finalized), state that dependency explicitly rather than giving an unconditional yes you might not be able to keep.',
-      'Mention that being physically present in Berlin also lets you engage with any works council or in-office culture norms the company has, which shows awareness of local employment practice.',
+      'Ask whether the cadence is a team norm or a company-wide rule: where a works council exists, attendance and hybrid arrangements are often fixed in a Betriebsvereinbarung rather than by an individual manager, which tells you how much flexibility is actually on the table.',
     ],
     keyPoints: [
       'Plain, unambiguous willingness stated (if true)',
       'Concrete cadence rather than a vague "sure, sometimes"',
       'Any real dependency named explicitly',
-      'Awareness of local in-office/works council norms',
+      'Asks whether the policy is a team norm or a company-wide agreement',
     ],
     followUps: ['What if the team norm changes to more office days?', 'Do you have housing plans in Berlin already?'],
   },
@@ -247,7 +248,7 @@ export const hr: Question[] = [
     question: 'What are your salary expectations?',
     answer: [
       'Do your homework before this call: research the EUR base salary band for a staff-level engineer in Berlin at a company of this size and stage, and come with a range rather than a single number, e.g. "[€X-€Y] base".',
-      'Where possible, turn the question back first: "Can you share the budgeted band for this role?" — this is normal and expected in most EU hiring processes, and lets you calibrate rather than anchor low.',
+      'Where possible, turn the question back first: "Can you share the budgeted band for this role?" — this is normal and expected in most EU hiring processes, and lets you calibrate rather than anchor low. The EU Pay Transparency Directive (2023/970) requires employers to state the pay range before or at the first interview; its transposition deadline was June 2026, so check whether Germany\'s implementing law is in force yet — if it is, the band should be volunteered without you asking.',
       'Separate the components explicitly: base salary, any equity or bonus, and note that you are flexible on the mix if the total package and growth trajectory make sense.',
     ],
     keyPoints: [
@@ -264,12 +265,12 @@ export const hr: Question[] = [
     category: 'Compensation',
     question: 'What is your current compensation?',
     answer: [
-      'In Germany you are generally not obligated to disclose current compensation, and many candidates decline this question — you can say so politely: "I would prefer to focus on the expectations for this role rather than share current pay."',
+      'In Germany you are not obligated to disclose current compensation, and the EU Pay Transparency Directive (2023/970) explicitly bars employers from asking about pay history once transposed (deadline June 2026 — check the current German status). Decline politely: "I would prefer to focus on the expectations for this role rather than share current pay."',
       'Redirect immediately and constructively to the researched range from the previous question, so the conversation keeps moving rather than stalling on a refusal.',
       'If you choose to share, keep it factual and brief, but the stronger staff-level move is usually the polite decline plus redirect, since current pay at a different market/company is not a reliable anchor anyway.',
     ],
     keyPoints: [
-      'Aware that disclosure is not obligatory in Germany',
+      'Aware that disclosure is not obligatory and that pay-history questions are being phased out by EU law',
       'Polite, non-defensive decline if choosing not to share',
       'Immediate redirect to forward-looking expectations',
       'No awkward silence or over-explaining',
@@ -300,15 +301,15 @@ export const hr: Question[] = [
     category: 'Compensation',
     question: 'Do you have questions about vacation days, Probezeit, or Kündigungsfrist?',
     answer: [
-      'Confirm the basics you should already know generically: German statutory minimum is 20 days, but the market norm for tech roles is [28-30 days]; Probezeit (probation) is typically 6 months, during which notice periods are shorter on both sides; Kündigungsfrist (post-probation notice period) is often around 3 months for senior/staff hires, sometimes longer.',
-      'Ask the specific numbers for this offer rather than assuming: exact vacation allowance, exact Probezeit length and its shortened notice terms, and the standard notice period after probation, since these vary by contract and can matter a lot for your next job\'s negotiating leverage.',
-      'If negotiating, focus on vacation days and start date flexibility as the more movable levers; Kündigungsfrist terms are usually more standardized and less negotiable at the individual level.',
+      'Confirm the basics you should already know generically: the statutory vacation minimum is 20 days on a five-day week (§3 BUrlG says 24 Werktage on a six-day week), but the market norm for tech roles is [28-30 days]; Probezeit (probation) is at most 6 months, with a two-week notice period on both sides (§622(3) BGB); after probation the statutory baseline is four weeks to the 15th or the end of a month (§622(1) BGB), and contracts for senior/staff hires commonly extend that to around 3 months.',
+      'Ask the specific numbers for this offer rather than assuming: exact vacation allowance, exact Probezeit length, and the contractual notice period after probation, since these vary by contract and matter a lot for your next job\'s negotiating leverage.',
+      'If negotiating, vacation days and start date are the easiest levers, but notice length is negotiable too for senior hires — the one hard rule is that a longer contractual notice must bind employer and employee equally (§622(6) BGB), so a shorter period for you than for them is not on offer.',
     ],
     keyPoints: [
-      'Correctly states vacation norm (28-30 days) vs statutory minimum (20)',
-      'Explains Probezeit (~6 months) and its shortened notice terms',
-      'Explains Kündigungsfrist (~3 months post-probation for senior roles)',
-      'Knows which of these are realistically negotiable',
+      'Correctly states vacation norm (28-30 days) vs statutory minimum (20 on a five-day week)',
+      'Explains Probezeit (≤6 months) and its two-week statutory notice',
+      'Knows the statutory notice baseline and that ~3 months is a contractual extension',
+      'Knows notice is negotiable but must be symmetric',
     ],
     followUps: ['Would a longer notice period concern you?', 'Is vacation day count a priority for you?'],
   },

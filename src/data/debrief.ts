@@ -6,7 +6,7 @@ export const debrief: Question[] = [
     id: 'debrief-001',
     round: 'debrief',
     category: 'Trade-off probes',
-    question: 'Why this state approach and not X?',
+    question: 'Why this state approach rather than [the alternative you considered]?',
     answer: [
       'Name the actual options you considered generically — e.g. "[local component state] versus [a global store] versus [URL/query-param state]" — and give the one or two factors that decided it: how many components needed the value, whether it had to survive a refresh or be shareable via a link, and how much ceremony the take-home\'s time-box could absorb.',
       'State the trade-off honestly rather than pretending the choice was obviously correct: name one thing the alternative would have done better (e.g. "[a global store] would scale to more consumers, but added indirection this scope did not need") and explain why that cost was not worth paying here.',
@@ -42,7 +42,7 @@ export const debrief: Question[] = [
     id: 'debrief-003',
     round: 'debrief',
     category: 'Trade-off probes',
-    question: 'Why client-side filtering instead of server-side (or vice versa)?',
+    question: 'You filtered on the client. Why not server-side?',
     answer: [
       'Anchor the answer in the actual data volume and API shape given in the brief: client-side filtering is the right default when the dataset is small and already fully fetched, since it avoids extra round-trips and keeps the UI snappy; server-side becomes necessary once the dataset is large enough that shipping it all to the client is wasteful or slow.',
       'State plainly which one you picked and the specific signal in the brief or mock data that justified it (e.g. "[the dataset size / lack of pagination in the API] pointed at client-side for this scope").',
@@ -62,7 +62,7 @@ export const debrief: Question[] = [
     category: 'Trade-off probes',
     question: 'Why this styling approach?',
     answer: [
-      'Name the specific approach (e.g. "[CSS modules / a utility framework / styled components / plain CSS]") and the one or two reasons it fit this scope: team familiarity assumed for the reviewer, setup cost within the time-box, or how well it matches whatever the brief signalled about the target stack.',
+      'Name the specific approach (e.g. "[CSS modules / a utility framework / styled components / plain CSS]") and the one or two reasons it fit this scope: team familiarity assumed for the reviewer, setup cost within the time-box, or how well it matches whatever the brief signaled about the target stack.',
       'Be honest about the trade-off: note one thing a different approach would have given you (e.g. stronger design-token consistency, or less context-switching) and why it was not worth it here.',
       'If the codebase mixes approaches inconsistently anywhere, own it directly rather than let the panel find it — name where it happened and why (time pressure, copying an existing pattern) rather than defending it as deliberate.',
     ],
@@ -78,7 +78,7 @@ export const debrief: Question[] = [
     id: 'debrief-005',
     round: 'debrief',
     category: 'Trade-off probes',
-    question: 'Why did you not use a UI library (or why did you)?',
+    question: 'Why did you not use a UI library?',
     answer: [
       'If you did not use one: name the reason plainly — wanting to show raw component and accessibility instincts without leaning on a library\'s defaults, or the scope being too small to justify the bundle size and learning curve for a reviewer unfamiliar with your choice of library.',
       'If you did use one: name the specific gap it closed under the time-box (accessible primitives like a combobox or dialog, consistent form controls) and be ready to say which parts you still built by hand and why.',
@@ -96,11 +96,11 @@ export const debrief: Question[] = [
     id: 'debrief-006',
     round: 'debrief',
     category: 'Trade-off probes',
-    question: 'You skipped Y, walk me through that decision',
+    question: 'You skipped [a feature the brief mentioned] — walk me through that decision.',
     answer: [
-      'Confirm the omission directly and without deflecting — restating what "[Y]" is and confirming it is indeed not in the submission signals you know your own work rather than being caught off guard.',
+      'Confirm the omission directly and without deflecting — restating what the feature is and confirming it is indeed not in the submission signals you know your own work rather than being caught off guard.',
       'Give the actual reason: usually a time-box trade-off against something else you prioritized higher (a core flow, error handling, or tests), and name what that higher-priority thing was so the decision reads as deliberate sequencing, not an oversight.',
-      'State concretely what adding "[Y]" would take — roughly how much effort and what it would touch — to show you scoped it out with intent rather than simply running out of time and hoping no one asked.',
+      'State concretely what adding it would take — roughly how much effort and what it would touch — to show you scoped it out with intent rather than simply running out of time and hoping no one asked.',
     ],
     keyPoints: [
       'Confirms the omission directly rather than getting defensive or vague',
@@ -132,7 +132,7 @@ export const debrief: Question[] = [
     id: 'debrief-008',
     round: 'debrief',
     category: 'Trade-off probes',
-    question: 'Why this folder structure?',
+    question: 'Pick one file in your submission and defend where it lives.',
     answer: [
       'Name the organizing principle plainly — by feature, by layer (components/hooks/utils), or a hybrid — and connect it to the project\'s actual size: a small take-home usually favors a flatter, easier-to-scan structure over deep feature folders that only pay off at larger scale.',
       'Give one concrete example of a file placement decision that followed the principle, and one place where you made a pragmatic exception (e.g. one shared util that does not cleanly belong to a single feature) and why that was fine at this size.',
@@ -156,13 +156,13 @@ export const debrief: Question[] = [
     answer: [
       'Name the specific mechanism, not just "it would be slow": e.g. an unmemoized render that re-computes a derived list on every keystroke, a full-array filter or sort running on every render, or a DOM list rendered without virtualization once row count crosses a few hundred.',
       'Point to where in the actual code this lives — which component, which render path — so the answer is concrete rather than theoretical, and describe the visible symptom (input lag, a frozen frame, slow initial paint).',
-      'Give the specific fix in order of effort: memoizing the derived computation first, then windowing/virtualizing the list, then moving filtering or pagination server-side if data keeps growing beyond what the client should hold at all.',
+      'Give the specific fix in order of effort: first check whether the project runs the React Compiler (if so, component-level memoization is already handled and hand-memoizing is not the first move), otherwise memoize the derived computation; then window/virtualize the list; then move filtering or pagination server-side if data keeps growing beyond what the client should hold at all.',
     ],
     keyPoints: [
       'Names the specific mechanism that breaks, not a vague "performance issue"',
       'Points to the actual location in the submission where it would occur',
       'Describes the concrete visible symptom at 10x scale',
-      'Gives fixes in order of effort: memoize, then virtualize, then move server-side',
+      'Gives fixes in order of effort, checking the compiler regime before hand-memoizing',
     ],
     followUps: ['At what row count would you actually notice this in practice?', 'How would you measure this before assuming it is a problem?'],
   },
@@ -191,7 +191,7 @@ export const debrief: Question[] = [
     question: 'How would this work with 50 engineers contributing?',
     answer: [
       'Separate the question into a few concrete axes: code ownership (would this still be one flat set of files, or need feature boundaries), conflict surface (shared files everyone touches, like a single giant component or a single global store), and review process (would a single PR touching this area be reviewable at all).',
-      'Point to the specific part of the current structure that would become a hotspot first — usually a single large file, a single shared state module, or a single shared type file everyone edits — and name the concrete restructuring that would relieve it (splitting by feature, introducing clearer module boundaries, code ownership rules).',
+      'Point to the specific part of the current structure that would become a hotspot first — usually a single large file, a single shared state module, or a single shared type file everyone edits — and name the concrete restructuring that would relieve it (splitting by feature, introducing clearer module boundaries, code ownership rules) — with independently deployed micro-frontends via Module Federation as the far end of that spectrum, named with its cost (shared-dependency contracts, harder debugging) rather than as a default.',
       'Be clear this is a hypothetical extrapolation, not a claim that the take-home was built for this scale — the goal is to show you can reason about the axis of change without over-engineering the actual submission for a scenario that does not apply to it.',
     ],
     keyPoints: [
@@ -209,7 +209,7 @@ export const debrief: Question[] = [
     question: 'Where would you add caching and what invalidates it?',
     answer: [
       'Name the specific data that is worth caching — usually something fetched repeatedly and relatively stable, like a reference list — versus data that should never be cached because it is cheap to fetch and must always be fresh (anything driving a live count or a just-submitted action).',
-      'State the caching layer plainly (in-memory during a session, a library like a query cache, or an HTTP-level cache) and why that layer fits this scope rather than something heavier.',
+      'State the caching layer plainly and name the primitive: in-memory during a session, a query cache with a stale time, or HTTP caching (Cache-Control max-age plus ETag revalidation for reference data, stale-while-revalidate to show stale-then-fresh rather than blank-then-fresh) — and why that layer fits this scope rather than something heavier.',
       'Answer the invalidation half directly, since it is the harder part: name the specific trigger — a mutation that changes the underlying data, a manual refresh action, or a time-based staleness window — and what happens to dependent UI when it fires.',
     ],
     keyPoints: [
@@ -224,7 +224,7 @@ export const debrief: Question[] = [
     id: 'debrief-013',
     round: 'debrief',
     category: 'Scale & failure',
-    question: 'How would you make this real-time?',
+    question: 'Assuming your submission is request/response, how would you make it real-time?',
     answer: [
       'Name the mechanism generically: polling on an interval as the simplest option, versus a push mechanism (websockets or server-sent events) once update frequency or fan-out makes polling wasteful — and state plainly which one fits this scope and why.',
       'Point to what would actually need to change in the current code to support it: where fetched data currently lives, how it would be updated in place without a full re-fetch, and how the UI would visually indicate a live update landed (a subtle highlight, not a jarring reflow).',
@@ -264,17 +264,17 @@ export const debrief: Question[] = [
     category: 'Quality & security',
     question: 'What security issues exist in your submission?',
     answer: [
-      'Go through the concrete categories rather than a blanket "none that I know of": unescaped or unsanitized content rendered into the DOM (an XSS vector if any user-controlled string is rendered as HTML rather than text), any place user input flows into a query or command unsanitized, and any secret or key that should never live in client-side code or a committed file.',
-      'State plainly which of these apply here and which do not, and for anything that does apply, name the specific fix (rendering as text by default, escaping, moving a secret to a server boundary).',
+      'Go through the concrete frontend vectors rather than a blanket "none that I know of": React escapes text by default, so the real XSS risks are any dangerouslySetInnerHTML, any href or src built from user-controlled data (a javascript: URL), and any third-party script or widget you included; then any secret or key that should never live in client-side code or a committed file.',
+      'State plainly which of these apply here and which do not, and for anything that does apply, name the specific fix (render as text, validate URL schemes, move a secret behind a server boundary) — and name the Content-Security-Policy you would ship with: a restrictive default-src, no unsafe-inline scripts, and a nonce or hash strategy if the build emits inline styles or scripts.',
       'Add the dependency-risk angle: whether any library pulled in carries known vulnerabilities or is unnecessarily broad in scope for what it is used for, and how you would check that in a real repo (an automated dependency scan in CI).',
     ],
     keyPoints: [
-      'Covers XSS/unsanitized rendering, injection via user input, and secrets handling specifically',
+      'Covers the real frontend vectors: dangerouslySetInnerHTML, unvalidated href/src, third-party scripts, secrets',
       'States plainly which risks actually apply to this submission and which do not',
-      'Names the concrete fix for anything that does apply',
+      'Names the concrete fix for anything that does apply, plus a concrete CSP posture',
       'Addresses dependency/supply-chain risk and how it would be checked in CI',
     ],
-    followUps: ['Where exactly does user-controlled data get rendered in this submission?', 'How would you automate a dependency vulnerability check for this repo?'],
+    followUps: ['Where exactly does user-controlled data reach the DOM or a URL in this submission?', 'How would you automate a dependency vulnerability check for this repo?'],
   },
   {
     id: 'debrief-016',
@@ -282,17 +282,19 @@ export const debrief: Question[] = [
     category: 'Quality & security',
     question: 'How accessible is it, honestly?',
     answer: [
-      'Give an honest, specific self-assessment rather than a blanket claim of full compliance: name what is definitely covered (semantic HTML, labelled form controls, visible focus states) and name the gaps you know about (keyboard-only flows not fully tested, color contrast not checked against a real tool, dynamic content changes not announced to a screen reader).',
+      'Give an honest, specific self-assessment rather than a blanket claim of full compliance: name what is definitely covered (semantic HTML, labeled form controls, visible focus states) and name the gaps you know about (keyboard-only flows not fully tested, color contrast not checked against a real tool, dynamic content changes not announced to a screen reader).',
       'Distinguish between what you are confident about because you tested it directly (tabbing through the flow yourself) versus what you assumed because you followed a known-good pattern but did not verify — panels respect this distinction far more than a confident "yes, fully accessible."',
-      'Name the concrete next step to close the biggest gap: running an automated audit tool as a floor, then a manual keyboard and screen-reader pass for the primary flow, since automated tools catch only a fraction of real accessibility issues.',
+      'Name the concrete next step to close the biggest gap: running an automated audit (axe or Lighthouse) as a floor, then a manual keyboard and screen-reader pass for the primary flow, since automated tools catch only a fraction of real accessibility issues.',
+      'For an EU product, say whether it is in scope of the European Accessibility Act (in force since June 2025; BFSG in Germany): if it is, WCAG 2.2 AA via EN 301 549 is the legal floor rather than a quality preference, which changes which gaps are acceptable to ship.',
     ],
     keyPoints: [
       'Gives an honest, specific split between what is covered and what is not',
       'Distinguishes verified coverage from assumed-but-untested coverage',
       'Names concrete gaps rather than claiming full compliance',
       'States the next concrete step: automated audit plus a manual keyboard/screen-reader pass',
+      'Knows whether the European Accessibility Act makes WCAG 2.2 AA mandatory for this product',
     ],
-    followUps: ['Walk me through this flow using only a keyboard.', 'What would an automated accessibility audit tool flag here?'],
+    followUps: ['Describe what happens when you tab through the primary flow from the top of the page.', 'What would an automated accessibility audit tool flag here?'],
   },
   {
     id: 'debrief-017',
@@ -300,8 +302,8 @@ export const debrief: Question[] = [
     category: 'Quality & security',
     question: 'How would you add i18n and what would you have to change?',
     answer: [
-      'Name the mechanical change first: every user-facing string currently hard-coded inline would need to move behind a lookup keyed by a translation identifier, backed by a library or a simple key-value map per locale, plus a way to select and persist the active locale.',
-      'Name the harder, non-obvious parts beyond string extraction: date/number/currency formatting that must respect locale rather than being hard-coded, and layout that must tolerate significantly longer translated strings without breaking (a label that fits in English but wraps or truncates in German).',
+      'Name the mechanical change first: every user-facing string currently hard-coded inline would need to move behind a lookup keyed by a translation identifier, backed by a library — a simple key-value map per locale breaks as soon as you need pluralization or gender agreement, which is what ICU MessageFormat exists for — plus a way to select and persist the active locale.',
+      'Name the harder, non-obvious parts beyond string extraction: date/number/currency formatting that must respect locale rather than being hard-coded, layout that must tolerate significantly longer translated strings without breaking (a label that fits in English but wraps or truncates in German), and text direction — if a right-to-left locale is ever in scope, logical CSS properties (margin-inline-start, not margin-left) from the start are far cheaper than a retrofit.',
       'Give a realistic scope estimate for this specific submission: roughly how many strings, which components would need layout adjustments, and whether any string concatenation currently assumes a fixed word order that would break under translation.',
     ],
     keyPoints: [
@@ -336,17 +338,17 @@ export const debrief: Question[] = [
     category: 'Quality & security',
     question: 'How would you monitor this in production?',
     answer: [
-      'Separate the layers: client-side error tracking to catch uncaught exceptions and rejected promises with enough context to reproduce them, performance monitoring for the metrics that actually affect the user (initial load, time-to-interactive for the main flow), and product analytics on the key actions to know if the feature is actually being used as intended.',
+      'Separate the layers: client-side error tracking to catch uncaught exceptions and rejected promises with enough context to reproduce them, performance monitoring for the metrics that actually affect the user (LCP for initial load, INP for interaction responsiveness, CLS for layout stability), and product analytics on the key actions to know if the feature is actually being used as intended.',
       'Name one or two specific events or errors from this submission that would be worth instrumenting first — e.g. "[a failed fetch on the main data load, or a filter action]" — rather than a generic "add logging everywhere."',
       'Address alerting explicitly: what threshold would actually page someone versus what belongs in a dashboard only, since undifferentiated alerting is itself a production risk (alert fatigue).',
-      'For EU users, note the GDPR angle on client-side monitoring: error and analytics tooling can capture personal data (IP address, session identifiers) even unintentionally, so scrub or avoid capturing anything beyond what is needed to debug, and know whether the tool is covered by an existing data processing agreement or needs consent to fire.',
+      'For EU users, separate two regimes on client-side monitoring: the consent gate before the tool reads or writes anything on the device is ePrivacy law (§25 TDDDG in Germany) and applies whether or not the data is personal; GDPR then governs what it captures — error and analytics tools pick up IP addresses and session identifiers even unintentionally, so scrub to what debugging needs and confirm a data processing agreement covers the vendor.',
     ],
     keyPoints: [
       'Separates error tracking, performance monitoring, and product analytics as distinct layers',
       'Names one or two specific events from the submission worth instrumenting first',
       'Distinguishes alert-worthy thresholds from dashboard-only metrics',
       'Avoids a generic "add more logging" non-answer',
-      'Flags the GDPR angle on personal data captured by monitoring tools',
+      'Separates the TDDDG consent gate from GDPR data minimization for monitoring tools',
     ],
     followUps: ['What would you actually want to be paged for here at 3am?', 'How would you know if this feature was being used at all?'],
   },
@@ -354,19 +356,19 @@ export const debrief: Question[] = [
     id: 'debrief-020',
     round: 'debrief',
     category: 'Quality & security',
-    question: 'What did you not test and why?',
+    question: 'How would you have found your own test gaps before we pointed them out?',
     answer: [
-      'Name the specific gap plainly — a visual/CSS layout concern, a genuine race condition, cross-browser behavior, or a rarely-hit error branch — rather than implying full coverage exists.',
-      'Give the real reason, which is almost always time-box prioritization against something judged higher risk, and name that higher-priority thing explicitly so the trade-off reads as deliberate.',
-      'State what kind of test you would add first if given more time, and be specific about the test type (a targeted unit test for the edge case, an integration test for the flow, a manual cross-browser pass) rather than a vague "more tests."',
+      'Describe a repeatable self-review pass, not a feeling: list every branch and error path in the core flow and check each against the test file, read the README assumptions section and ask which assumption has no test pinning it, and run the app once as an adversarial user (empty data, a failed request, a double submit) noting anything untested that misbehaves.',
+      'Name the specific gap that pass would have surfaced in this submission — [a rarely hit error branch, a race between two async calls, a layout-only concern] — and be honest about whether you ran the pass and accepted the gap, or never ran it; the first is a time-box decision, the second is the thing to fix in your process.',
+      'State what you would do with the finding: write the one test that pins the highest-risk gap, and record the rest as known limitations in the README so the panel sees a deliberate risk decision instead of discovering it for you.',
     ],
     keyPoints: [
-      'Names the specific untested gap rather than implying full coverage',
-      'Gives the real reason: a deliberate time-box trade-off against a named priority',
-      'States the specific type of test that would be added first with more time',
-      'Avoids a vague "I would add more tests" non-answer',
+      'Describes a concrete, repeatable self-review method rather than "I would look harder"',
+      'Names the specific gap the method would have surfaced in this submission',
+      'Honest about whether the pass was run and the gap accepted, or never run',
+      'Converts the finding into one targeted test plus documented known limitations',
     ],
-    followUps: ['If you had thirty more minutes, which single test would you write?', 'How would you have discovered this gap yourself before the panel asked?'],
+    followUps: ['If you had thirty more minutes, which single test would you write?', 'Which of your README assumptions has no test behind it?'],
   },
 
   // Reflection (5)
@@ -410,7 +412,7 @@ export const debrief: Question[] = [
     id: 'debrief-023',
     round: 'debrief',
     category: 'Reflection',
-    question: 'What did you learn building it?',
+    question: 'What did building this teach you that your presentation did not admit?',
     answer: [
       'Name something concrete and specific to this submission, not a generic platitude — a pattern you had not used in a while and had to re-derive, an assumption you made that turned out to need revisiting once you started building, or a constraint in the brief that shaped the design more than expected once you got into it.',
       'Connect the learning to how it changed the actual approach mid-build, if it did — e.g. "[realizing partway through that the data shape implied a different filtering strategy than I first assumed, and adjusting]" — since a static, unchanged learning reads as less credible than one that visibly shaped a decision.',
@@ -446,19 +448,19 @@ export const debrief: Question[] = [
     id: 'debrief-025',
     round: 'debrief',
     category: 'Reflection',
-    question: 'How would you onboard a junior to this codebase?',
+    question: 'If a junior had to extend this tomorrow, where would they get stuck?',
     answer: [
-      'Describe a concrete, ordered path rather than "read everything": start with the README and the entry point, walk the single primary user flow end to end next, and only then branch into the supporting utilities and tests, since a linear path through one flow builds a working mental model far faster than a top-down file-by-file tour.',
-      'Name the one or two things you would specifically flag as non-obvious or easy to misread — a naming choice, an implicit assumption, or a place where the structure does not perfectly match convention — since proactively naming these saves the junior from a confused hour later.',
-      'Frame this as evidence of staff-level thinking about the codebase\'s legibility to others, not just its correctness: a submission that is easy to onboard someone into is itself part of the quality bar being evaluated.',
+      'Answer with specific places, not "it is pretty readable": name the one or two spots where the structure does not match convention, an implicit assumption is baked in (a data shape, a fixed word order in a string), or a name is easy to misread — proactively naming these shows you have read your own code as a stranger would.',
+      'Give the path you would point them down — README, then the entry point, then the single primary flow end to end, then the tests — and say which step of that walk is the one where the current code is least self-explanatory, since a linear walk through one flow builds a working mental model faster than a file-by-file tour.',
+      'Frame legibility to others as part of the quality bar being evaluated: a submission a junior can extend without asking you is evidence of staff-level thinking about the codebase, and honestly naming where it falls short is more credible than claiming it is fully self-documenting.',
     ],
     keyPoints: [
-      'Gives a concrete, ordered onboarding path, not "read the whole codebase"',
-      'Starts from one primary flow rather than a file-by-file tour',
-      'Proactively names non-obvious parts a junior would likely misread',
-      'Frames codebase legibility itself as part of the quality bar',
+      'Names specific places a newcomer would misread, not a generic readability claim',
+      'Gives a concrete ordered path through one primary flow',
+      'Identifies the step where the code is least self-explanatory',
+      'Frames legibility to others as part of the quality bar',
     ],
-    followUps: ['Which file would confuse a junior most on first read?', 'What would you add to the README to make this onboarding faster?'],
+    followUps: ['Which file would confuse a junior most on first read?', 'What one comment or README line would have prevented that?'],
   },
 
   // From your CV (5)
@@ -488,7 +490,7 @@ export const debrief: Question[] = [
     answer: [
       'Order gates by how cheap and fast they are relative to the risk they catch: linting and type-checking first (near-instant, catches a wide class of mistakes), then the test suite, then a build step to confirm the artifact actually compiles for production, then anything slower like an end-to-end pass or a dependency vulnerability scan.',
       'Justify the order explicitly: fast, cheap gates should fail a pull request before anyone waits on a slow one, so contributors get feedback in seconds for the common mistakes and only wait longer for the checks that need it.',
-      'Name one gate specific to this submission\'s actual risk, not a generic list — e.g. "[a gate that fails if a new component ships without a corresponding test, given how much this submission leans on X]" — to show the ordering is reasoned about this codebase, not copy-pasted from a template.',
+      'Name one gate specific to this submission\'s actual risk, not a generic list — e.g. "[a gate that fails if a new component ships without a corresponding test, given how much this submission leans on [the part carrying the most logic]]" — to show the ordering is reasoned about this codebase, not copy-pasted from a template.',
     ],
     keyPoints: [
       'Orders gates fast-and-cheap first: lint/type-check, then tests, then build, then slower checks',
@@ -538,7 +540,7 @@ export const debrief: Question[] = [
     id: 'debrief-030',
     round: 'debrief',
     category: 'From your CV',
-    question: 'Your CV emphasises ADRs: write the one-paragraph ADR for the biggest decision in this submission',
+    question: 'Your CV emphasizes ADRs: write the one-paragraph ADR for the biggest decision in this submission.',
     answer: [
       'Use a standard ADR shape compressed to one paragraph: context (what constraint or requirement forced a choice), the decision itself stated plainly, the alternatives considered briefly, and the consequence — what this choice makes easy and what it makes harder later.',
       'Pick the actual biggest decision in the submission, not the easiest one to write about — usually the state-management approach, the client-versus-server split for a core operation, or the overall component structure — and be specific to that real choice rather than writing a generic template ADR.',
@@ -553,7 +555,7 @@ export const debrief: Question[] = [
     followUps: ['What would make you revisit this decision later?', 'Which alternative came closest to being chosen instead?'],
   },
 
-  // Pushback & pressure (3)
+  // Pushback & pressure (5)
   {
     id: 'debrief-031',
     round: 'debrief',
@@ -607,5 +609,41 @@ export const debrief: Question[] = [
       'Pairs "I do not know" with a concrete plan for finding the answer',
     ],
     followUps: ['Has this actually happened to you in a real interview or review? What did you do?', 'How is admitting a mistake here different from doing it in front of your own team?'],
+  },
+  {
+    id: 'debrief-034',
+    round: 'debrief',
+    category: 'Pushback & pressure',
+    question: 'Your README says you deliberately skipped this. I read that as running out of time. Convince me otherwise.',
+    answer: [
+      'Do not argue about the label — show the sequencing: name what you built instead in the time that item would have taken, and why that thing ranked higher for this brief (core flow correctness, error handling, a test on the riskiest logic), so the cut reads as a ranked decision with a visible winner rather than a leftover.',
+      'Concede the part that is true: under a time-box every cut is partly about time, and saying so plainly ("yes, with unlimited time I would have built it — the question is what I chose to spend the fixed time on") is more credible than insisting time played no role.',
+      'Close by proving you scoped it rather than dropped it: give the rough effort and what it would touch in the current code, since a candidate who ran out of time usually cannot estimate the thing they skipped, and one who deprioritized it can.',
+    ],
+    keyPoints: [
+      'Shows the ranked trade-off by naming what was built instead and why it won',
+      'Concedes the true part rather than denying time played any role',
+      'Demonstrates the skipped item was actually scoped: effort and code touched',
+      'Stays non-defensive under a direct challenge to their honesty',
+    ],
+    followUps: ['If I gave you the same brief again, would you cut the same thing?', 'Which cut in your README are you least confident defending?'],
+  },
+  {
+    id: 'debrief-035',
+    round: 'debrief',
+    category: 'Pushback & pressure',
+    question: 'The interviewer before me told us your structure was over-engineered for the brief. Respond.',
+    answer: [
+      'Ask what specifically they pointed at before defending anything — "over-engineered" usually means one concrete thing (an abstraction with one caller, a store for state one component uses, a folder tree deeper than the app) and responding to the actual criticism beats responding to the label.',
+      'If the criticism lands, agree specifically and say what the simpler version would look like: "[the adapter layer] has one implementation here; inline it and you lose nothing until a second data source exists" — updating in real time on a fair point is the staff-level signal, not winning the exchange.',
+      'If it does not land, defend it with the concrete scenario it serves in this brief, not with a general principle — and if the only defense is "it would matter at scale," concede that the brief did not ask for scale and the choice was a habit, which is an honest and recoverable answer.',
+    ],
+    keyPoints: [
+      'Asks for the specific criticism before responding to a label',
+      'Agrees specifically and names the simpler version when the point is fair',
+      'Defends only with a concrete scenario from this brief, not a general principle',
+      'Distinguishes a justified choice from a habit carried in from larger codebases',
+    ],
+    followUps: ['Which abstraction in your submission has exactly one caller?', 'What would you delete first if I asked you to halve the file count?'],
   },
 ];
