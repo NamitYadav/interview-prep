@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, test } from 'vitest';
+import type { Persisted } from '../types';
 import { CORRUPT_KEY, EMPTY, STORAGE_KEY, backupFilename, load, parseBackup, save } from '../lib/storage';
 
-const valid = { version: 1, progress: { 'hr-001': { rating: 2, seen: 1, lastSeen: 5 } }, notes: { 'hr-001': 'hi' } };
+const valid: Persisted = { version: 1, progress: { 'hr-001': { rating: 2, seen: 1, lastSeen: 5 } }, notes: { 'hr-001': 'hi' } };
 
 beforeEach(() => localStorage.clear());
 
@@ -43,7 +44,7 @@ describe('load', () => {
 
 describe('save', () => {
   test('writes JSON and returns true', () => {
-    expect(save(valid as never)).toBe(true);
+    expect(save(valid)).toBe(true);
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual(valid);
   });
   test('returns false when storage throws', () => {
