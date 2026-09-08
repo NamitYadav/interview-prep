@@ -24,7 +24,7 @@ export function Browse({ questions, state, dispatch }: { questions: Question[]; 
         aria-label="Search questions"
         className="w-full rounded border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
       />
-      <p className="text-xs text-zinc-500">{visible.length} of {questions.length}</p>
+      <p className="text-xs text-zinc-500 dark:text-zinc-400">{visible.length} of {questions.length}</p>
       <ul className="space-y-2">
         {visible.map((q) => {
           const rating = state.progress[q.id]?.rating;
@@ -42,7 +42,7 @@ export function Browse({ questions, state, dispatch }: { questions: Question[]; 
                     onNote={(text) => dispatch({ type: 'note', id: q.id, text })}
                     onRate={(r) => dispatch({ type: 'rate', id: q.id, rating: r, now: Date.now() })}
                   />
-                  <button type="button" onClick={() => setOpenId(null)} className="mt-1 text-sm text-zinc-500 hover:underline">Collapse</button>
+                  <button type="button" onClick={() => setOpenId(null)} className="mt-1 text-sm text-zinc-500 dark:text-zinc-400 hover:underline">Collapse</button>
                 </div>
               ) : (
                 <button
@@ -51,10 +51,10 @@ export function Browse({ questions, state, dispatch }: { questions: Question[]; 
                   className="flex w-full items-start justify-between gap-3 rounded border border-zinc-200 bg-white p-3 text-left text-sm hover:border-emerald-500 dark:border-zinc-800 dark:bg-zinc-900"
                 >
                   <span>
-                    <span className="mr-2 text-xs text-zinc-500">{q.category}</span>
+                    <span className="mr-2 text-xs text-zinc-500 dark:text-zinc-400">{q.category}</span>
                     {q.question}
                   </span>
-                  <span className="shrink-0 text-xs text-zinc-500">{rating ? RATING_LABEL[rating] : '—'}</span>
+                  <span className="shrink-0 text-xs text-zinc-500 dark:text-zinc-400">{rating ? RATING_LABEL[rating] : '—'}</span>
                 </button>
               )}
             </li>
