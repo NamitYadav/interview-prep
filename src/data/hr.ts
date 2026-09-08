@@ -1,7 +1,25 @@
 import type { Question } from '../types';
 
 export const hr: Question[] = [
-  // Motivation & fit (6)
+  // Motivation & fit (7)
+  {
+    id: 'hr-026',
+    round: 'hr',
+    category: 'Motivation & fit',
+    question: 'Tell me about yourself — walk me through your CV.',
+    answer: [
+      'Keep it under two minutes and structure it as a short arc, not a full recitation: where you are now (current scope, generically), one or two prior steps that explain how you got to staff-level scope, and why that arc points at this specific role next.',
+      'Weight it toward the recent and relevant: spend most of the time on your current or most recent role and its scope, compress earlier career history into a sentence each, and skip anything not relevant to a staff frontend role at this company.',
+      'End by handing control back to the interviewer: close with a one-sentence bridge into why you are interested in this move, which naturally opens into the "why this company" follow-up rather than trailing off.',
+    ],
+    keyPoints: [
+      'Stays under roughly two minutes, not a full career recitation',
+      'Weighted toward recent, relevant scope over early career history',
+      'Clear narrative arc: where you are, how you got here, why this is next',
+      'Ends with a deliberate bridge into motivation, not a trailing-off stop',
+    ],
+    followUps: ['What would you cut if I gave you only thirty seconds?', 'Which part of that story most directly prepared you for this role?'],
+  },
   {
     id: 'hr-001',
     round: 'hr',
@@ -9,7 +27,7 @@ export const hr: Question[] = [
     question: 'Why are you looking to move, and why this company?',
     answer: [
       'Lead with pull, not push: name two concrete things about the company (product domain, engineering culture signal, a public engineering post) and connect them to what you want to do next at staff scope.',
-      'Keep the push side short and neutral: "[your current role] has been a great run; I have shipped [scope] and I am now looking for a larger platform surface / a Berlin-based team." Never criticise the current employer.',
+      'Keep the push side short and neutral: "[your current role] has been a great run; I have shipped [scope] and I am now looking for a larger platform surface / a Berlin-based team." Never criticize the current employer.',
       'Close by naming what you would own in the first year so the recruiter can map you to the open role.',
     ],
     keyPoints: [
@@ -68,7 +86,7 @@ export const hr: Question[] = [
     ],
     keyPoints: [
       'Strength maps directly to staff-level expectations',
-      'One generic supporting example, no fabricated metrics',
+      'One concrete supporting example, no fabricated metrics',
       'Weakness is real, bounded, and has a visible improvement step',
       'No humble-brag disguised as a weakness',
     ],
@@ -86,7 +104,7 @@ export const hr: Question[] = [
     ],
     keyPoints: [
       'Explicit listen-first phase before proposing changes',
-      'One concrete, bounded early win named generically',
+      'Names one concrete, bounded early win',
       'A longer-horizon deliverable by day 90 (point of view, relationships)',
       'Shows awareness that staff impact is earned through trust, not authority',
     ],
@@ -325,7 +343,7 @@ export const hr: Question[] = [
       'If most of your experience has been in one country/language, be honest about that and pivot to how you have already adapted in smaller ways (e.g. English-medium documentation, distributed stakeholders).',
     ],
     keyPoints: [
-      'One concrete, generic example of international/English-first work',
+      'One concrete example of international/English-first work',
       'Names a specific practical habit that supports remote/async collaboration',
       'Honest if experience is more limited, with a credible pivot',
       'Shows awareness of cultural/communication nuance, not just language',
@@ -344,7 +362,7 @@ export const hr: Question[] = [
     ],
     keyPoints: [
       'Clear listen-then-clarify-then-act process',
-      'One generic example of feedback acted on',
+      'One concrete example of feedback acted on',
       'Distinguishes actionable feedback from noise',
       'Mentions proactively soliciting feedback at staff level',
     ],
@@ -374,7 +392,7 @@ export const hr: Question[] = [
     id: 'hr-021',
     round: 'hr',
     category: 'From your CV',
-    question: 'You already lived in Berlin for over three years, why did you leave and why come back?',
+    question: 'You already lived in Berlin before, why did you leave and why come back?',
     answer: [
       'Structure this as a simple narrative arc: what took you there originally (a role, an opportunity), what changed that led you to leave (a new opportunity elsewhere, a life event), and what is now pulling you back (be specific about the pull, not just "I missed it").',
       'Keep the "why leave" part neutral and forward-looking — frame it as a deliberate career step you took at the time, not as something that did not work out, even if aspects of it were mixed.',
@@ -392,14 +410,14 @@ export const hr: Question[] = [
     id: 'hr-022',
     round: 'hr',
     category: 'From your CV',
-    question: 'You moved from Berlin to a Bengaluru-based company in 2024, walk me through that decision.',
+    question: 'You moved from Berlin to a company based in another country, walk me through that decision.',
     answer: [
       'Frame it as a deliberate scope or growth decision at the time: name the kind of opportunity it represented generically (e.g. "a chance to take on [broader technical ownership / a new domain / a leadership step]") rather than describing it as a fallback or purely personal necessity.',
       'Be honest about what you learned from the experience that is directly transferable back to a Berlin/EU staff role — e.g. operating with more autonomy, working across a more distributed or higher-context organization, or scaling a system under different constraints.',
       'Close by connecting it to why you are now looking to return to the EU market: be specific and positive (e.g. wanting to rejoin a Berlin-based tech ecosystem, family/life reasons, or targeting a specific type of company only well-represented in that market).',
     ],
     keyPoints: [
-      'Frames the 2024 move as a deliberate growth decision',
+      'Frames the move as a deliberate growth decision',
       'Names one concrete, transferable skill gained there',
       'Avoids describing it as a fallback or mistake',
       'Clear, positive reasoning for the return to the EU market now',
@@ -417,7 +435,7 @@ export const hr: Question[] = [
       'If the title is genuinely a step down in scope on paper, be upfront about it and reframe the conversation around actual responsibilities and impact rather than the label, since titles are not standardized across companies or markets.',
     ],
     keyPoints: [
-      'Clarifies actual scope behind the "Technical Lead" title, generically',
+      'Clarifies actual scope behind the "Technical Lead" title',
       'States the IC-vs-management choice as deliberate',
       'Does not get defensive about title mismatch across companies',
       'Focuses the conversation on responsibilities, not labels',
@@ -436,7 +454,7 @@ export const hr: Question[] = [
     ],
     keyPoints: [
       'Distinguishes personal/logistical settling from professional ramp-up',
-      'Concrete but generic professional milestones for month six',
+      'Concrete professional milestones for month six',
       'Explicit staff-level marker: influence beyond the immediate team',
       'Realistic timeframe, not overpromising day-one impact',
     ],
