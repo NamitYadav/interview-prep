@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { ROUND_IDS, questions, rounds } from '../data';
 
-const ID_RE = /^(hr|hm|case|debrief|hoe)-\d{3}$/;
+const ID_RE = /^(hr|hm|coding|case|debrief|hoe)-\d{3}$/;
 
 describe('question bank', () => {
   test('rounds cover every RoundId once', () => {
@@ -27,11 +27,12 @@ describe('question bank', () => {
       for (const p of [...q.answer, ...q.keyPoints, ...(q.followUps ?? [])]) {
         expect(p.trim().length, q.id).toBeGreaterThan(0);
       }
+      if (q.code !== undefined) expect(q.code.trim().length, q.id).toBeGreaterThan(0);
     }
   });
 
   test('every round has its expected exact question count', () => {
-    const expected: Record<string, number> = { hr: 26, hm: 50, case: 37, debrief: 35, hoe: 31 };
+    const expected: Record<string, number> = { hr: 26, hm: 50, coding: 27, case: 37, debrief: 35, hoe: 31 };
     for (const id of ROUND_IDS) {
       expect(questions.filter((q) => q.round === id).length, id).toBe(expected[id]);
     }
