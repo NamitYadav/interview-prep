@@ -1,6 +1,6 @@
 import { useEffect, useReducer, useState } from 'react';
 import type { Persisted, Rating } from '../types';
-import { EMPTY, load, save } from '../lib/storage';
+import { emptyState, load, save } from '../lib/storage';
 
 export type Action =
   | { type: 'rate'; id: string; rating: Rating; now: number }
@@ -29,7 +29,7 @@ export function reducer(state: Persisted, action: Action): Persisted {
     case 'import':
       return action.data;
     case 'reset':
-      return EMPTY;
+      return emptyState();
   }
 }
 

@@ -34,6 +34,19 @@ describe('reducer', () => {
     reducer(EMPTY, { type: 'rate', id: 'a', rating: 1, now: 1 });
     expect(EMPTY).toEqual(before);
   });
+  test('reset does not alias the shared EMPTY reference', () => {
+    const s = reducer(EMPTY, { type: 'rate', id: 'a', rating: 1, now: 1 });
+    const reset1 = reducer(s, { type: 'reset' });
+    // mutate in place, as an accidental caller might
+    (reset1.notes as Record<string, string>).x = 'mutated';
+    (reset1.progress as Record<string, unknown>).x = { rating: 1, seen: 1, lastSeen: 1 };
+
+    expect(EMPTY).toEqual({ version: 1, progress: {}, notes: {} });
+
+    const reset2 = reducer(s, { type: 'reset' });
+    expect(reset2).toEqual({ version: 1, progress: {}, notes: {} });
+    expect(reset2).not.toBe(reset1);
+  });
 });
 
 describe('useAppState', () => {
