@@ -1,10 +1,12 @@
 @import "tailwindcss";
 
 /* Overriding --font-sans is enough: Tailwind's preflight sets the document font from
-   it, so every element inherits Geist without a utility class anywhere. Weights are
-   capped at 400..700 because that is all the app uses. */
+   it, so every element inherits Geist without a utility class anywhere. --font-mono is
+   what the `font-mono` utility on code blocks resolves to. Weights are capped at what
+   the app actually uses: 400..700 sans, 400 mono. */
 @theme {
   --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 /* Both themes are dark, so `dark:` is unconditionally on — one variant, no media
