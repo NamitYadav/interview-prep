@@ -10,6 +10,22 @@ const RATINGS: { value: Rating; label: string; className: string }[] = [
 const suggestedRating = (hits: number, total: number): Rating | undefined =>
   total === 0 ? undefined : hits === total ? 3 : hits === 0 ? 1 : 2;
 
+const PLACEHOLDER_SPLIT = /(\[[^\]]+\])/;
+const isPlaceholder = (s: string) => /^\[[^\]]+\]$/.test(s);
+
+// "[your current role]"-style bracket slots are a fill-in-your-own-details cue, not
+// a rating or status color — dashed underline keeps that distinct from everything else.
+const withPlaceholders = (text: string) =>
+  text.split(PLACEHOLDER_SPLIT).map((part, i) =>
+    isPlaceholder(part) ? (
+      <span key={i} className="underline decoration-dashed decoration-zinc-400 underline-offset-2 dark:decoration-zinc-500">
+        {part}
+      </span>
+    ) : (
+      part
+    ),
+  );
+
 export function QuestionCard({
   question, revealed, note, rating, onReveal, onNote, onRate,
 }: {
@@ -57,7 +73,7 @@ export function QuestionCard({
       ) : (
         <div ref={answerRef} tabIndex={-1} className="animate-fade-in space-y-4 text-sm outline-none">
           <section className="space-y-2">
-            {question.answer.map((p, i) => <p key={i}>{p}</p>)}
+            {question.answer.map((p, i) => <p key={i}>{withPlaceholders(p)}</p>)}
           </section>
           <section>
             <h3 className="mb-1 font-semibold">Key points</h3>

@@ -86,3 +86,20 @@ describe('QuestionCard follow-ups', () => {
     expect(screen.queryByRole('button', { name: /answer the follow-up/i })).not.toBeInTheDocument();
   });
 });
+
+describe('QuestionCard placeholder styling', () => {
+  test('renders a [bracket] slot distinctly from the surrounding text', () => {
+    const { container } = renderCard(
+      { ...base, answer: ['Name [your current role] and connect it to [scope].'] },
+      true,
+    );
+    const p = screen.getByText(/Name/i, { selector: 'p' });
+    expect(p).toHaveTextContent('Name [your current role] and connect it to [scope].');
+    expect(container.querySelectorAll('p span.underline')).toHaveLength(2);
+  });
+
+  test('plain text with no brackets renders unchanged', () => {
+    renderCard({ ...base, answer: ['No placeholders here at all.'] }, true);
+    expect(screen.getByText('No placeholders here at all.')).toBeInTheDocument();
+  });
+});
