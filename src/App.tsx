@@ -6,6 +6,7 @@ import { WeakDrill } from './components/WeakDrill';
 import { NotesView } from './components/NotesView';
 import { StoriesView } from './components/StoriesView';
 import { MockSession } from './components/MockSession';
+import { ThemeToggle } from './components/ThemeToggle';
 
 export default function App() {
   const { state, dispatch, saveFailed } = useAppState();
@@ -18,6 +19,9 @@ export default function App() {
           Progress is not being saved (storage unavailable). Export before closing the tab.
         </div>
       )}
+      <header className="mx-auto flex max-w-3xl justify-end px-4 pt-4 sm:px-6">
+        <ThemeToggle />
+      </header>
       {route === null && <Home state={state} dispatch={dispatch} />}
       {route === 'weak' && <WeakDrill state={state} dispatch={dispatch} />}
       {route === 'notes' && <NotesView state={state} />}

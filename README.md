@@ -18,6 +18,7 @@ follow-ups. Reveal, rate yourself, and weak questions come back first.
 ## Using it
 - **Practice**: `Space` reveal · `1` / `2` / `3` rate Weak / OK / Solid · `N` skip.
 - **Browse**: search and expand any question.
+- **Theme**: Dark or Gruvbox, switchable from the top of any page. Stored per device, outside the backup.
 - Notes and ratings stay in your browser (localStorage). Use **Export** / **Import** to back up or move devices.
 
 ## Adding questions

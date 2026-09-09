@@ -1,6 +1,46 @@
 @import "tailwindcss";
 
-:root { color-scheme: light dark; }
+/* Both themes are dark, so `dark:` is unconditionally on — one variant, no media
+   query, no toggle class. A future light theme would narrow this to its own value. */
+@custom-variant dark (&:where([data-theme] *, [data-theme]));
+
+/* Gruvbox is a palette swap and nothing else: redefining Tailwind's color variables
+   on the theme root remaps every existing zinc/emerald/red/amber utility in place,
+   so no component needs to know a second theme exists. The neutral ramp stays
+   monotonic light -> dark so the light/dark halves of each pair keep their roles. */
+[data-theme='gruvbox'] {
+  --color-white: #fbf1c7;
+  --color-black: #1d2021;
+  --color-zinc-50: #fbf1c7;
+  --color-zinc-100: #ebdbb2;
+  --color-zinc-200: #d5c4a1;
+  --color-zinc-300: #bdae93;
+  --color-zinc-400: #a89984;
+  --color-zinc-500: #928374;
+  --color-zinc-600: #7c6f64;
+  --color-zinc-700: #504945;
+  --color-zinc-800: #3c3836;
+  --color-zinc-900: #282828;
+  --color-zinc-950: #1d2021;
+
+  --color-emerald-50: #f2f0c9;
+  --color-emerald-400: #b8bb26;
+  --color-emerald-500: #b8bb26;
+  --color-emerald-600: #98971a;
+  --color-emerald-950: #3c3a15;
+
+  --color-red-400: #fb4934;
+  --color-red-500: #fb4934;
+  --color-red-600: #cc241d;
+
+  --color-amber-100: #f9e2a0;
+  --color-amber-400: #fabd2f;
+  --color-amber-500: #fabd2f;
+  --color-amber-600: #d79921;
+  --color-amber-900: #5c4a11;
+}
+
+:root { color-scheme: dark; }
 body { @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 antialiased; }
 
 /* Pointer cursor on every clickable control, plus smooth color/border transitions on
