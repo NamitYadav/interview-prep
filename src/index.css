@@ -2,3 +2,26 @@
 
 :root { color-scheme: light dark; }
 body { @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 antialiased; }
+
+/* Pointer cursor on every clickable control, plus smooth color/border transitions on
+   the hover states already defined per-component — one global rule instead of adding
+   `cursor-pointer`/`transition-colors` to every button, link, and card individually. */
+button, a, label, select, [role='button'], input[type='checkbox'], input[type='radio'] {
+  cursor: pointer;
+}
+button:disabled, [role='button'][aria-disabled='true'] {
+  cursor: not-allowed;
+}
+a, button, [role='button'], input, textarea, select {
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease, opacity 150ms ease;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; }
+}
+.animate-fade-in { animation: fade-in 200ms ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
