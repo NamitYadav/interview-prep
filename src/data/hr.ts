@@ -222,7 +222,7 @@ export const hr: Question[] = [
     followUps: ['Would you be open to formal language classes?', 'Has the language ever been a barrier at work before?'],
   },
 
-  // Compensation (4)
+  // Compensation (7)
   {
     id: 'hr-013',
     round: 'hr',
@@ -294,6 +294,63 @@ export const hr: Question[] = [
       'Knows notice is negotiable but must be symmetric',
     ],
     followUps: ['Would a longer notice period concern you?', 'Is vacation day count a priority for you?'],
+  },
+  {
+    id: 'hr-027',
+    round: 'hr',
+    category: 'Compensation',
+    question: 'The offer includes VSOP instead of real equity, how do you evaluate that?',
+    answer: [
+      'Know the distinction cold: a Virtual Stock Option Plan pays out cash tied to a future valuation event (exit or funding round), it does not make you a shareholder, carries no voting rights, and in Germany it is typically taxed as ordinary income (dry-income risk) rather than at the more favorable capital-gains treatment real equity or options under the newer Zukunftsfinanzierungsgesetz framework can get.',
+      'Ask the concrete numbers before assigning it any value: strike/reference price, vesting schedule and cliff, what happens to unvested VSOP on termination, and whether there is a good-leaver/bad-leaver distinction that could zero it out.',
+      'Weigh it as speculative upside with a real tax drag, not as a cash-equivalent — discount it heavily against a lower cash offer, and treat a company\'s willingness to explain the plan clearly (or not) as a signal in itself.',
+      'If the company is far enough along to offer real equity or options instead of VSOP, that is worth asking about directly, since the legal and tax profile is materially better for you.',
+    ],
+    keyPoints: [
+      'Knows VSOP is not real equity: no shares, no voting rights, cash payout only',
+      'Names the German tax disadvantage versus real equity/options',
+      'Asks for strike price, vesting, cliff, and leaver clauses before valuing it',
+      'Discounts it as speculative upside, not a cash-equivalent',
+    ],
+    followUps: ['Would you accept a lower base for a larger VSOP pool?', 'Has a VSOP plan ever paid out for you before?'],
+  },
+  {
+    id: 'hr-028',
+    round: 'hr',
+    category: 'Compensation',
+    question: 'The contract offered is befristet (fixed-term) rather than unbefristet (permanent), what do you ask?',
+    answer: [
+      'Ask why: a genuine project/backfill reason, or a de facto extended trial period — German law (§14 TzBfG) allows fixed-term contracts without a reason for up to two years total, extendable up to three times within that window, so a first-contract befristung without a stated reason is common and not automatically a red flag.',
+      'Get the concrete term length and what conversion to unbefristet actually depends on: is it close to automatic after the term if performance is fine, or genuinely uncertain and tied to funding/headcount.',
+      'Know the ceiling: sachgrundlos (without-cause) fixed terms cap at two years total and cannot be used again with the same employer afterward (Kettenbefristung is barred), so ask whether this is that clock or a sachgrund (with-cause) term, which has different rules and no fixed cap.',
+      'Weigh it like a real risk for relocation decisions specifically: a fixed term shortens how long you can rely on this role to anchor a visa/permit runway, so factor that into your negotiating position on other terms.',
+    ],
+    keyPoints: [
+      'Distinguishes sachgrundlos (two-year cap, no reason needed) from sachgrund (with-cause) fixed terms',
+      'Asks the concrete conversion path to unbefristet, not just "usually renews"',
+      'Connects contract length to visa/relocation runway risk',
+      'Treats an unexplained or vague fixed-term reason as worth probing, not as automatically a red flag',
+    ],
+    followUps: ['Would a shorter fixed term change your interest in the offer?', 'How would you negotiate for an unbefristet contract instead?'],
+  },
+  {
+    id: 'hr-029',
+    round: 'hr',
+    category: 'Compensation',
+    question: 'Is Weihnachtsgeld or a 13th-month payment something you would expect or negotiate for?',
+    answer: [
+      'Be accurate about the norm: Weihnachtsgeld (a Christmas bonus, often close to a full month) and Urlaubsgeld (a vacation bonus) are common in traditional German industries under collective bargaining agreements, but far less standard in tech, where compensation is usually consolidated into a higher base plus a discretionary or performance bonus instead.',
+      'Ask directly whether the total package already reflects this consolidation before assuming a bonus is missing: compare the annual total, not the base alone, against a company that does pay a 13th month.',
+      'If you want it, frame it as a total-comp question rather than assuming entitlement: ask whether any structured annual bonus exists and how it is calculated (company performance, individual performance, or a fixed multiplier), since an ad hoc "we will see" answer is worth probing further.',
+      'Do not let its absence alone read as a bad offer — a strong base with clear bonus mechanics can be worth more than a lower base plus a nominal 13th month.',
+    ],
+    keyPoints: [
+      'Knows Weihnachtsgeld/Urlaubsgeld are common in traditional industries, less standard in tech',
+      'Compares total annual comp rather than treating base and bonus separately',
+      'Asks how any bonus is actually calculated rather than assuming a fixed structure',
+      'Does not treat its absence alone as a negative signal',
+    ],
+    followUps: ['How would you compare two offers with different bonus structures?', 'Would you push for a signing bonus instead?'],
   },
 
   // Process & culture (4)
