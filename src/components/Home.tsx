@@ -9,6 +9,8 @@ import { ProgressBar } from './ProgressBar';
 export function Home({ state, dispatch }: { state: Persisted; dispatch: Dispatch<Action> }) {
   const weak = questions.filter((q) => state.progress[q.id]?.rating === 1).length;
   const noted = questions.filter((q) => (state.notes[q.id] ?? '').trim().length > 0).length;
+  const stories = Object.values(state.stories);
+  const neverRehearsed = stories.filter((s) => s.lastRehearsed === undefined).length;
 
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
@@ -49,6 +51,16 @@ export function Home({ state, dispatch }: { state: Persisted; dispatch: Dispatch
         <a href="#notes" className="rounded-lg border border-zinc-200 bg-white p-4 hover:border-emerald-500 dark:border-zinc-800 dark:bg-zinc-900">
           <h2 className="font-medium">My notes</h2>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">{noted} questions with a note.</p>
+        </a>
+        <a href="#stories" className="rounded-lg border border-zinc-200 bg-white p-4 hover:border-emerald-500 dark:border-zinc-800 dark:bg-zinc-900">
+          <h2 className="font-medium">My stories</h2>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            {stories.length} {stories.length === 1 ? 'story' : 'stories'} · {neverRehearsed} never rehearsed.
+          </p>
+        </a>
+        <a href="#mock" className="rounded-lg border border-zinc-200 bg-white p-4 hover:border-emerald-500 dark:border-zinc-800 dark:bg-zinc-900">
+          <h2 className="font-medium">Mock session</h2>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">A curated, cross-round set in one sitting.</p>
         </a>
       </nav>
     </main>

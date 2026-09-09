@@ -21,6 +21,14 @@ describe('useHashRoute', () => {
     window.location.hash = '#notes';
     const notes = renderHook(() => useHashRoute());
     expect(notes.result.current[0]).toBe('notes');
+
+    window.location.hash = '#stories';
+    const stories = renderHook(() => useHashRoute());
+    expect(stories.result.current[0]).toBe('stories');
+
+    window.location.hash = '#mock';
+    const mock = renderHook(() => useHashRoute());
+    expect(mock.result.current[0]).toBe('mock');
   });
 
   test('falls back to null for an invalid hash', () => {
