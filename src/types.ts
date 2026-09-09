@@ -1,4 +1,4 @@
-export type RoundId = 'hr' | 'hm' | 'coding' | 'case' | 'debrief' | 'hoe';
+export type RoundId = 'hr' | 'hm' | 'coding' | 'design' | 'case' | 'debrief' | 'hoe';
 export type Route = RoundId | 'weak' | 'notes';
 export interface Round { id: RoundId; title: string; blurb: string }
 export interface Question { id: string; round: RoundId; category: string; question: string; code?: string; answer: string[]; keyPoints: string[]; followUps?: string[] }
