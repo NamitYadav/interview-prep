@@ -55,7 +55,7 @@ export function QuestionCard({
           Reveal <kbd className="ml-2 text-xs opacity-70 [@media(hover:none)]:hidden">Space</kbd>
         </button>
       ) : (
-        <div ref={answerRef} tabIndex={-1} className="space-y-4 text-sm outline-none">
+        <div ref={answerRef} tabIndex={-1} className="animate-fade-in space-y-4 text-sm outline-none">
           <section className="space-y-2">
             {question.answer.map((p, i) => <p key={i}>{p}</p>)}
           </section>
@@ -102,7 +102,7 @@ export function QuestionCard({
                   Answer the follow-up
                 </button>
               ) : (
-                <ul className="list-disc space-y-1 pl-5">{question.followUps.map((f, i) => <li key={i}>{f}</li>)}</ul>
+                <ul className="animate-fade-in list-disc space-y-1 pl-5">{question.followUps.map((f, i) => <li key={i}>{f}</li>)}</ul>
               )}
             </section>
           )}

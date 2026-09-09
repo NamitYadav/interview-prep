@@ -57,10 +57,10 @@ export function MockSession({ state, dispatch }: { state: Persisted; dispatch: D
               <button
                 type="button"
                 onClick={() => start(p)}
-                className="block w-full rounded-lg border border-zinc-200 bg-white p-4 text-left hover:border-emerald-500 dark:border-zinc-800 dark:bg-zinc-900"
+                className="flex w-full flex-col rounded-lg border border-zinc-200 bg-white p-4 text-left hover:border-emerald-500 dark:border-zinc-800 dark:bg-zinc-900"
               >
                 <h2 className="font-medium">{p.title}</h2>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">{p.blurb}</p>
+                <p className="line-clamp-2 min-h-10 text-sm text-zinc-600 dark:text-zinc-400">{p.blurb}</p>
               </button>
             </li>
           ))}
