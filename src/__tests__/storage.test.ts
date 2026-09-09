@@ -2,7 +2,14 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import type { Persisted } from '../types';
 import { CORRUPT_KEY, EMPTY, STORAGE_KEY, backupFilename, load, parseBackup, save } from '../lib/storage';
 
-const valid: Persisted = { version: 1, progress: { 'hr-001': { rating: 2, seen: 1, lastSeen: 5 } }, notes: { 'hr-001': 'hi' } };
+const valid: Persisted = {
+  version: 2,
+  progress: { 'hr-001': { rating: 2, seen: 1, lastSeen: 5 } },
+  notes: { 'hr-001': 'hi' },
+  stories: { s1: { title: 'The migration', body: 'Situation...' } },
+};
+
+const v1Backup = { version: 1, progress: { 'hr-001': { rating: 2, seen: 1, lastSeen: 5 } }, notes: { 'hr-001': 'hi' } };
 
 beforeEach(() => localStorage.clear());
 
@@ -13,6 +20,10 @@ describe('load', () => {
   test('returns stored data', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(valid));
     expect(load()).toEqual(valid);
+  });
+  test('migrates a v1 backup, adding empty stories', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(v1Backup));
+    expect(load()).toEqual({ ...v1Backup, version: 2, stories: {} });
   });
   test('moves corrupt JSON aside and returns EMPTY', () => {
     localStorage.setItem(STORAGE_KEY, '{not json');
@@ -57,12 +68,17 @@ describe('parseBackup', () => {
   test('accepts a valid backup', () => {
     expect(parseBackup(JSON.stringify(valid))).toEqual(valid);
   });
+  test('migrates a v1 backup forward', () => {
+    expect(parseBackup(JSON.stringify(v1Backup))).toEqual({ ...v1Backup, version: 2, stories: {} });
+  });
   test.each([
     ['not json', 'Not valid JSON'],
-    [JSON.stringify({ version: 2, progress: {}, notes: {} }), 'Unsupported backup version'],
+    [JSON.stringify({ version: 3, progress: {}, notes: {} }), 'Unsupported backup version'],
     [JSON.stringify({ version: 1, progress: [], notes: {} }), 'progress must be an object'],
     [JSON.stringify({ version: 1, progress: { a: { rating: 4, seen: 1, lastSeen: 1 } }, notes: {} }), 'Invalid progress entry for a'],
     [JSON.stringify({ version: 1, progress: {}, notes: { a: 1 } }), 'Invalid note for a'],
+    [JSON.stringify({ version: 2, progress: {}, notes: {}, stories: [] }), 'stories must be an object'],
+    [JSON.stringify({ version: 2, progress: {}, notes: {}, stories: { a: { title: 1 } } }), 'Invalid story for a'],
   ])('rejects %s', (text, message) => {
     expect(() => parseBackup(text)).toThrow(message);
   });

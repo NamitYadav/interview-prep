@@ -5,6 +5,9 @@ import { emptyState, load, save } from '../lib/storage';
 export type Action =
   | { type: 'rate'; id: string; rating: Rating; now: number }
   | { type: 'note'; id: string; text: string }
+  | { type: 'saveStory'; id: string; title: string; body: string }
+  | { type: 'rehearseStory'; id: string; now: number }
+  | { type: 'deleteStory'; id: string }
   | { type: 'import'; data: Persisted }
   | { type: 'reset' };
 
@@ -25,6 +28,25 @@ export function reducer(state: Persisted, action: Action): Persisted {
       if (action.text.trim() === '') delete notes[action.id];
       else notes[action.id] = action.text;
       return { ...state, notes };
+    }
+    case 'saveStory': {
+      // Unlike notes, a story never auto-deletes on going blank — it is a first-class
+      // item the user creates and removes explicitly via 'deleteStory'.
+      const existing = state.stories[action.id];
+      return {
+        ...state,
+        stories: { ...state.stories, [action.id]: { ...existing, title: action.title, body: action.body } },
+      };
+    }
+    case 'rehearseStory': {
+      const existing = state.stories[action.id];
+      if (!existing) return state;
+      return { ...state, stories: { ...state.stories, [action.id]: { ...existing, lastRehearsed: action.now } } };
+    }
+    case 'deleteStory': {
+      const stories = { ...state.stories };
+      delete stories[action.id];
+      return { ...state, stories };
     }
     case 'import':
       return action.data;

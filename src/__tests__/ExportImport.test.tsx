@@ -7,9 +7,10 @@ import { reducer } from '../hooks/useAppState';
 import { ExportImport } from '../components/ExportImport';
 
 const seeded: Persisted = {
-  version: 1,
+  version: 2,
   progress: { 'hr-001': { rating: 3, seen: 1, lastSeen: 1 } },
   notes: { 'hr-001': 'my story' },
+  stories: {},
 };
 
 function Harness({ initial }: { initial: Persisted }) {

@@ -22,7 +22,7 @@ describe('reducer', () => {
     expect(s.notes).toEqual({});
   });
   test('import replaces state', () => {
-    const data = { version: 1 as const, progress: { x: { rating: 1 as const, seen: 1, lastSeen: 1 } }, notes: {} };
+    const data = { version: 2 as const, progress: { x: { rating: 1 as const, seen: 1, lastSeen: 1 } }, notes: {}, stories: {} };
     expect(reducer(EMPTY, { type: 'import', data })).toEqual(data);
   });
   test('reset returns EMPTY', () => {
@@ -41,10 +41,10 @@ describe('reducer', () => {
     (reset1.notes as Record<string, string>).x = 'mutated';
     (reset1.progress as Record<string, unknown>).x = { rating: 1, seen: 1, lastSeen: 1 };
 
-    expect(EMPTY).toEqual({ version: 1, progress: {}, notes: {} });
+    expect(EMPTY).toEqual({ version: 2, progress: {}, notes: {}, stories: {} });
 
     const reset2 = reducer(s, { type: 'reset' });
-    expect(reset2).toEqual({ version: 1, progress: {}, notes: {} });
+    expect(reset2).toEqual({ version: 2, progress: {}, notes: {}, stories: {} });
     expect(reset2).not.toBe(reset1);
   });
 });
