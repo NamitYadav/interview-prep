@@ -11,7 +11,13 @@ export function Browse({ questions, state, dispatch }: { questions: Question[]; 
 
   const needle = search.trim().toLowerCase();
   const visible = needle
-    ? questions.filter((q) => q.question.toLowerCase().includes(needle) || q.category.toLowerCase().includes(needle))
+    ? questions.filter(
+        (q) =>
+          q.question.toLowerCase().includes(needle) ||
+          q.category.toLowerCase().includes(needle) ||
+          q.answer.some((p) => p.toLowerCase().includes(needle)) ||
+          q.keyPoints.some((k) => k.toLowerCase().includes(needle)),
+      )
     : questions;
 
   return (

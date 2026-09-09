@@ -18,13 +18,15 @@ function Harness() {
 }
 
 describe('Practice', () => {
-  test('reveal shows answer, key points and follow-ups', async () => {
+  test('reveal shows answer and key points; follow-ups stay gated until asked for', async () => {
     render(<Harness />);
     expect(screen.getByText('First question?')).toBeInTheDocument();
     expect(screen.queryByText('Answer one.')).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
     expect(screen.getByText('Answer one.')).toBeInTheDocument();
     expect(screen.getByText('Point one')).toBeInTheDocument();
+    expect(screen.queryByText('Follow one')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /answer the follow-up/i }));
     expect(screen.getByText('Follow one')).toBeInTheDocument();
   });
 
