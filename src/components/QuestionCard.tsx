@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Question, Rating } from '../types';
 
 const RATINGS: { value: Rating; label: string; className: string }[] = [
@@ -6,6 +6,9 @@ const RATINGS: { value: Rating; label: string; className: string }[] = [
   { value: 2, label: 'OK', className: 'border-amber-500 text-amber-600 dark:text-amber-400' },
   { value: 3, label: 'Solid', className: 'border-emerald-500 text-emerald-600 dark:text-emerald-400' },
 ];
+
+const suggestedRating = (hits: number, total: number): Rating | undefined =>
+  total === 0 ? undefined : hits === total ? 3 : hits === 0 ? 1 : 2;
 
 export function QuestionCard({
   question, revealed, note, rating, onReveal, onNote, onRate,
@@ -15,6 +18,8 @@ export function QuestionCard({
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const answerRef = useRef<HTMLDivElement>(null);
+  const [checked, setChecked] = useState<Set<number>>(() => new Set());
+  const [followUpsShown, setFollowUpsShown] = useState(false);
 
   // Declared before the heading effect so that on mount (Browse renders revealed) the
   // heading wins; on a Practice reveal only this one re-runs and focus lands on the answer
@@ -47,7 +52,7 @@ export function QuestionCard({
           onClick={onReveal}
           className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
         >
-          Reveal <kbd className="ml-2 text-xs opacity-70">Space</kbd>
+          Reveal <kbd className="ml-2 text-xs opacity-70 [@media(hover:none)]:hidden">Space</kbd>
         </button>
       ) : (
         <div ref={answerRef} tabIndex={-1} className="space-y-4 text-sm outline-none">
@@ -56,12 +61,49 @@ export function QuestionCard({
           </section>
           <section>
             <h3 className="mb-1 font-semibold">Key points</h3>
-            <ul className="list-disc space-y-1 pl-5">{question.keyPoints.map((k, i) => <li key={i}>{k}</li>)}</ul>
+            <p className="mb-1 text-xs text-zinc-500 dark:text-zinc-400">Check off what you actually said out loud.</p>
+            <ul className="space-y-1">
+              {question.keyPoints.map((k, i) => (
+                <li key={i}>
+                  <label className="flex items-start gap-2">
+                    <input
+                      type="checkbox"
+                      checked={checked.has(i)}
+                      onChange={(e) => {
+                        const next = new Set(checked);
+                        if (e.target.checked) next.add(i); else next.delete(i);
+                        setChecked(next);
+                      }}
+                      className="mt-1"
+                    />
+                    <span>{k}</span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+            {(() => {
+              const s = suggestedRating(checked.size, question.keyPoints.length);
+              return s && (
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                  {checked.size}/{question.keyPoints.length} key points hit · suggested: {RATINGS.find((r) => r.value === s)!.label}
+                </p>
+              );
+            })()}
           </section>
           {question.followUps && question.followUps.length > 0 && (
             <section>
               <h3 className="mb-1 font-semibold">Likely follow-ups</h3>
-              <ul className="list-disc space-y-1 pl-5">{question.followUps.map((f, i) => <li key={i}>{f}</li>)}</ul>
+              {!followUpsShown ? (
+                <button
+                  type="button"
+                  onClick={() => setFollowUpsShown(true)}
+                  className="rounded border border-zinc-300 px-3 py-1.5 text-xs hover:border-emerald-500 dark:border-zinc-700"
+                >
+                  Answer the follow-up
+                </button>
+              ) : (
+                <ul className="list-disc space-y-1 pl-5">{question.followUps.map((f, i) => <li key={i}>{f}</li>)}</ul>
+              )}
             </section>
           )}
           <section>
@@ -84,7 +126,7 @@ export function QuestionCard({
                 aria-pressed={rating === r.value}
                 className={`rounded border px-4 py-2 ${r.className} ${rating === r.value ? 'bg-zinc-100 dark:bg-zinc-800' : ''}`}
               >
-                {r.label} <kbd className="ml-1 text-xs opacity-70">{r.value}</kbd>
+                {r.label} <kbd className="ml-1 text-xs opacity-70 [@media(hover:none)]:hidden">{r.value}</kbd>
               </button>
             ))}
           </section>

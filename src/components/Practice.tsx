@@ -66,6 +66,7 @@ export function Practice({ questions, state, dispatch }: { questions: Question[]
   return (
     <div className="space-y-3">
       <QuestionCard
+        key={current.id}
         question={current}
         revealed={revealed}
         note={state.notes[current.id] ?? ''}
