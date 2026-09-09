@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Overriding --font-sans is enough: Tailwind's preflight sets the document font from
+   it, so every element inherits Geist without a utility class anywhere. Weights are
+   capped at 400..700 because that is all the app uses. */
+@theme {
+  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+}
+
 /* Both themes are dark, so `dark:` is unconditionally on — one variant, no media
    query, no toggle class. A future light theme would narrow this to its own value. */
 @custom-variant dark (&:where([data-theme] *, [data-theme]));
