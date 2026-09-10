@@ -1,14 +1,14 @@
 # Interview Prep
 
 Interactive mock-interview drill for staff frontend engineer loops in Berlin / EU.
-Seven rounds, 227 curated questions with model answers, key points and likely
+Seven rounds, 255 curated questions with model answers, key points and likely
 follow-ups. Reveal, rate yourself, and weak questions come back first.
 
 **Live:** https://namityadav.github.io/interview-prep/
 
 ## Rounds
 1. HR screen
-2. Hiring manager (technical + behavioral)
+2. Hiring manager (live code review, web fundamentals, situational, behavioral)
 3. Live coding (pairing, debugging, code review)
 4. Frontend system design (one prompt, 45 minutes)
 5. Case study (take-home + presentation)
