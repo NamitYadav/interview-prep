@@ -1,6 +1,6 @@
 export type RoundId = 'hr' | 'hm' | 'coding' | 'design' | 'case' | 'debrief' | 'hoe';
 export type Route = RoundId | 'weak' | 'notes' | 'stories' | 'mock';
-export interface Round { id: RoundId; title: string; blurb: string }
+export interface Round { id: RoundId; title: string; blurb: string; targetSeconds: number }
 export interface Question { id: string; round: RoundId; category: string; question: string; code?: string; answer: string[]; keyPoints: string[]; followUps?: string[] }
 export type Rating = 1 | 2 | 3;
 export interface ProgressEntry { rating: Rating; seen: number; lastSeen: number }

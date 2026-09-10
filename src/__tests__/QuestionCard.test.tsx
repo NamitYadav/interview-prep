@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import type { Question } from '../types';
 import { QuestionCard } from '../components/QuestionCard';
 
@@ -47,6 +48,30 @@ describe('QuestionCard reveal', () => {
     );
     screen.getByRole('button', { name: /reveal/i }).click();
     expect(onReveal).toHaveBeenCalledOnce();
+  });
+});
+
+function RevealHarness({ question }: { question: Question }) {
+  const [revealed, setRevealed] = useState(false);
+  return <QuestionCard question={question} revealed={revealed} note="" onReveal={() => setRevealed(true)} onNote={noop} onRate={noop} />;
+}
+
+describe('QuestionCard stopwatch', () => {
+  test('shows elapsed time and the round target once revealed', () => {
+    vi.useFakeTimers();
+    try {
+      render(<RevealHarness question={base} />);
+      vi.advanceTimersByTime(62_000);
+      fireEvent.click(screen.getByRole('button', { name: /reveal/i }));
+      expect(screen.getByText(/answered in 1:02 · target 3:00/i)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('shows no stopwatch line for a card rendered already revealed (Browse)', () => {
+    renderCard(base, true);
+    expect(screen.queryByText(/answered in/i)).not.toBeInTheDocument();
   });
 });
 
