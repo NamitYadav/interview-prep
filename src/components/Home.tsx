@@ -65,6 +65,14 @@ export function Home({ state, dispatch }: { state: Persisted; dispatch: Dispatch
           <h2 className="font-medium">Mock session</h2>
           <p className={cardBlurb}>A curated, cross-round set in one sitting.</p>
         </a>
+        <a href="#search" className={cardLink}>
+          <h2 className="font-medium">Search</h2>
+          <p className={cardBlurb}>Every question, every round, in one search.</p>
+        </a>
+        <a href="#print" className={cardLink}>
+          <h2 className="font-medium">Print cheat sheet</h2>
+          <p className={cardBlurb}>Weak questions and notes, grouped by round, ready to print.</p>
+        </a>
       </nav>
     </main>
   );

@@ -8,13 +8,13 @@ const q = (id: string): Question => ({
 const qs = ['a', 'b', 'c', 'd', 'e'].map(q);
 
 describe('orderQueue', () => {
-  test('unrated first, then weak, ok, solid', () => {
+  test('weak first, then unrated, ok, solid', () => {
     const progress: Progress = {
       a: { rating: 3, seen: 1, lastSeen: 10 },
       b: { rating: 1, seen: 1, lastSeen: 10 },
       c: { rating: 2, seen: 1, lastSeen: 10 },
     };
-    expect(orderQueue(qs, progress).map((x) => x.id)).toEqual(['d', 'e', 'b', 'c', 'a']);
+    expect(orderQueue(qs, progress).map((x) => x.id)).toEqual(['b', 'd', 'e', 'c', 'a']);
   });
 
   test('within a bucket, oldest lastSeen first', () => {
@@ -42,8 +42,8 @@ describe('nextQuestion', () => {
   test('skips excluded ids', () => {
     expect(nextQuestion(qs, {}, new Set(['a', 'b']))?.id).toBe('c');
   });
-  test('falls back to head when everything is excluded', () => {
-    expect(nextQuestion(qs, {}, new Set(['a', 'b', 'c', 'd', 'e']))?.id).toBe('a');
+  test('undefined when everything is excluded (lap done)', () => {
+    expect(nextQuestion(qs, {}, new Set(['a', 'b', 'c', 'd', 'e']))).toBeUndefined();
   });
   test('undefined for empty list', () => {
     expect(nextQuestion([], {})).toBeUndefined();

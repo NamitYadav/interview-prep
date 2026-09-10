@@ -6,11 +6,13 @@ import { WeakDrill } from './components/WeakDrill';
 import { NotesView } from './components/NotesView';
 import { StoriesView } from './components/StoriesView';
 import { MockSession } from './components/MockSession';
+import { SearchView } from './components/SearchView';
+import { PrintView } from './components/PrintView';
 import { ThemeToggle } from './components/ThemeToggle';
 
 export default function App() {
   const { state, dispatch, saveFailed } = useAppState();
-  const [route] = useHashRoute();
+  const route = useHashRoute();
 
   return (
     <>
@@ -27,7 +29,9 @@ export default function App() {
       {route === 'notes' && <NotesView state={state} />}
       {route === 'stories' && <StoriesView state={state} dispatch={dispatch} />}
       {route === 'mock' && <MockSession state={state} dispatch={dispatch} />}
-      {route !== null && route !== 'weak' && route !== 'notes' && route !== 'stories' && route !== 'mock' && (
+      {route === 'search' && <SearchView state={state} dispatch={dispatch} />}
+      {route === 'print' && <PrintView state={state} />}
+      {route !== null && route !== 'weak' && route !== 'notes' && route !== 'stories' && route !== 'mock' && route !== 'search' && route !== 'print' && (
         <RoundView roundId={route} state={state} dispatch={dispatch} />
       )}
     </>

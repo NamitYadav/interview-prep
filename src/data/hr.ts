@@ -222,7 +222,7 @@ export const hr: Question[] = [
     followUps: ['Would you be open to formal language classes?', 'Has the language ever been a barrier at work before?'],
   },
 
-  // Compensation (7)
+  // Compensation (13)
   {
     id: 'hr-013',
     round: 'hr',
@@ -230,7 +230,7 @@ export const hr: Question[] = [
     question: 'What are your salary expectations?',
     answer: [
       'Do your homework before this call: research the EUR base salary band for a staff-level engineer in Berlin at a company of this size and stage, and come with a range rather than a single number, e.g. "[€X-€Y] base".',
-      'Where possible, turn the question back first: "Can you share the budgeted band for this role?" — this is normal and expected in most EU hiring processes, and lets you calibrate rather than anchor low. The EU Pay Transparency Directive (2023/970) requires employers to state the pay range before or at the first interview; its transposition deadline was June 2026, so check whether Germany\'s implementing law is in force yet — if it is, the band should be volunteered without you asking.',
+      'Where possible, turn the question back first: "Can you share the budgeted band for this role?" — this is normal and expected in most EU hiring processes, and lets you calibrate rather than anchor low. The EU Pay Transparency Directive (2023/970) requires employers to state the pay range before or at the first interview; its transposition deadline (7 June 2026) has passed, but member states routinely lag on actually bringing national law into force, so ask directly whether this employer already publishes ranges rather than assuming the German rules are live.',
       'Separate the components explicitly: base salary, any equity or bonus, and note that you are flexible on the mix if the total package and growth trajectory make sense.',
     ],
     keyPoints: [
@@ -247,7 +247,7 @@ export const hr: Question[] = [
     category: 'Compensation',
     question: 'What is your current compensation?',
     answer: [
-      'In Germany you are not obligated to disclose current compensation, and the EU Pay Transparency Directive (2023/970) explicitly bars employers from asking about pay history once transposed (deadline June 2026 — check the current German status). Decline politely: "I would prefer to focus on the expectations for this role rather than share current pay."',
+      'In Germany you are not obligated to disclose current compensation, and the EU Pay Transparency Directive (2023/970) bars employers from asking about pay history once transposed into national law — the transposition deadline (7 June 2026) has passed, though whether Germany\'s implementing law is actually in force yet is worth a quick check, since member states often lag past the deadline. Either way, decline politely: "I would prefer to focus on the expectations for this role rather than share current pay."',
       'Redirect immediately and constructively to the researched range from the previous question, so the conversation keeps moving rather than stalling on a refusal.',
       'If you choose to share, keep it factual and brief, but the stronger staff-level move is usually the polite decline plus redirect, since current pay at a different market/company is not a reliable anchor anyway.',
     ],
@@ -351,6 +351,120 @@ export const hr: Question[] = [
       'Does not treat its absence alone as a negative signal',
     ],
     followUps: ['How would you compare two offers with different bonus structures?', 'Would you push for a signing bonus instead?'],
+  },
+  {
+    id: 'hr-030',
+    round: 'hr',
+    category: 'Compensation',
+    question: 'The offer comes in below your researched range, how do you respond?',
+    answer: [
+      'Do not accept or reject on the spot: acknowledge the offer, thank them for it, and ask for a short window to review the full package before responding — a lowball answered under time pressure is where most bad outcomes happen.',
+      'Respond with your researched range and the specific gap, not a vague "I was hoping for more": "Based on [market data / my current comp / the scope of this role], I was expecting closer to [€X-€Y]. Can we close that gap?" — specific and factual reads as confident, not confrontational.',
+      'Ask what moved the number down before pushing back blindly: a genuinely tighter band for this level, or room they expect you to negotiate into — the answer changes your next move.',
+      'If base cannot move, widen the negotiation to the whole package: signing bonus, equity, extra vacation days, a faster review cycle, or relocation support, since a lowball on base does not mean the total package is fixed.',
+    ],
+    keyPoints: [
+      'Takes time to respond rather than reacting immediately',
+      'States a specific researched range and gap, not a vague complaint',
+      'Asks what drove the lower number before countering',
+      'Widens negotiation to the whole package if base will not move',
+    ],
+    followUps: ['What is your walk-away number?', 'How would you handle a company that says the band is fixed with no exceptions?'],
+  },
+  {
+    id: 'hr-031',
+    round: 'hr',
+    category: 'Compensation',
+    question: 'Who should name a number first, you or them?',
+    answer: [
+      'Prefer them naming it first: whoever names a number first anchors the conversation, and a company with a defined band usually shares it if asked directly — "What is the budgeted range for this role?" is a normal, expected question in EU hiring.',
+      'If pushed to answer first, give a range, not a single number, and anchor it toward the top of your researched band rather than the middle, since ranges tend to get negotiated downward, not upward.',
+      'Never answer with your current or previous salary as the anchor — anchor on the market rate and scope for this role instead, which is a stronger and more defensible number.',
+      'If they genuinely will not share a band even after being asked, treat that itself as a data point about the process, not just a negotiating tactic.',
+    ],
+    keyPoints: [
+      'Prefers getting their band first by asking directly',
+      'Gives a range anchored high in their researched band if forced to go first',
+      'Anchors on market rate and role scope, never on past salary',
+      'Notices an unwillingness to share a band as a signal, not just noise',
+    ],
+    followUps: ['What would you do if they asked for your current salary directly?', 'How do you research a realistic band for a role like this?'],
+  },
+  {
+    id: 'hr-032',
+    round: 'hr',
+    category: 'Compensation',
+    question: 'You would be forfeiting a bonus or unvested equity by leaving your current role, how do you negotiate for that?',
+    answer: [
+      'Quantify it precisely before the conversation: the exact amount forfeited, the date it would have vested or paid out, and whether it is cash, equity, or a mix — a specific number is far more persuasive than "I am giving up a lot to join."',
+      'Ask for a signing bonus explicitly sized to offset it, and say so directly: "I would be forfeiting approximately [€X] in [unvested equity / an annual bonus] by leaving on [date]. Could a signing bonus help bridge that?"',
+      'If a lump sum signing bonus is not possible, ask about alternatives that achieve the same goal: a higher starting equity grant, a delayed start date to capture a near-term vesting event, or a guaranteed first-year bonus.',
+      'Be prepared for a clawback clause on the signing bonus if you leave within a short period — read it carefully and treat an unreasonable clawback window as a real negotiating point, not boilerplate to ignore.',
+    ],
+    keyPoints: [
+      'Quantifies the exact forfeited amount and its timing before asking',
+      'Explicitly frames the ask as offsetting a specific, named loss',
+      'Offers alternatives (equity grant, delayed start, guaranteed bonus) if a lump sum is not available',
+      'Reads any signing-bonus clawback clause carefully rather than ignoring it',
+    ],
+    followUps: ['What if they offer a smaller signing bonus than the amount you are forfeiting?', 'Would a delayed start date to capture a vesting event work for you?'],
+  },
+  {
+    id: 'hr-033',
+    round: 'hr',
+    category: 'Compensation',
+    question: 'How do you think about brutto versus netto when comparing a German offer to what you have now?',
+    answer: [
+      'Always compare netto (take-home) when reasoning about lifestyle affordability, but always negotiate on brutto (gross), since that is the number in the contract and the one that scales with future raises and pension contributions.',
+      'Know the rough mechanics that separate the two: income tax (progressive, roughly 14-45%), solidarity surcharge (largely phased out for most earners now), church tax if registered with a church, and social security contributions (health, pension, unemployment, long-term care insurance), split between employee and employer.',
+      'Name Steuerklasse (tax class) as a real lever for net pay for married couples specifically: the combination chosen (e.g. III/V vs IV/IV) changes monthly withholding, though not the final annual tax liability after filing — worth knowing so a lower payslip number does not cause unnecessary alarm.',
+      'Use a rough net-salary calculator with your actual Steuerklasse and Bundesland before comparing offers, rather than applying a flat percentage rule of thumb, since real-world take-home varies meaningfully by canton-equivalent (Bundesland) church-tax status and family situation.',
+    ],
+    keyPoints: [
+      'Compares netto for lifestyle, negotiates on brutto',
+      'Names the real deduction categories: income tax, solidarity surcharge, church tax, social security',
+      'Knows Steuerklasse affects monthly withholding, not final annual liability, for married couples',
+      'Uses an actual calculator with real inputs rather than a rough percentage',
+    ],
+    followUps: ['How would this compare if you are not married?', 'What surprised you most about German payroll deductions?'],
+  },
+  {
+    id: 'hr-034',
+    round: 'hr',
+    category: 'Compensation',
+    question: 'At this salary you are above the JAEG threshold, what does that mean for your health insurance?',
+    answer: [
+      'Know what the threshold does: above the Jahresarbeitsentgeltgrenze (JAEG, the compulsory-insurance income ceiling, roughly [check the current year\'s figure — it rises annually]), you are no longer required to stay in the statutory system (GKV) and can opt into private health insurance (PKV) instead.',
+      'Weigh the real trade-off, not just the sticker price: PKV premiums are often lower when young and healthy but rise with age and pre-existing conditions, are individually underwritten (not income-based), and switching back to GKV later is restricted, especially past age 55 — so it is a long-horizon decision, not just a today decision.',
+      'Name the family angle: GKV has free co-insurance for a non-earning spouse and children (Familienversicherung); PKV requires a separate paid policy for each family member, which changes the math significantly for anyone planning a family.',
+      'If unsure, the practical staff-level answer is to stay on GKV (or a strong open GKV-equivalent) unless you have done the specific math for your situation, since the switch is easy to make later but expensive to reverse.',
+    ],
+    keyPoints: [
+      'Knows the JAEG threshold is what makes PKV optional, not GKV membership itself',
+      'Weighs age-based/underwritten PKV pricing against flat-rate, family-inclusive GKV',
+      'Names the restricted path back to GKV, especially past age 55',
+      'Gives a sensible default (stay GKV unless the math is done) rather than a snap decision',
+    ],
+    followUps: ['Would your answer change if you have or are planning a family?', 'What would you want to know before choosing PKV?'],
+  },
+  {
+    id: 'hr-035',
+    round: 'hr',
+    category: 'Compensation',
+    question: 'Would you ask your current employer for an Arbeitszeugnis before you leave?',
+    answer: [
+      'Yes, and explain why it matters in Germany specifically: an Arbeitszeugnis (a formal, legally regulated reference letter) is standard practice, often expected by future employers, and you are legally entitled to one on request when leaving a role.',
+      'Know the coded-language convention: German reference letters use a well-known scale of stock phrases where subtly different wording signals very different performance ratings (e.g. "stets zu unserer vollsten Zufriedenheit" reads as top marks, "zu unserer Zufriedenheit" alone reads as merely average) — worth knowing so you can sanity-check your own letter.',
+      'Request it in writing, ideally timed near your last working day so it reflects your final role and responsibilities accurately, and review it carefully before accepting it, since a poorly worded one can be pushed back on and revised.',
+      'If you are early in a relocation process and have not yet resigned, note that this is a forward-looking habit to build, not something to worry about mid-interview, unless directly asked about references.',
+    ],
+    keyPoints: [
+      'Knows Arbeitszeugnis is standard German practice and a legal entitlement on leaving',
+      'Aware of the coded-phrase convention and what it signals',
+      'Requests it near the last working day and reviews wording carefully',
+      'Frames it as routine practice, not something to be anxious about',
+    ],
+    followUps: ['What would you do if the wording seemed subtly negative?', 'Have you seen this convention in other countries you have worked in?'],
   },
 
   // Process & culture (4)

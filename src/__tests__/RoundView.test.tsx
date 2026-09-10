@@ -75,4 +75,14 @@ describe('RoundView', () => {
     expect(screen.getByPlaceholderText(/search questions/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /reveal/i })).not.toBeInTheDocument();
   });
+
+  test('an unknown round id renders a not-found message instead of throwing', () => {
+    function BadHarness() {
+      const [state, dispatch] = useReducer(reducer, EMPTY);
+      // @ts-expect-error deliberately invalid RoundId to exercise the guard
+      return <RoundView roundId="not-a-round" state={state} dispatch={dispatch} />;
+    }
+    render(<BadHarness />);
+    expect(screen.getByText(/round not found/i)).toBeInTheDocument();
+  });
 });

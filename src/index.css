@@ -38,7 +38,9 @@
   --color-emerald-600: #98971a;
   --color-emerald-950: #3c3a15;
 
-  --color-red-400: #fb4934;
+  /* Lightened from gruvbox's #fb4934 (~4.3:1 on this bg, below AA text contrast)
+     to #ff6b5b (~5.3:1) — still reads as gruvbox red, just legible as body text. */
+  --color-red-400: #ff6b5b;
   --color-red-500: #fb4934;
   --color-red-600: #cc241d;
 
@@ -73,4 +75,16 @@ a, button, [role='button'], input, textarea, select {
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) {
+    animation-duration: 0.001ms !important;
+  }
+}
+
+/* Both themes are dark-on-dark, and browsers drop background colors when printing
+   by default — without this, the cheat sheet prints light text on white paper.
+   Force plain black-on-white instead of trying to preserve either theme's palette. */
+@media print {
+  html, body { background: #fff !important; }
+  body, body * { color: #000 !important; border-color: #999 !important; }
+  header { display: none !important; }
 }

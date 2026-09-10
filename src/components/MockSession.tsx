@@ -49,7 +49,7 @@ export function MockSession({ state, dispatch }: { state: Persisted; dispatch: D
         <a href="#" className="mb-4 inline-block text-sm text-zinc-500 dark:text-zinc-400 hover:underline">← All rounds</a>
         <h1 className="text-2xl font-semibold">Mock session</h1>
         <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-          A curated, cross-round set in one sitting. No timer — go at your own pace, finish whenever.
+          A curated, cross-round set in one sitting. Go at your own pace — each question shows how long you took once you reveal it, but nothing forces a hide.
         </p>
         <ul className="space-y-3">
           {PRESETS.map((p) => (
@@ -102,7 +102,7 @@ export function MockSession({ state, dispatch }: { state: Persisted; dispatch: D
       <a href="#" className="mb-4 inline-block text-sm text-zinc-500 dark:text-zinc-400 hover:underline">← All rounds</a>
       <h1 className="text-2xl font-semibold">{preset.title}</h1>
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{drill.length} questions. Rate as you go, finish whenever.</p>
-      <Practice questions={drill} state={state} dispatch={dispatch} />
+      <Practice questions={drill} state={state} dispatch={dispatch} onLapComplete={() => setFinished(true)} />
       <div className="mt-3 flex justify-end">
         <button type="button" onClick={() => setFinished(true)} className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">
           Finish session

@@ -1,15 +1,16 @@
 # Interview Prep
 
 Interactive mock-interview drill for staff frontend engineer loops in Berlin / EU.
-Seven rounds, 255 curated questions with model answers, key points and likely
+Seven rounds, 296 curated questions with model answers, key points and likely
 follow-ups. Reveal, rate yourself, and weak questions come back first.
 
 **Live:** https://namityadav.github.io/interview-prep/
 
 ## Rounds
-1. HR screen
-2. Hiring manager (live code review, web fundamentals, situational, behavioral)
-3. Live coding (pairing, debugging, code review)
+1. HR screen (compensation, negotiation, German employment basics)
+2. Hiring manager (live code review, web fundamentals, security, TypeScript,
+   reliability, situational, behavioral)
+3. Live coding (pairing, debugging, code review, timed build prompts)
 4. Frontend system design (one prompt, 45 minutes)
 5. Case study (take-home + presentation)
 6. Case study debrief (panel grilling)
@@ -17,16 +18,25 @@ follow-ups. Reveal, rate yourself, and weak questions come back first.
 
 ## Ways to drill
 - **Round practice** — a weak-first queue for one round. Filter by category, or switch
-  to the **Browse** tab to search every question, answer and key point at once.
+  to the **Browse** tab to search every question, answer and key point at once. A lap
+  ends once every question has been shown once, with a summary and a way to start
+  another.
 - **Weak drill** — everything you rated Weak, across all seven rounds, in one queue.
   The set is frozen on entry; re-enter it to rebuild.
 - **Mock session** — a cross-round set in one sitting, weighted toward your weak spots.
   Two presets: *Full loop* (a slice of every round) and *Technical rounds* (hiring
-  manager, live coding, system design). No timer. Ends in a recap of what you rated.
+  manager, live coding, system design). Ends in a recap, either by hitting Finish or
+  once you have gone through the whole set.
+- **Search** — every question, every round, in one search box.
+- **Print cheat sheet** — everything rated Weak plus everything you have a note on,
+  grouped by round, laid out for printing before you walk in.
 
 ## Working a question
 - **Reveal** the model answer, then tick off the key points you actually said out loud.
-  The hit count suggests a rating.
+  The hit count suggests a rating. Once revealed, the card shows how long you took and
+  the round's target time — a stopwatch, not a countdown, so nothing forces a hide.
+- **Back** steps to the previous question if you want to re-rate it; disabled at the
+  start of a lap.
 - **Likely follow-ups** stay behind a button, so you answer before you read.
 - `[bracket slots]` in an answer are yours to fill from your own experience — the
   answers are coaching scaffolds, not a script to memorise.
@@ -40,7 +50,7 @@ follow-ups. Reveal, rate yourself, and weak questions come back first.
   you have said it out loud.
 
 ## Keyboard (practice queues)
-`Space` reveal · `1` / `2` / `3` rate Weak / OK / Solid · `N` skip.
+`Space` reveal · `1` / `2` / `3` rate Weak / OK / Solid · `N` skip · `B` back.
 
 ## Your data
 - Ratings, notes and stories stay in your browser (localStorage). Nothing is sent

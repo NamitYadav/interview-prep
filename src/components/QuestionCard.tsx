@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Question, Rating } from '../types';
+import { rounds } from '../data';
 
 const RATINGS: { value: Rating; label: string; className: string }[] = [
   { value: 1, label: 'Weak', className: 'border-red-500 text-red-600 dark:text-red-400' },
@@ -9,6 +10,13 @@ const RATINGS: { value: Rating; label: string; className: string }[] = [
 
 const suggestedRating = (hits: number, total: number): Rating | undefined =>
   total === 0 ? undefined : hits === total ? 3 : hits === 0 ? 1 : 2;
+
+const formatTime = (ms: number) => {
+  const totalSeconds = Math.round(ms / 1000);
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+};
 
 const PLACEHOLDER_SPLIT = /(\[[^\]]+\])/;
 const isPlaceholder = (s: string) => /^\[[^\]]+\]$/.test(s);
@@ -36,6 +44,22 @@ export function QuestionCard({
   const answerRef = useRef<HTMLDivElement>(null);
   const [checked, setChecked] = useState<Set<number>>(() => new Set());
   const [followUpsShown, setFollowUpsShown] = useState(false);
+
+  // Runs from mount to the Reveal click — a stopwatch, not a countdown, so it never
+  // forces a hide. Stays null in Browse, which renders already-revealed and never
+  // fires this click. Set in an effect, not `useRef(Date.now())` in the render body —
+  // Date.now() is impure, and the effect always commits before a user could click
+  // Reveal, so the timing is equivalent in practice.
+  const mountedAt = useRef<number | null>(null);
+  useEffect(() => {
+    mountedAt.current = Date.now();
+  }, []);
+  const [elapsedMs, setElapsedMs] = useState<number | null>(null);
+  const targetSeconds = rounds.find((r) => r.id === question.round)?.targetSeconds;
+  const handleReveal = () => {
+    setElapsedMs(Date.now() - mountedAt.current!);
+    onReveal();
+  };
 
   // Declared before the heading effect so that on mount (Browse renders revealed) the
   // heading wins; on a Practice reveal only this one re-runs and focus lands on the answer
@@ -65,13 +89,18 @@ export function QuestionCard({
       {!revealed ? (
         <button
           type="button"
-          onClick={onReveal}
+          onClick={handleReveal}
           className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
         >
           Reveal <kbd className="ml-2 text-xs opacity-70 [@media(hover:none)]:hidden">Space</kbd>
         </button>
       ) : (
         <div ref={answerRef} tabIndex={-1} className="animate-fade-in space-y-4 text-sm outline-none">
+          {elapsedMs !== null && (
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Answered in {formatTime(elapsedMs)}{targetSeconds !== undefined && ` · target ${formatTime(targetSeconds * 1000)}`}
+            </p>
+          )}
           <section className="space-y-2">
             {question.answer.map((p, i) => <p key={i}>{withPlaceholders(p)}</p>)}
           </section>
