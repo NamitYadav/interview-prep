@@ -47,12 +47,17 @@ export function QuestionCard({
 
   // Runs from mount to the Reveal click — a stopwatch, not a countdown, so it never
   // forces a hide. Stays null in Browse, which renders already-revealed and never
-  // fires this click.
-  const mountedAt = useRef(Date.now());
+  // fires this click. Set in an effect, not `useRef(Date.now())` in the render body —
+  // Date.now() is impure, and the effect always commits before a user could click
+  // Reveal, so the timing is equivalent in practice.
+  const mountedAt = useRef<number | null>(null);
+  useEffect(() => {
+    mountedAt.current = Date.now();
+  }, []);
   const [elapsedMs, setElapsedMs] = useState<number | null>(null);
   const targetSeconds = rounds.find((r) => r.id === question.round)?.targetSeconds;
   const handleReveal = () => {
-    setElapsedMs(Date.now() - mountedAt.current);
+    setElapsedMs(Date.now() - mountedAt.current!);
     onReveal();
   };
 
