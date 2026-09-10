@@ -13,11 +13,19 @@ export function Practice({
 }: {
   questions: Question[]; state: Persisted; dispatch: Dispatch<Action>; onLapComplete?: () => void;
 }) {
-  const [currentId, setCurrentId] = useState<string | undefined>(() => nextQuestion(questions, state.progress)?.id);
+  // `history` is every question id shown this lap, in order; `historyPos` is which one
+  // is on screen. Advancing appends and moves the pointer to the end; Back just moves
+  // the pointer back over ids already recorded, no separate undo stack needed.
+  const [history, setHistory] = useState<string[]>(() => {
+    const first = nextQuestion(questions, state.progress)?.id;
+    return first ? [first] : [];
+  });
+  const [historyPos, setHistoryPos] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [seenThisLap, setSeenThisLap] = useState<Set<string>>(() => new Set());
   const [lapDone, setLapDone] = useState(false);
 
+  const currentId = history[historyPos];
   const current = useMemo(() => questions.find((q) => q.id === currentId), [questions, currentId]);
 
   // A lap ends when every question in this set has been shown once — nextQuestion
@@ -26,12 +34,12 @@ export function Practice({
     const next = nextQuestion(questions, progress, seen);
     setSeenThisLap(seen);
     if (!next) {
-      setCurrentId(undefined);
       setLapDone(true);
       onLapComplete?.();
       return;
     }
-    setCurrentId(next.id);
+    setHistory((h) => [...h, next.id]);
+    setHistoryPos((p) => p + 1);
     setRevealed(false);
   };
 
@@ -47,6 +55,12 @@ export function Practice({
     advance(state.progress, new Set([...seenThisLap, current.id]));
   };
 
+  const back = () => {
+    if (historyPos === 0) return;
+    setHistoryPos((p) => p - 1);
+    setRevealed(true);
+  };
+
   const startAnotherLap = () => {
     setLapDone(false);
     advance(state.progress, new Set());
@@ -54,9 +68,9 @@ export function Practice({
 
   // Keydown handler is registered once; latest closures are read through this ref
   // so skip/rate/revealed never go stale without re-subscribing on every render.
-  const latest = useRef({ skip, rate, revealed });
+  const latest = useRef({ skip, rate, back, revealed, historyPos });
   useEffect(() => {
-    latest.current = { skip, rate, revealed };
+    latest.current = { skip, rate, back, revealed, historyPos };
   });
 
   useEffect(() => {
@@ -65,6 +79,7 @@ export function Practice({
       const isButton = e.target instanceof HTMLElement && e.target.tagName === 'BUTTON';
       if (e.key === ' ') { if (isButton) return; e.preventDefault(); setRevealed(true); }
       else if (e.key === 'n' || e.key === 'N') latest.current.skip();
+      else if (e.key === 'b' || e.key === 'B') latest.current.back();
       else if (latest.current.revealed && (e.key === '1' || e.key === '2' || e.key === '3')) latest.current.rate(Number(e.key) as Rating);
     };
     window.addEventListener('keydown', onKey);
@@ -104,7 +119,15 @@ export function Practice({
         onNote={(text) => dispatch({ type: 'note', id: current.id, text })}
         onRate={rate}
       />
-      <div className="flex justify-end">
+      <div className="flex justify-between">
+        <button
+          type="button"
+          onClick={back}
+          disabled={historyPos === 0}
+          className="text-sm text-zinc-500 disabled:opacity-40 dark:text-zinc-400 hover:enabled:underline"
+        >
+          <kbd className="mr-1 text-xs">B</kbd> Back
+        </button>
         <button type="button" onClick={skip} className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">
           Skip <kbd className="ml-1 text-xs">N</kbd>
         </button>

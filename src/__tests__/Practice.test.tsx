@@ -91,6 +91,29 @@ describe('Practice', () => {
     expect(screen.getByText('Second question?')).toBeInTheDocument();
   });
 
+  test('back returns to the previous question, revealed, and is disabled on the first', async () => {
+    render(<Harness />);
+    expect(screen.getByRole('button', { name: /back/i })).toBeDisabled();
+
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    await userEvent.click(screen.getByRole('button', { name: /solid/i }));
+    expect(screen.getByText('Second question?')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /back/i }));
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+    expect(screen.getByText('Answer one.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /solid/i })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /back/i })).toBeDisabled();
+  });
+
+  test('keyboard: b goes back', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    await userEvent.click(screen.getByRole('button', { name: /solid/i }));
+    fireEvent.keyDown(window, { key: 'b' });
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+  });
+
   test('empty state when no questions', () => {
     render(<Practice questions={[]} state={EMPTY} dispatch={() => {}} />);
     expect(screen.getByText(/no questions match/i)).toBeInTheDocument();
