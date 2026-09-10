@@ -1,7 +1,7 @@
 import type { Question } from '../types';
 
 export const design: Question[] = [
-  // Product surfaces (6)
+  // Product surfaces (12)
   {
     id: 'design-001',
     round: 'design',
@@ -116,8 +116,122 @@ export const design: Question[] = [
     ],
     followUps: ['How would you handle a step whose validation depends on a slow external check, like an ID verification service?', 'How would you migrate in-progress applications if you change the step order later?'],
   },
+  {
+    id: 'design-019',
+    round: 'design',
+    category: 'Product surfaces',
+    question: 'Design a multi-currency balance view: a user holds several currencies, and the UI must show live-converted totals without misleading anyone about exact amounts.',
+    answer: [
+      "Separate stored value from displayed value hard: the amount actually held in each currency is the source of truth and never changes based on a conversion rate; a converted total shown in a reference currency is a derived, clearly-labeled estimate, never presented as an exact balance.",
+      "Handle precision correctly: hold monetary amounts as integers in the smallest unit (cents) or a decimal library, never as floating-point numbers, since float rounding errors in a balance screen are a real-world class of production bug, not a theoretical one.",
+      "Make rate staleness visible: show when the conversion rate was last fetched, refresh it on an interval or on focus, and never let a stale rate silently sit for hours presented as current — a fintech user will notice and lose trust immediately.",
+      "Cover the input side too: if the user is converting or transferring, lock in the rate at confirmation time and show a short countdown or re-confirmation if it expires before the action completes, rather than executing at a rate that has since moved.",
+    ],
+    keyPoints: [
+      'Stored per-currency amount is the source of truth; converted total is a labeled estimate',
+      'Uses integer cents or a decimal library for money, never raw floats',
+      'Shows rate staleness/last-updated time rather than presenting a rate as permanently current',
+      'Locks a conversion rate at confirmation time with expiry handling for a real transaction',
+    ],
+    followUps: ['How would you handle a currency pair with no direct rate, requiring conversion through a third currency?', 'What would you show if the rate feed itself goes down?'],
+  },
+  {
+    id: 'design-020',
+    round: 'design',
+    category: 'Product surfaces',
+    question: 'Design a transaction history screen: thousands of rows, filterable by date/category/amount, searchable, and exportable to CSV.',
+    answer: [
+      "Push filtering and search to the server, not the client: with thousands of rows the client should never hold the full dataset just to filter it locally — send filter/search/sort parameters and paginate the results with a cursor.",
+      "Design the filter state as URL-shareable query parameters, not only component state, so a filtered view can be bookmarked, shared, or survive a refresh — a real, frequently-requested feature for exactly this kind of screen.",
+      "Cover export honestly: a CSV export of a filtered, possibly large result set should be a server-generated async job with a download-when-ready notification, not a client-side loop fetching every page and building the file in the browser, which will time out or freeze the tab past a modest size.",
+      "Address categorization UX: category is often user-editable after the fact (recategorizing a transaction), so design that as an inline, immediately-persisted edit rather than a separate screen, and make sure a recategorization updates any already-rendered summary totals.",
+    ],
+    keyPoints: [
+      'Filtering, search, and sort are server-side with cursor pagination, not client-side over a full dataset',
+      'Filter state lives in the URL so views are shareable and refresh-safe',
+      'Large exports are an async server job with a ready notification, not a client-side loop',
+      'Inline recategorization updates any visible summary totals immediately',
+    ],
+    followUps: ['How would you keep the running balance column correct while a filter is applied?', 'How would you handle a search term that matches a merchant name stored inconsistently across transactions?'],
+  },
+  {
+    id: 'design-021',
+    round: 'design',
+    category: 'Product surfaces',
+    question: 'Design the document-capture step of a KYC (identity verification) flow: photograph an ID document and a selfie, handle a rejected submission, and let the user retry.',
+    answer: [
+      "Scope this to the capture and verification UX specifically, not the whole onboarding wizard: guide the user to a good photo (in-frame guides, blur/glare detection before upload) since a bad capture causing a slow, generic rejection later is the most common real-world failure of these flows.",
+      "Give live feedback before submission where feasible: a client-side check for obvious problems (image too dark, document out of frame, cropped) provides an instant retry loop, far faster than a round trip to a verification service that takes seconds to minutes.",
+      "Design the rejection path to be specific, not generic: 'document expired' and 'photo unreadable' need different next steps shown to the user, and each retry should reset only the failed capture, not force restarting the entire step.",
+      "Treat the images as highly sensitive personal data end to end: upload over TLS directly to a secure, access-controlled store (ideally not routed through general application logs or error trackers), and make sure any client-side preview of the captured image is cleared from memory/state once the upload completes.",
+    ],
+    keyPoints: [
+      'Scoped to capture/verification UX, not the whole onboarding wizard',
+      'Client-side pre-submission checks (blur, framing, glare) give an instant retry loop',
+      'Specific, actionable rejection reasons per failure type, not a generic retry',
+      'Treats captured images as sensitive personal data through upload, storage, and cleanup',
+    ],
+    followUps: ['How would you support this on a low-end device with a poor camera?', 'How would you test the pre-submission image-quality checks without a real verification backend?'],
+  },
+  {
+    id: 'design-022',
+    round: 'design',
+    category: 'Product surfaces',
+    question: 'Design a live courier/delivery tracking view: a map showing a moving courier, an ETA that updates, and a route line.',
+    answer: [
+      "Separate the update cadence from the render cadence: position updates might arrive every few seconds over a WebSocket, but you should interpolate the marker's movement smoothly between updates (a short client-side animation toward the new point) rather than snapping, which reads as broken.",
+      "Treat the ETA as a derived, uncertain estimate and say so in the UI (a range or a 'about' prefix), recomputed on each position update from a routing service, rather than a single fixed number the user learns to distrust the moment it is wrong.",
+      "Handle the map/route data volume deliberately: render only the relevant route segment near the courier's current position at high detail, and simplify the geometry for the parts already traveled, since a full precise polyline for a long route is unnecessary rendering cost.",
+      "Cover the disconnect case: if position updates stop arriving, show a 'last seen' timestamp rather than freezing the marker with no indication anything is wrong, and reconnect the stream with backoff.",
+    ],
+    keyPoints: [
+      'Interpolates marker movement between updates instead of snapping',
+      'Presents ETA as an explicit estimate/range, recomputed per update',
+      'Simplifies already-traveled route geometry to control rendering cost',
+      'Shows a last-seen indicator rather than silently freezing on a dropped stream',
+    ],
+    followUps: ['How would you handle multiple couriers on one map view (e.g. a dispatcher dashboard)?', 'How would you test the interpolation logic without a live GPS feed?'],
+  },
+  {
+    id: 'design-023',
+    round: 'design',
+    category: 'Product surfaces',
+    question: 'Design a live preview pane for a CMS: an editor on one side, and a preview of the rendered page on the other, updating as the user types.',
+    answer: [
+      "Decide the isolation boundary first: render the preview inside an iframe (a separate document/origin from the editor) so the previewed page's own scripts and styles cannot leak into or break the editor UI, and vice versa.",
+      "Communicate editor-to-preview changes via postMessage rather than direct DOM manipulation across the iframe boundary, since that is the only safe, standard channel between two separate browsing contexts, and validate the message shape on the receiving side rather than trusting it blindly.",
+      "Debounce the update, not the keystroke handling: batch rapid typing into a preview refresh every 200-400ms rather than re-rendering the full preview on every keystroke, which is wasted work and can visibly stutter for a content-heavy page.",
+      "Preserve preview state across updates where it matters: a full iframe reload on every change loses scroll position and any interactive state (an open accordion, a video mid-play) — prefer patching the rendered content in place, or explicitly restoring scroll position after a reload if a full reload is simpler to build first.",
+    ],
+    keyPoints: [
+      'Preview renders in an isolated iframe, not inline in the editor document',
+      'Editor-to-preview communication goes through postMessage with validated payloads',
+      'Debounces preview refresh instead of re-rendering on every keystroke',
+      'Preserves or restores scroll/interactive state across preview updates',
+    ],
+    followUps: ['How would you support a preview of a responsive breakpoint without a real device?', 'How would you validate a postMessage payload against a malicious or buggy sender?'],
+  },
+  {
+    id: 'design-024',
+    round: 'design',
+    category: 'Product surfaces',
+    question: 'Design a fraud/risk review queue: an analyst works through flagged transactions, viewing evidence side by side and recording a decision with an audit trail.',
+    answer: [
+      "Design the case view around comparison, not a single record: the analyst needs the flagged transaction alongside relevant context (recent transaction history, device/location signals, prior flags on this account) visible at once, not behind separate tabs they must reconstruct mentally.",
+      "Make every decision an explicit, structured action, not a free-text note: approve/deny/escalate with a required reason code, so the data is later queryable (which reason codes correlate with confirmed fraud) rather than locked in prose.",
+      "Treat the audit trail as non-negotiable and append-only: every view, decision, and reason is logged with who and when, and a decision is never silently editable after the fact — a correction is a new logged entry referencing the original, not an overwrite, since this data has real compliance and legal weight.",
+      "Design for queue fairness and throughput explicitly: show the analyst their queue position/count, prevent two analysts from being assigned the same case simultaneously (a claim/lock mechanism), and support a fast keyboard-driven flow for the common path, since analysts triage a high volume of cases per shift.",
+    ],
+    keyPoints: [
+      'Side-by-side case context, not scattered across separate views',
+      'Decisions are structured (reason codes), not free text, for later analysis',
+      'Audit trail is append-only; corrections are new entries, never silent edits',
+      'Explicit case-locking and a fast keyboard flow for analyst throughput',
+    ],
+    followUps: ['How would you handle two analysts disagreeing on the same case?', 'How would you surface a pattern across many cases (e.g. the same device flagged repeatedly) to the analyst reviewing one of them?'],
+  },
 
-  // Platform & scale (6)
+  // Platform & scale (8)
   {
     id: 'design-007',
     round: 'design',
@@ -235,6 +349,44 @@ export const design: Question[] = [
       'Reconnect resyncs to current state rather than replaying full history',
     ],
     followUps: ['How would you handle a user who has been offline for an hour rejoining the session?', 'How would you show attribution for who wrote what without cluttering the document?'],
+  },
+  {
+    id: 'design-025',
+    round: 'design',
+    category: 'Platform & scale',
+    question: 'Design a resumable file upload for large files (e.g. bank statement PDFs or exported data) that must survive a dropped connection or a closed laptop lid.',
+    answer: [
+      "Chunk the file client-side and upload it in fixed-size pieces, tracking which chunks have been acknowledged by the server, so a resume only needs to send the remaining chunks rather than restarting the whole file.",
+      "Persist upload progress somewhere that survives a closed tab: an IndexedDB record (or, for a short interruption, an in-memory retry) mapping file identity (name, size, a content hash) to acknowledged chunk indices, so reopening the tab can detect and resume a matching in-progress upload.",
+      "Make chunk upload idempotent: each chunk request includes its index and the upload's id, so a chunk re-sent after an ambiguous network failure (request sent, response lost) does not get applied twice server-side.",
+      "Cover the finish condition explicitly: the server assembles chunks only after an explicit 'complete' call once every chunk is acknowledged, with a checksum comparison against the original file, so a subtly corrupted upload is caught before being treated as done.",
+    ],
+    keyPoints: [
+      'Uploads in fixed-size, independently-acknowledged chunks, not one request for the whole file',
+      'Persists progress (e.g. IndexedDB) keyed by file identity so a resume can be detected',
+      'Chunk uploads are idempotent against ambiguous network failures',
+      'Explicit complete step with a checksum check before treating the upload as done',
+    ],
+    followUps: ['How would you detect that a resumed upload is actually for a different, similarly-named file?', 'How would you show upload progress accurately across pause/resume cycles?'],
+  },
+  {
+    id: 'design-026',
+    round: 'design',
+    category: 'Platform & scale',
+    question: 'Design a feature-flag and experimentation platform for the frontend: flags can target a percentage of users, specific cohorts, and support instant kill-switch rollback.',
+    answer: [
+      "Separate flag evaluation from flag management: the client fetches a resolved, evaluated set of flags for the current user (given their id/cohort attributes) from an edge-cached endpoint, rather than downloading the full targeting-rule engine and evaluating rules client-side, which leaks rollout logic and is slower.",
+      "Design for an instant kill-switch: flag state changes must propagate fast (a short-TTL cache or a push invalidation), because the entire value of a kill-switch is being able to disable a broken feature in seconds, not on the next deploy or after a multi-minute cache expiry.",
+      "Cover consistency within a session: a user should not see a feature flip on and off within the same session due to re-evaluation on every render — resolve flags once per session/page-load and treat a mid-session change as taking effect on the next load, unless the feature explicitly needs live updates.",
+      "Address the code-hygiene failure mode directly: every flag needs an owner and an expected removal date, since the classic outcome of a flag system is permanent 'temporary' branches — treat an untouched flag past its expected date as tech debt to clean up, not a permanent architecture.",
+    ],
+    keyPoints: [
+      'Client fetches pre-evaluated flags from an edge-cached endpoint, not the full rule engine',
+      'Kill-switch changes propagate on a short TTL or push, not on the next deploy',
+      'Flags resolve once per session for consistency, not re-evaluated on every render',
+      'Every flag has an owner and expected removal date to avoid permanent flag debt',
+    ],
+    followUps: ['How would you test a flag combination locally without hitting the real targeting service?', 'How would you roll out a flag gradually while watching for a specific error-rate regression?'],
   },
 
   // Running the round (6)
