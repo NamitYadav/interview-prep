@@ -38,7 +38,10 @@ export function Practice({
       onLapComplete?.();
       return;
     }
-    setHistory((h) => [...h, next.id]);
+    // Truncate anything past the current position before appending, so advancing
+    // after a Back overwrites the old forward path instead of stranding it — the
+    // same semantics as browser history after navigating back then clicking a link.
+    setHistory((h) => [...h.slice(0, historyPos + 1), next.id]);
     setHistoryPos((p) => p + 1);
     setRevealed(false);
   };
@@ -62,15 +65,19 @@ export function Practice({
   };
 
   const startAnotherLap = () => {
+    const first = nextQuestion(questions, state.progress)?.id;
+    setHistory(first ? [first] : []);
+    setHistoryPos(0);
+    setSeenThisLap(new Set());
+    setRevealed(false);
     setLapDone(false);
-    advance(state.progress, new Set());
   };
 
   // Keydown handler is registered once; latest closures are read through this ref
   // so skip/rate/revealed never go stale without re-subscribing on every render.
-  const latest = useRef({ skip, rate, back, revealed, historyPos });
+  const latest = useRef({ skip, rate, back, revealed });
   useEffect(() => {
-    latest.current = { skip, rate, back, revealed, historyPos };
+    latest.current = { skip, rate, back, revealed };
   });
 
   useEffect(() => {

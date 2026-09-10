@@ -22,8 +22,13 @@ export function useHashRoute(): Route | null {
 
   useEffect(() => {
     const onChange = () => {
-      withViewTransition(() => setRoute(fromHash()));
-      window.scrollTo(0, 0);
+      // Scroll inside the transition callback so it lands in the same flushSync as
+      // the route change, before the transition snapshots the old page — outside it,
+      // the outgoing view jumps to the top a frame before the cross-fade starts.
+      withViewTransition(() => {
+        setRoute(fromHash());
+        window.scrollTo(0, 0);
+      });
     };
     window.addEventListener('hashchange', onChange);
     return () => window.removeEventListener('hashchange', onChange);

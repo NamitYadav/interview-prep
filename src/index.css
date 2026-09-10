@@ -79,3 +79,12 @@ a, button, [role='button'], input, textarea, select {
     animation-duration: 0.001ms !important;
   }
 }
+
+/* Both themes are dark-on-dark, and browsers drop background colors when printing
+   by default — without this, the cheat sheet prints light text on white paper.
+   Force plain black-on-white instead of trying to preserve either theme's palette. */
+@media print {
+  html, body { background: #fff !important; }
+  body, body * { color: #000 !important; border-color: #999 !important; }
+  header { display: none !important; }
+}
