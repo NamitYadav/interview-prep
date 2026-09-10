@@ -51,7 +51,25 @@ describe('Practice', () => {
     expect(screen.getByText('Answer one.')).toBeInTheDocument();
     fireEvent.keyDown(window, { key: '2' });
     expect(screen.getByText('Second question?')).toBeInTheDocument();
+    // Both questions have now been shown this lap — skipping the second ends the lap
+    // rather than silently wrapping back to the first.
     fireEvent.keyDown(window, { key: 'n' });
+    expect(screen.getByText(/lap done/i)).toBeInTheDocument();
+  });
+
+  test('a lap ends once every question has been shown, with a way to start another', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    await userEvent.click(screen.getByRole('button', { name: /solid/i }));
+    expect(screen.getByText('Second question?')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    await userEvent.click(screen.getByRole('button', { name: /solid/i }));
+
+    expect(screen.getByText(/lap done/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 solid/i)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /start another lap/i }));
     expect(screen.getByText('First question?')).toBeInTheDocument();
   });
 

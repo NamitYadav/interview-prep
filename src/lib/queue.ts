@@ -1,7 +1,13 @@
 import type { Progress, Question } from '../types';
 
 // ponytail: bucket sort, not SM-2. Upgrade to SM-2 intervals if the queue feels repetitive.
-const bucket = (progress: Progress, id: string): number => progress[id]?.rating ?? 0;
+// Weak surfaces first (you need the reps most), then unrated, then ok, then solid.
+const bucket = (progress: Progress, id: string): number => {
+  const rating = progress[id]?.rating;
+  if (rating === 1) return 0;
+  if (rating === undefined) return 1;
+  return rating;
+};
 const lastSeen = (progress: Progress, id: string): number => progress[id]?.lastSeen ?? 0;
 
 export function orderQueue(questions: Question[], progress: Progress): Question[] {
@@ -12,13 +18,14 @@ export function orderQueue(questions: Question[], progress: Progress): Question[
   );
 }
 
+// undefined means every question has already been shown this lap — the caller decides
+// what "lap done" looks like instead of this silently wrapping back to the top.
 export function nextQuestion(
   questions: Question[],
   progress: Progress,
   exclude: ReadonlySet<string> = new Set(),
 ): Question | undefined {
-  const ordered = orderQueue(questions, progress);
-  return ordered.find((q) => !exclude.has(q.id)) ?? ordered[0];
+  return orderQueue(questions, progress).find((q) => !exclude.has(q.id));
 }
 
 export interface RoundStats {

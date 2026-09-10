@@ -1,30 +1,37 @@
 import { useEffect, useMemo, useRef, useState, type Dispatch } from 'react';
 import type { Persisted, Question, Rating } from '../types';
 import type { Action } from '../hooks/useAppState';
-import { nextQuestion } from '../lib/queue';
+import { nextQuestion, roundStats } from '../lib/queue';
 import { reducer } from '../hooks/useAppState';
 import { QuestionCard } from './QuestionCard';
 
 const isTyping = (target: EventTarget | null) =>
   target instanceof HTMLElement && (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT');
 
-export function Practice({ questions, state, dispatch }: { questions: Question[]; state: Persisted; dispatch: Dispatch<Action> }) {
+export function Practice({
+  questions, state, dispatch, onLapComplete,
+}: {
+  questions: Question[]; state: Persisted; dispatch: Dispatch<Action>; onLapComplete?: () => void;
+}) {
   const [currentId, setCurrentId] = useState<string | undefined>(() => nextQuestion(questions, state.progress)?.id);
   const [revealed, setRevealed] = useState(false);
-  const [skipped, setSkipped] = useState<Set<string>>(() => new Set());
+  const [seenThisLap, setSeenThisLap] = useState<Set<string>>(() => new Set());
+  const [lapDone, setLapDone] = useState(false);
 
   const current = useMemo(() => questions.find((q) => q.id === currentId), [questions, currentId]);
 
-  const advance = (progress: Persisted['progress'], exclude: Set<string>) => {
-    let ordered = nextQuestion(questions, progress, exclude);
-    const exhausted = ordered !== undefined && exclude.has(ordered.id);
-    if (exhausted) {
-      // Every question has been seen this lap. Restart the lap (skipped clears) but still
-      // don't just redisplay the question we're leaving - exclude only that one.
-      ordered = nextQuestion(questions, progress, current ? new Set([current.id]) : new Set());
+  // A lap ends when every question in this set has been shown once — nextQuestion
+  // returns undefined rather than silently wrapping back to the top of the queue.
+  const advance = (progress: Persisted['progress'], seen: Set<string>) => {
+    const next = nextQuestion(questions, progress, seen);
+    setSeenThisLap(seen);
+    if (!next) {
+      setCurrentId(undefined);
+      setLapDone(true);
+      onLapComplete?.();
+      return;
     }
-    setSkipped(exhausted ? new Set() : exclude);
-    setCurrentId(ordered?.id);
+    setCurrentId(next.id);
     setRevealed(false);
   };
 
@@ -32,12 +39,17 @@ export function Practice({ questions, state, dispatch }: { questions: Question[]
     if (!current) return;
     const action = { type: 'rate' as const, id: current.id, rating, now: Date.now() };
     dispatch(action);
-    advance(reducer(state, action).progress, new Set([...skipped, current.id]));
+    advance(reducer(state, action).progress, new Set([...seenThisLap, current.id]));
   };
 
   const skip = () => {
     if (!current) return;
-    advance(state.progress, new Set([...skipped, current.id]));
+    advance(state.progress, new Set([...seenThisLap, current.id]));
+  };
+
+  const startAnotherLap = () => {
+    setLapDone(false);
+    advance(state.progress, new Set());
   };
 
   // Keydown handler is registered once; latest closures are read through this ref
@@ -58,6 +70,23 @@ export function Practice({ questions, state, dispatch }: { questions: Question[]
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  if (lapDone) {
+    const stats = roundStats(questions, state.progress);
+    return (
+      <div className="rounded border border-dashed p-6 text-center text-sm">
+        <p className="mb-1 font-medium">Lap done</p>
+        <p className="mb-4 text-zinc-600 dark:text-zinc-400">{stats.weak} weak · {stats.ok} ok · {stats.solid} solid</p>
+        <button
+          type="button"
+          onClick={startAnotherLap}
+          className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+        >
+          Start another lap
+        </button>
+      </div>
+    );
+  }
 
   if (!current) {
     return <p className="rounded border border-dashed p-6 text-center text-zinc-500 dark:text-zinc-400">No questions match this filter.</p>;
