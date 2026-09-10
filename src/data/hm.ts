@@ -1,7 +1,7 @@
 import type { Question } from '../types';
 
 export const hm: Question[] = [
-  // Architecture & system design (10)
+  // Architecture & system design (7)
   {
     id: 'hm-001',
     round: 'hm',
@@ -30,12 +30,14 @@ export const hm: Question[] = [
       'Lead with what it actually solves: independently deployable, independently built remotes sharing a runtime, so you avoid the classic iframe/duplication tax while still letting teams ship on their own schedule.',
       'Be direct about the costs: shared dependency version drift (React or a design system loaded twice if versions mismatch), harder debugging across remote boundaries, and a build/deploy pipeline that now has to reason about host-remote compatibility, not just one app.',
       'Cover the operational tax: you need a strategy for versioning shared singletons, a fallback story if a remote fails to load, and a way to test host + remote combinations before they hit production — this is infrastructure work, not a config flag.',
+      'Name the real organizational tension this creates, not just the technical one: a remote wanting to upgrade a shared dependency ahead of the host (or vice versa) is common, and it needs a negotiated upgrade cadence or compatibility test between the owning teams, not an ad hoc Slack message.',
       'End with when it is worth it: [genuine multi-team independent-deploy need], not as a default architecture for a single team that could just use one build.',
     ],
     keyPoints: [
       'Explains what Module Federation actually buys you',
       'Names concrete costs: version drift, cross-remote debugging, pipeline complexity',
       'Covers shared singleton versioning and remote-failure fallback',
+      'Names the organizational tension between host/remote teams over shared dependency upgrades',
       'States when it is and is not worth adopting',
     ],
     followUps: ['How would you test a host against a remote before deploy?', 'How would you detect a remote that loaded but is silently degraded in production?'],
@@ -58,25 +60,6 @@ export const hm: Question[] = [
       'Names the "too many variants" failure mode and its fix',
     ],
     followUps: ['How do you handle a team that needs a variant the library does not support?', 'How do you decide something belongs in the shared library versus staying app-specific?'],
-  },
-  {
-    id: 'hm-004',
-    round: 'hm',
-    category: 'Architecture & system design',
-    question: 'How do you version and roll out breaking changes in a design system?',
-    answer: [
-      'Use semver meaningfully: patch/minor for additive and non-breaking changes, major for anything that changes an existing public API or visual contract consumers rely on, and communicate that distinction clearly in release notes.',
-      'Prefer additive migration paths over hard cuts: ship the new API alongside the old one behind a clearly named prop or component variant, give consumers a deprecation window with a real deadline, and provide a codemod where the change is mechanical.',
-      'Make the blast radius visible before you ship: know which consuming apps use the changing component and at what usage volume, so you can sequence rollout from lowest-risk to highest-risk consumers.',
-      'Close the loop with monitoring: track how many consumers are still on the deprecated path and chase the long tail explicitly, rather than assuming a changelog entry is enough.',
-    ],
-    keyPoints: [
-      'Meaningful semver discipline tied to actual API/visual contract',
-      'Additive deprecation path plus codemod where mechanical',
-      'Visibility into which apps use the changing component before rollout',
-      'Active tracking of long-tail migration, not just a changelog note',
-    ],
-    followUps: ['How do you handle a team that cannot migrate before the deprecation deadline?', 'What would you automate first in this rollout process?'],
   },
   {
     id: 'hm-005',
@@ -136,25 +119,6 @@ export const hm: Question[] = [
     followUps: ['How would you measure whether SSR actually helped after adopting it?', 'What would make you migrate a dashboard back to a pure SPA?'],
   },
   {
-    id: 'hm-008',
-    round: 'hm',
-    category: 'Architecture & system design',
-    question: 'How do you architect a frontend for a multi-tenant / whitelabel product?',
-    answer: [
-      'Separate the two axes clearly: theming (colors, logos, typography — a design-token layer resolved per tenant at runtime or build time) versus behavior differences (feature flags per tenant, not forked code paths), since conflating them is the root cause of most whitelabel messes.',
-      'Push tenant differences to configuration, not branches: a tenant config object driving tokens and enabled features, loaded once per session, so the same build serves every tenant rather than maintaining N forked builds.',
-      'Plan for the two failure modes explicitly: tenant-specific one-off requests that tempt you into a special-cased code branch (resist this, generalize the config schema instead), and a tenant config that grows so large it becomes its own maintenance burden — mitigate with a clear schema and validation.',
-      'Cover testing: you need at least one representative tenant configuration exercised in CI beyond the default, since a change that only gets tested against tenant A silently breaks tenant B\'s theme or flag combination.',
-    ],
-    keyPoints: [
-      'Separates theming (tokens) from behavior (feature flags) as distinct axes',
-      'Pushes differences to configuration rather than forked code paths',
-      'Names the one-off special-case trap and the config-bloat failure mode',
-      'CI covers more than one representative tenant configuration',
-    ],
-    followUps: ['How would you onboard a new tenant with a genuinely unique requirement?', 'How do you test theming regressions across tenants?'],
-  },
-  {
     id: 'hm-009',
     round: 'hm',
     category: 'Architecture & system design',
@@ -172,27 +136,6 @@ export const hm: Question[] = [
       'Explicit communication plan and buffer for long-tail apps',
     ],
     followUps: ['What would you do if the pilot app revealed a blocking issue?', 'How do you decide the rollback trigger threshold in advance?'],
-  },
-  {
-    id: 'hm-010',
-    round: 'hm',
-    category: 'Architecture & system design',
-    question: 'How do you design a frontend for offline or flaky networks?',
-    answer: [
-      'Start by naming what must work offline versus what can degrade gracefully: not every feature needs offline support, so scope it to [the specific critical flows] rather than the whole app.',
-      'Cover the mechanics: a service worker or equivalent for asset caching, a local persistence layer (IndexedDB or similar) for data that needs to survive a refresh or connectivity drop, and a clear sync strategy for reconciling local changes once connectivity returns.',
-      'Be explicit about conflict handling: when a local change and a server change to the same resource both exist, define the resolution rule up front (last-write-wins, a merge strategy, or surfacing the conflict to the user) rather than discovering it in production.',
-      'Address UX honestly: users need visible, accurate connectivity/sync-status indicators — a queued action that silently fails to sync is worse than one that visibly tells the user it is pending.',
-      'For an EU/GDPR context, treat local persistence of personal data deliberately: only cache what the offline flow genuinely needs, give queued data a bounded lifetime, and make sure a user-initiated data deletion or logout actually clears the local store rather than leaving stale personal data behind on the device.',
-    ],
-    keyPoints: [
-      'Scopes offline support to specific critical flows, not the whole app',
-      'Covers asset caching, local persistence, and a sync strategy',
-      'Defines a conflict-resolution rule for local vs server changes up front',
-      'Visible, accurate connectivity/sync-status UX for the user',
-      'Addresses GDPR data-minimization and clearing local personal data on logout/deletion',
-    ],
-    followUps: ['How would you test this reliably in CI?', 'What is your conflict-resolution rule when both sides changed the same field?'],
   },
 
   // Performance (6)
@@ -313,7 +256,7 @@ export const hm: Question[] = [
     followUps: ['When would you avoid a skeleton screen?', 'How do you decide what to prefetch versus what to leave lazy?'],
   },
 
-  // Testing & quality (6)
+  // Testing & quality (5)
   {
     id: 'hm-017',
     round: 'hm',
@@ -823,26 +766,7 @@ export const hm: Question[] = [
     followUps: ['How would you handle a reviewer whose comments are consistently harsh in tone?', 'What would you do about a team that routinely submits huge, hard-to-review PRs?'],
   },
 
-  // From your CV (8)
-  {
-    id: 'hm-043',
-    round: 'hm',
-    category: 'From your CV',
-    question: 'Walk me through a major React version migration across multiple apps: how you sequenced it, what broke, what you would do differently.',
-    answer: [
-      'Structure the walkthrough as a phased plan rather than a single leap: [a dependency and usage audit across all the affected apps first] to find which ones used APIs affected by the changes (rendering behavior, StrictMode double-invocation, any concurrent-feature-adjacent code), then a deliberately chosen pilot app to build the actual playbook before touching the rest.',
-      'Cover sequencing logic explicitly: which app went first and why (lowest risk, still representative), how the remaining apps were batched (by risk, by team availability, by shared dependency), and what the rollback trigger was for each batch if something broke post-deploy.',
-      'For "what broke," describe the shape of the breakage generically rather than inventing specifics: [a subtle rendering behavior change surfacing a latent bug that had been masked before], or a third-party library not yet compatible with the new version, and how you triaged whether to fix, patch around, or delay that app.',
-      'Close with a genuine "what I would do differently": something concrete and non-defensive, like starting the dependency audit earlier, or investing in a shared upgrade checklist before app one instead of discovering the checklist as you went.',
-    ],
-    keyPoints: [
-      'Presents a clear phased plan: audit, pilot, playbook, batched rollout',
-      'Explicit sequencing logic and a stated rollback trigger per batch',
-      'Describes the shape of real breakage without inventing specifics',
-      'Ends with a genuine, concrete lesson learned, not a rehearsed non-answer',
-    ],
-    followUps: ['Which React-specific behavior change caused the most breakage, and why did the audit miss it?', 'How did you validate each app was stable before moving to the next batch?'],
-  },
+  // From your CV (5)
   {
     id: 'hm-044',
     round: 'hm',
@@ -901,23 +825,6 @@ export const hm: Question[] = [
     followUps: ['How did you avoid the shared implementation becoming an unmanageable pile of flags?', 'What was the hardest single grid to migrate, generically speaking?'],
   },
   {
-    id: 'hm-047',
-    round: 'hm',
-    category: 'From your CV',
-    question: 'You introduced visual regression testing: what did it catch, what did it cost?',
-    answer: [
-      'Describe the scope decision first: [which surfaces you chose to cover, likely a shared component library or a set of pixel-sensitive critical screens] rather than the whole product, and why that scope was the right cost/value trade-off at the time.',
-      'For what it caught, describe the category of bug generically rather than a specific incident: [a shared token or base style change unintentionally affecting a component nobody was actively watching], the kind of regression that a purely functional test suite structurally cannot detect.',
-      'Close with whether the cost/benefit held up in practice: the baseline-maintenance and false-positive costs are known going in, so the interesting answer is whether they landed where you expected, and whether you would scope it the same way again or narrow/widen the coverage given what you learned.',
-    ],
-    keyPoints: [
-      'States a deliberate scope decision, not blanket coverage',
-      'Describes the category of bug caught without inventing a specific incident',
-      'Gives an honest retrospective view on whether the cost landed as expected and the scope was right',
-    ],
-    followUps: ['How did you handle the false-positive rate in practice?', 'Would you expand or narrow the coverage today?'],
-  },
-  {
     id: 'hm-048',
     round: 'hm',
     category: 'From your CV',
@@ -937,25 +844,6 @@ export const hm: Question[] = [
       'Names the Betriebsrat/§87(1) Nr. 6 BetrVG step (or BDSG fallback) before naming individuals',
     ],
     followUps: ['What would you do if the team started ignoring the bot\'s messages?', 'How would you measure whether it actually improved turnaround time?'],
-  },
-  {
-    id: 'hm-049',
-    round: 'hm',
-    category: 'From your CV',
-    question: 'You built a micro-frontend with Module Federation: what did it decouple, what did it couple?',
-    answer: [
-      'Name what it decoupled clearly: [deploy cadence and release ownership for that specific surface from the rest of the host application], letting one team ship independently without waiting on the host\'s release train — the actual organizational win.',
-      'Be equally direct about what it coupled, since that is the more interesting and more staff-level part of the question: a shared runtime dependency contract (framework version, design system version) between host and remote that both sides now must honor, and a build-time or runtime compatibility check that did not exist before.',
-      'Describe a concrete tension this created generically: [the remote wanting to upgrade a shared dependency ahead of the host, or vice versa], and how you resolved or mitigated it — a versioning policy, a compatibility test, or a negotiated upgrade cadence between the teams.',
-      'Close with an honest assessment: whether the decoupling benefit was worth the new coupling cost in this case, since that trade-off, not the technology itself, is what a staff engineer should be able to weigh clearly in hindsight.',
-    ],
-    keyPoints: [
-      'Names the concrete organizational decoupling win (independent deploy)',
-      'Equally names the new coupling introduced (shared runtime contract)',
-      'Describes a real tension and how it was mitigated',
-      'Gives an honest, weighed retrospective on whether the trade-off was worth it',
-    ],
-    followUps: ['How did you handle a shared dependency version mismatch between host and remote?', 'Would you make the same call again given what you learned?'],
   },
   {
     id: 'hm-050',
