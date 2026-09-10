@@ -9,7 +9,7 @@ import { hoe } from './hoe';
 
 export const ROUND_IDS = ['hr', 'hm', 'coding', 'design', 'case', 'debrief', 'hoe'] as const satisfies readonly RoundId[];
 
-export const ROUTES = [...ROUND_IDS, 'weak', 'notes', 'stories', 'mock'] as const satisfies readonly Route[];
+export const ROUTES = [...ROUND_IDS, 'weak', 'notes', 'stories', 'mock', 'search', 'print'] as const satisfies readonly Route[];
 
 export const rounds: Round[] = [
   { id: 'hr', title: 'HR screen', blurb: 'Motivation, logistics, compensation framing, German employment basics.', targetSeconds: 90 },
