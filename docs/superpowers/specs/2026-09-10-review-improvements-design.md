@@ -32,13 +32,11 @@ own editor.
 | C3d Reliability | `hm.ts`, new category `Reliability & incidents` | Frontend SLOs/error budgets, incident command basics, writing outage comms, blameless postmortem structure, being the 3am owner of a frontend alert. | +5 |
 | C4 Negotiation | `hr.ts`, existing category `Compensation` | Responding to a lowball, who names a number first, signing bonus to offset a forfeited bonus, brutto vs netto & Steuerklasse, GKV vs PKV above the JAEG threshold, requesting an Arbeitszeugnis. | +6 |
 | C4b Fix | `hr.ts` | Correct the EU Pay Transparency Directive question: the national transposition deadline (7 June 2026) has passed — rephrase from "upcoming" to what changed and what to expect from a German employer now. | 0 |
-| C5 Dedupe | `hm.ts`, `debrief.ts` | Delete the weaker of each near-duplicate pair, folding any unique key points into the survivor. Cross-round pairs (hm/design) keep the design copy and delete the hm one — these are system-design-shaped prompts that fit the design round: hm-004/design-010, hm-008/design-007, hm-010/design-011. Within-round: hm-009/hm-043 (drop hm-043), hm-018/hm-047 (drop hm-047; case-036 is a third near-match but stays — different round, kept), hm-001/002/049 (keep 2 of the 3, drop the weakest), debrief-007/021 (drop debrief-021). `design-008`/`debrief-018` reviewed and **kept as-is**: one is a build prompt, the other a post-hoc reflection question — different enough in framing to not be a true duplicate. | −6 |
+| C5 Dedupe | `hm.ts` | Delete the weaker of each confirmed near-duplicate pair, folding any unique key points into the survivor. Cross-round pairs (hm/design) keep the design copy and delete the hm one — these are system-design-shaped prompts that fit the design round: hm-004/design-010 (drop hm-004), hm-008/design-007 (drop hm-008), hm-010/design-011 (drop hm-010, fold its GDPR/local-storage point into design-011). Within-round: hm-009/hm-043 (drop hm-043, near-identical structure reworded), hm-018/hm-047 (drop hm-047; case-036 is a third near-match but stays — different round, kept), hm-002/hm-049 (drop hm-049, fold its organizational-coupling framing into hm-002; hm-001 is a distinct decision-framework question and stays). | −6 |
+| ~~Dedupe~~ | — | Re-read against the actual text: `debrief-007`/`debrief-021` and `design-008`/`debrief-018` are **not duplicates** (different questions entirely — testing prioritization vs. "one more day" reflection; RTL/i18n design vs. adversarial-QA reflection). The earlier review's pairing was wrong. Both pairs are kept, untouched. | 0 |
 | C6 | `src/__tests__/data.test.ts`, `README.md` | Update exact-count map and round blurbs/totals. | — |
 
-Net counts: hr 29→35, hm 78+21−6=93, coding 27→39, design 18→26 (unaffected
-by dedupe — it keeps the survivor), case 37 (unchanged), debrief 35→34
-(−1), hoe 31 (unchanged). **Total 255→295.** The plan's data tasks hard-code
-this exact map in `data.test.ts`.
+Net counts: hr 29→35, hm 78+21−6=93, coding 27→39, design 18→26 (unaffected by dedupe — it keeps the survivor), case 37 (unchanged), debrief 35 (unchanged — no real duplicate found), hoe 31 (unchanged). **Total 255→296.** The plan's data tasks hard-code this exact map in `data.test.ts`.
 
 ## 2. Drilling UX
 
