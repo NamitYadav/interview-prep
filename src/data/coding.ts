@@ -614,4 +614,305 @@ class NotifierFactory {
     ],
     followUps: ['Which of these have you caught in a real review recently?', 'What would you automate away first so review can focus on the rest?'],
   },
+
+  // Build prompts (12)
+  {
+    id: 'coding-028',
+    round: 'coding',
+    category: 'Build prompts',
+    question: 'Build an autocomplete input: as the user types, fetch suggestions and show them in a list. You have 45 minutes. In-flight requests must not race — a slow response for an earlier keystroke must never overwrite a later, faster one.',
+    code: `function Autocomplete({ fetchSuggestions }: { fetchSuggestions: (q: string) => Promise<string[]> }) {
+  // state: query, suggestions, loading
+  // TODO: debounce the fetch
+  // TODO: cancel or ignore a stale in-flight request when a newer one starts
+  return null;
+}`,
+    answer: [
+      'State shape first: query (the input value), suggestions (the list), and a loading flag — resist adding a fourth "error" field until asked, a caught error can just clear suggestions and log.',
+      'Debounce the fetch (150-300ms) so you are not firing a request per keystroke, using a ref-held timeout id cleared on the next keystroke.',
+      'Solve the race explicitly, out loud, before typing it: either an AbortController per request (cancel the previous one when a new keystroke fires) or a request-id/sequence-number check (only apply the response if it is still the latest request issued) — AbortController is the stronger answer since it also stops wasted network work.',
+      'Wire it up: on each keystroke, bump the sequence/create a new controller, debounce, fetch, and on resolution check the request is still current before calling setSuggestions.',
+    ],
+    keyPoints: [
+      'Minimal state: query, suggestions, loading — no premature fields',
+      'Debounces the fetch instead of firing on every keystroke',
+      'Explicitly solves the race with AbortController or a sequence number',
+      'Only applies a response if it is still the latest in-flight request',
+    ],
+    followUps: ['How would you add keyboard navigation (arrow keys, Enter) to the list?', 'What would you change if suggestions came from a local array instead of a network call?'],
+  },
+  {
+    id: 'coding-029',
+    round: 'coding',
+    category: 'Build prompts',
+    question: 'Build a virtualised list that can smoothly render 100,000 rows of fixed height. You have 45 minutes. Only the rows currently in (or near) the viewport should exist in the DOM.',
+    code: `function VirtualList({ items, rowHeight, viewportHeight }: { items: string[]; rowHeight: number; viewportHeight: number }) {
+  // state: scrollTop
+  // TODO: compute the visible index range from scrollTop, rowHeight, viewportHeight
+  // TODO: render a spacer for the rows above/below instead of the full list
+  return null;
+}`,
+    answer: [
+      'Say the core idea before coding: track scrollTop, derive the first and last visible row index from it and the row height, and render only that slice — everything else is a spacer, not real DOM.',
+      'Use two spacer elements (or one padding-top/height trick) rather than absolutely positioning every row, since fixed-height rows make the arithmetic trivial: startIndex = floor(scrollTop / rowHeight), endIndex = startIndex + ceil(viewportHeight / rowHeight).',
+      'Add a small overscan (render a few extra rows above/below the viewport) so fast scrolling does not show a flash of blank space before the next paint.',
+      'Name what you are deliberately not building: dynamic/variable row heights, which need a measured-height cache and are a materially harder problem — scope that out explicitly rather than let it derail the 45 minutes.',
+    ],
+    keyPoints: [
+      'Computes visible range from scrollTop and fixed row height',
+      'Renders a spacer for off-screen rows instead of the full item list',
+      'Adds overscan to avoid blank flashes on fast scroll',
+      'Explicitly scopes out variable row heights as a harder follow-on problem',
+    ],
+    followUps: ['How would this change for variable-height rows?', 'How would you make individual rows keyboard-focusable without breaking virtualization?'],
+  },
+  {
+    id: 'coding-030',
+    round: 'coding',
+    category: 'Build prompts',
+    question: 'Build an accessible combobox: a text input with a filtered, keyboard-navigable listbox of options, following the ARIA Authoring Practices Guide pattern. You have 45 minutes.',
+    code: `function Combobox({ options }: { options: string[] }) {
+  // state: query, activeIndex, open
+  // TODO: role="combobox" on the input, aria-expanded, aria-controls, aria-activedescendant
+  // TODO: role="listbox" + role="option" on the results, arrow-key navigation
+  return null;
+}`,
+    answer: [
+      'Lead with the ARIA contract, not the styling: the input gets role="combobox", aria-expanded, aria-controls pointing at the listbox id, and aria-activedescendant pointing at the currently highlighted option id — this is what makes it a combobox to assistive tech, not the visual look.',
+      'The listbox itself uses role="listbox" with role="option" children; focus stays on the input the whole time (a well-known combobox convention) while ArrowDown/ArrowUp move a highlighted-index state and aria-activedescendant, not actual DOM focus.',
+      'Wire the keys explicitly: ArrowDown/Up move the active index (clamped, or wrapping — state your choice), Enter selects the active option and closes the list, Escape closes without selecting, and typing further filters and reopens.',
+      'Close the loop on mouse/touch parity: clicking an option must select it the same way Enter does, and closing on outside-click or blur should not fire a "select nothing" side effect that clears a valid typed query.',
+    ],
+    keyPoints: [
+      'Uses the correct ARIA roles/attributes: combobox, listbox, option, aria-activedescendant',
+      'Keeps real DOM focus on the input; highlighting is state-driven, not focus-driven',
+      'Implements ArrowDown/Up, Enter, Escape with clearly stated behavior',
+      'Mouse selection and keyboard selection converge on the same select handler',
+    ],
+    followUps: ['How would you announce the number of results to a screen reader as they change?', 'What changes if multiple selection is required?'],
+  },
+  {
+    id: 'coding-031',
+    round: 'coding',
+    category: 'Build prompts',
+    question: 'Build an accessible tabs component (tab list, tabs, panels) following the ARIA Authoring Practices Guide pattern, with roving tabindex keyboard navigation. You have 45 minutes.',
+    code: `function Tabs({ tabs }: { tabs: { id: string; label: string; panel: string }[] }) {
+  // state: activeId
+  // TODO: role="tablist" / role="tab" / role="tabpanel", aria-selected, aria-controls, aria-labelledby
+  // TODO: roving tabindex — only the active tab is tabbable, arrow keys move between tabs
+  return null;
+}`,
+    answer: [
+      'State the roles up front: a role="tablist" container, role="tab" buttons with aria-selected and aria-controls pointing at their panel, and role="tabpanel" elements with aria-labelledby pointing back at their tab.',
+      'Implement roving tabindex correctly: only the active tab has tabIndex=0, every other tab has tabIndex=-1, so a single Tab key press moves focus out of the whole tablist rather than through every tab — this is the detail most implementations get wrong.',
+      'Wire ArrowLeft/ArrowRight (or Up/Down for a vertical tablist) to move focus and activation between tabs, with Home/End jumping to the first/last tab; state whether activation is automatic-on-arrow or requires a follow-up Enter (both are valid APG patterns — automatic activation is more common and simpler to build first).',
+      'Keep only the active panel\'s content mounted or visually shown, and make sure the panel is in the tab order (tabIndex=0 on the panel itself) since it often contains no other focusable content.',
+    ],
+    keyPoints: [
+      'Correct roles: tablist, tab (aria-selected, aria-controls), tabpanel (aria-labelledby)',
+      'Roving tabindex: exactly one tab is tabbable at a time',
+      'Arrow keys move between tabs; states the chosen activation model (automatic vs manual)',
+      'Panel is reachable in the tab order even with no other focusable content',
+    ],
+    followUps: ['How would you support closable tabs?', 'What changes for a vertical tablist?'],
+  },
+  {
+    id: 'coding-032',
+    round: 'coding',
+    category: 'Build prompts',
+    question: 'Implement debounce and throttle from scratch (no library), then explain when you would reach for each. You have 45 minutes. Both must support cancel().',
+    code: `function debounce<T extends (...args: any[]) => void>(fn: T, wait: number): T & { cancel: () => void } {
+  // TODO
+}
+
+function throttle<T extends (...args: any[]) => void>(fn: T, wait: number): T & { cancel: () => void } {
+  // TODO
+}`,
+    answer: [
+      'Debounce: reset a single timer on every call, only invoking fn once the calls stop for `wait` ms — implemented with one setTimeout id in closure, cleared and reset each call, plus a cancel() that clears it.',
+      'Throttle: invoke fn immediately on the first call, then ignore calls for `wait` ms, typically also scheduling one trailing call at the end of the window so the very last event in a burst is not dropped — this trailing-call detail is the part candidates most often miss.',
+      'State the use-case split plainly: debounce for "wait until the user stops" (search-as-you-type, resizing before recalculating layout), throttle for "at most once every N ms while it keeps happening" (scroll position tracking, mousemove-driven drag feedback).',
+      'Test both with fake timers out loud: rapid calls to debounce should invoke fn once at the end; rapid calls to throttle should invoke it near-immediately, then again after the window, not on every call.',
+    ],
+    keyPoints: [
+      'Debounce resets a single timer per call, fires once calls stop',
+      'Throttle fires immediately then rate-limits, with a stated trailing-call behavior',
+      'Both implement cancel() to clear pending/queued invocations',
+      'Correctly explains which one fits which real use case',
+    ],
+    followUps: ['How would you add a leading:false option to throttle?', 'How would you unit test the trailing-call behavior deterministically?'],
+  },
+  {
+    id: 'coding-033',
+    round: 'coding',
+    category: 'Build prompts',
+    question: 'Build a promise pool: given an array of tasks (functions returning promises) and a concurrency limit N, run them with at most N in flight at once, resolving with all results in original order. You have 45 minutes.',
+    code: `async function promisePool<T>(tasks: (() => Promise<T>)[], limit: number): Promise<T[]> {
+  // TODO: run at most "limit" tasks concurrently
+  // TODO: results[i] must correspond to tasks[i], regardless of completion order
+  return [];
+}`,
+    answer: [
+      'State the shape of the solution first: an array of N "worker" loops running concurrently, each pulling the next unstarted task index off a shared cursor and writing its result into a results array at that task\'s original index — order comes from indexing, not from completion order.',
+      'Implement the worker as a small async function that loops while a shared mutable index is less than tasks.length, incrementing it and awaiting that task before looping again; start N of these workers with Promise.all.',
+      'Cover the failure case explicitly: does one task rejecting abort the whole pool (fail-fast) or should the rest continue (collect settled results)? State the choice and implement fail-fast with Promise.all propagating the rejection unless asked for the alternative.',
+      'Sanity-check with a small example out loud: 5 tasks, limit 2 — task 3 should start only once one of the first two finishes, not after both.',
+    ],
+    keyPoints: [
+      'Uses a shared cursor and N worker loops, not a queue-per-batch approach',
+      'Results array is indexed by original task position, not completion order',
+      'States and implements a clear failure-mode choice (fail-fast vs collect-all)',
+      'Verifies concurrency behavior with a concrete example, not just types',
+    ],
+    followUps: ['How would you support cancelling remaining tasks partway through?', 'How would you report progress as tasks complete?'],
+  },
+  {
+    id: 'coding-034',
+    round: 'coding',
+    category: 'Build prompts',
+    question: 'Build a minimal type-safe event emitter: on, off, and emit, where the event map and payload types are checked at compile time. You have 45 minutes.',
+    code: `type EventMap = Record<string, unknown[]>;
+
+class Emitter<T extends EventMap> {
+  // TODO: on<K extends keyof T>(event: K, handler: (...args: T[K]) => void): void
+  // TODO: off<K extends keyof T>(event: K, handler: (...args: T[K]) => void): void
+  // TODO: emit<K extends keyof T>(event: K, ...args: T[K]): void
+}`,
+    answer: [
+      'Design the type first: a generic Emitter<T extends EventMap> where T maps event names to their argument tuples, so on/off/emit are all constrained by the same map and a caller cannot emit an event with the wrong argument types.',
+      'Store handlers in a Map (or object) keyed by event name, each holding a Set of handler functions, so off can remove one handler without disturbing others and duplicate on calls do not double-register the same function.',
+      'Implement emit to iterate a snapshot (a copied array) of the handler set, not the live set, since a handler that calls off on itself or another handler during emit must not skip or double-fire remaining handlers.',
+      'Call out the type-safety payoff concretely: Emitter<{ login: [userId: string]; logout: [] }> makes emitter.emit(\'login\', 123) a compile error, catching a real class of bug before runtime.',
+    ],
+    keyPoints: [
+      'Generic EventMap constrains on/off/emit to consistent, checked argument types',
+      'Handlers stored per-event in a Set, supporting clean removal via off',
+      'Emits over a snapshot of handlers so mutation during emit is safe',
+      'Can state a concrete example of a type error the design prevents',
+    ],
+    followUps: ['How would you add a once() method?', 'How would you support wildcard/"any event" listeners without losing type safety?'],
+  },
+  {
+    id: 'coding-035',
+    round: 'coding',
+    category: 'Build prompts',
+    question: 'Build a drag-to-reorder list: dragging an item to a new position updates the list order, keyboard-operable, no external DnD library. You have 45 minutes.',
+    code: `function ReorderableList({ items, onReorder }: { items: string[]; onReorder: (next: string[]) => void }) {
+  // TODO: draggable items, onDragStart/onDragOver/onDrop to compute the new order
+  // TODO: keyboard equivalent (e.g. focus an item, Alt+ArrowUp/Down to move it)
+  return null;
+}`,
+    answer: [
+      'For mouse/touch: use native HTML5 drag-and-drop (draggable, onDragStart storing the dragged index, onDragOver preventing default and computing the hover target index, onDrop reordering the array immutably and calling onReorder) rather than building pointer-tracking from scratch.',
+      'Compute the reorder with a pure function (remove the dragged item, splice it back in at the target index) so the logic is unit-testable independent of any DOM event.',
+      'State the accessibility gap in native drag-and-drop plainly: it is mouse/touch-only and has no keyboard equivalent, so a keyboard path is a hard requirement, not a nice-to-have, for a genuinely accessible list.',
+      'Implement the keyboard path with a per-item "move up"/"move down" affordance (or a documented Alt+Arrow shortcut while an item is focused) calling the same pure reorder function, and move focus to the item\'s new position after the move so focus does not get lost.',
+    ],
+    keyPoints: [
+      'Uses native HTML5 drag events rather than hand-rolled pointer tracking',
+      'Reorder logic is a pure, independently testable function',
+      'Explicitly names drag-and-drop\'s keyboard-accessibility gap',
+      'Implements a working keyboard alternative that preserves focus after the move',
+    ],
+    followUps: ['How would you announce the new position to a screen reader after a move?', 'How would you support dragging across two separate lists?'],
+  },
+  {
+    id: 'coding-036',
+    round: 'coding',
+    category: 'Build prompts',
+    question: 'Build a tiny external store (get, set, subscribe) and a React hook that reads it via useSyncExternalStore, with no external state library. You have 45 minutes.',
+    code: `function createStore<T>(initial: T) {
+  // TODO: getSnapshot(), setState(next: T | ((prev: T) => T)), subscribe(listener: () => void)
+}
+
+function useStore<T>(store: ReturnType<typeof createStore<T>>): T {
+  // TODO: useSyncExternalStore(store.subscribe, store.getSnapshot)
+  return null as T;
+}`,
+    answer: [
+      'The store is plain JS: a mutable value in closure, a Set of listener callbacks, getSnapshot returning the current value, setState replacing it and calling every listener, and subscribe adding/removing a listener from the set.',
+      'Use useSyncExternalStore instead of a manual useEffect+useState subscription — it exists specifically to make external-store reads safe under concurrent rendering (tearing-free), which a hand-rolled subscription cannot guarantee.',
+      'Get getSnapshot right: it must return referentially stable values when nothing changed (returning a new object every call causes an infinite re-render loop), so setState should replace the reference only when the value actually changes.',
+      'Note the real-world implication: this is close to what small state libraries (Zustand-style) do under the hood, so the exercise shows you understand the primitive beneath the library, not just how to import one.',
+    ],
+    keyPoints: [
+      'Store is plain closure state: value, listener Set, getSnapshot, setState, subscribe',
+      'Uses useSyncExternalStore rather than a manual effect-based subscription',
+      'getSnapshot returns a stable reference when the value has not changed',
+      'Connects the exercise to what real external-store libraries do internally',
+    ],
+    followUps: ['How would you add a selector so a component only re-renders on part of the state changing?', 'How would you support server-side rendering with this store?'],
+  },
+  {
+    id: 'coding-037',
+    round: 'coding',
+    category: 'Build prompts',
+    question: 'Build an LRU (least-recently-used) cache with get and put, both O(1), fixed capacity. You have 45 minutes.',
+    code: `class LRUCache<K, V> {
+  constructor(private capacity: number) {}
+  // TODO: get(key: K): V | undefined — must count as a "use", refreshing recency
+  // TODO: put(key: K, value: V): void — evict the least-recently-used entry when over capacity
+}`,
+    answer: [
+      'State the data structure choice up front: a Map, because JavaScript Maps preserve insertion order and support O(1) get/set/delete — re-inserting a key on access is enough to move it to the "most recent" end without a hand-rolled doubly linked list.',
+      'Implement get: if the key exists, delete and re-set it (moving it to the end, i.e. most-recently-used), and return its value; if it does not exist, return undefined without mutating anything.',
+      'Implement put: if the key already exists, delete it first (so the re-insertion moves it to the end); set the new value; if the map now exceeds capacity, delete the first key returned by map.keys().next() — the least-recently-used one.',
+      'State the complexity honestly: every operation here is O(1) amortized, since Map operations are O(1) and each get/put does a small constant number of them.',
+    ],
+    keyPoints: [
+      'Chooses Map for its insertion-order guarantee instead of a hand-rolled linked list',
+      'get() correctly refreshes recency by re-inserting on access',
+      'put() evicts the true least-recently-used entry (Map iteration order, not insertion time alone)',
+      'States and justifies O(1) complexity for both operations',
+    ],
+    followUps: ['How would you make this thread-safe if used from multiple async contexts?', 'How would you add a TTL (time-based expiry) on top of the LRU eviction?'],
+  },
+  {
+    id: 'coding-038',
+    round: 'coding',
+    category: 'Build prompts',
+    question: 'Build a fetch wrapper that retries a failed request with exponential backoff and jitter, up to a max number of attempts. You have 45 minutes.',
+    code: `async function fetchWithRetry(url: string, options: RequestInit = {}, maxAttempts = 3): Promise<Response> {
+  // TODO: retry on network error or 5xx, not on 4xx
+  // TODO: exponential backoff with jitter between attempts
+  return fetch(url, options);
+}`,
+    answer: [
+      'Decide what is retryable before coding: a thrown network error or a 5xx response are worth retrying (transient), a 4xx is not (the request itself is wrong and will fail identically every time) — retrying a 4xx just wastes time and can violate rate limits.',
+      'Implement exponential backoff: wait base * 2^attempt ms before the next try, with an upper cap so it does not grow unbounded on a high max-attempts value.',
+      'Add jitter explicitly and explain why: pure exponential backoff across many clients retrying the same failing endpoint synchronizes them into a thundering herd — adding random jitter (e.g. backoff * (0.5 + Math.random() * 0.5)) spreads retries out and reduces load on a recovering server.',
+      'Surface the final failure clearly: after maxAttempts, throw or return the last real error/response rather than swallowing it, so the caller can distinguish "eventually succeeded" from "gave up."',
+    ],
+    keyPoints: [
+      'Retries network errors and 5xx, explicitly does not retry 4xx',
+      'Implements exponential backoff with a sensible cap',
+      'Adds jitter and can explain the thundering-herd problem it solves',
+      'Surfaces the final failure after exhausting attempts instead of swallowing it',
+    ],
+    followUps: ['How would you respect a Retry-After header if the server sends one?', 'How would you make retries cancellable via AbortSignal?'],
+  },
+  {
+    id: 'coding-039',
+    round: 'coding',
+    category: 'Build prompts',
+    question: 'Build a memoized async lookup: given an expensive async function, return a wrapped version that caches results by argument and de-duplicates concurrent calls for the same argument (only one real call in flight per key at a time). You have 45 minutes.',
+    code: `function memoizeAsync<A extends string, R>(fn: (arg: A) => Promise<R>): (arg: A) => Promise<R> {
+  // TODO: cache resolved results by argument
+  // TODO: if a call for the same argument is already in flight, return that same promise instead of calling fn again
+  return fn;
+}`,
+    answer: [
+      'Two caches, not one: a Map of resolved values keyed by argument (the actual memoization), and a Map of in-flight promises keyed by argument (the de-duplication) — conflating them causes either stale-forever caching or duplicate concurrent calls.',
+      'On a call: if the argument has a resolved value cached, return it synchronously wrapped in Promise.resolve; else if a promise is already in flight for that argument, return that same promise (this is the de-dupe — a second caller for the same key gets the same in-flight promise, not a second network call).',
+      'Otherwise call fn, store the resulting promise in the in-flight map immediately (before awaiting), and on resolution move the value into the resolved cache and delete the in-flight entry; on rejection, delete the in-flight entry without caching a failure, so a later call can retry.',
+      'Name the real-world use case directly: this is exactly the shape of a "get user by id" cache used across many components that might all mount and request the same id in the same tick — without de-dupe, that is N redundant network calls instead of one.',
+    ],
+    keyPoints: [
+      'Separates the resolved-value cache from the in-flight-promise cache',
+      'A second concurrent call for the same key reuses the in-flight promise instead of calling fn again',
+      'Does not cache a rejected result, allowing a later retry',
+      'Connects the pattern to a concrete real-world case (shared lookups across components)',
+    ],
+    followUps: ['How would you add a TTL so cached values expire?', 'How would you support cache invalidation for a specific key after a mutation?'],
+  },
 ];
