@@ -13,7 +13,7 @@ export const ROUTES = [...ROUND_IDS, 'weak', 'notes', 'stories', 'mock'] as cons
 
 export const rounds: Round[] = [
   { id: 'hr', title: 'HR screen', blurb: 'Motivation, logistics, compensation framing, German employment basics.' },
-  { id: 'hm', title: 'Hiring manager', blurb: 'Technical depth and behavioral stories at staff scope.' },
+  { id: 'hm', title: 'Hiring manager', blurb: 'Live code review on HTML, CSS and JS, situational judgement, and staff-scope stories.' },
   { id: 'coding', title: 'Live coding', blurb: 'Pairing on a build, debugging unfamiliar code, and reviewing a PR out loud.' },
   { id: 'design', title: 'Frontend system design', blurb: 'One prompt, 45 minutes: requirements, architecture, trade-offs, out loud.' },
   { id: 'case', title: 'Case study', blurb: 'Scoping, building and presenting the take-home.' },

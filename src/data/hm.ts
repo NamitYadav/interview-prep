@@ -976,4 +976,612 @@ export const hm: Question[] = [
     ],
     followUps: ['What would you do if a data error was discovered after documents had already been issued?', 'How did you decide which fields needed mandatory human review?'],
   },
+
+  // Live code review (8)
+  {
+    id: 'hm-051',
+    round: 'hm',
+    category: 'Live code review',
+    question: 'The interviewer shares this markup and asks you to review it out loud. What do you say?',
+    code: `<div class="card">
+  <div class="title">Invite a teammate</div>
+  <form>
+    <div class="field">
+      <span>Email</span>
+      <input type="text" class="input" />
+    </div>
+    <div class="btn" onclick="submitInvite()">Send invite</div>
+  </form>
+  <div class="error" style="display:none">Something went wrong</div>
+</div>`,
+    answer: [
+      'Lead with the one that is a functional bug, not a style opinion: the submit control is a div, so it is not reachable by keyboard, not in the tab order, does not fire on Enter or Space, and is not announced as a button. That is not an accessibility nicety, it is a control that a portion of users cannot operate at all. Replace it with a button element and the browser gives you focus, keyboard, and role for free.',
+      'Then the input, which has two separate problems worth separating out loud: the visible text is a span rather than a label with a for attribute, so there is no programmatic association and clicking the text does not focus the field, and type is text rather than email, which loses the mobile keyboard and the built-in validation hint. Neither is expensive to fix, which is worth saying, because a reviewer who only lists problems reads as harsher than one who notes the fix is one attribute.',
+      'Raise the error region as a third, subtler point: an element toggled from display:none announces nothing to a screen reader when it appears. It needs a live region so the failure is perceivable rather than merely visible, and it should be associated with the field it describes when the error is field-specific.',
+      'Close on structure and on the inline handler, both as non-blocking. The title is a styled div where a heading element would put this card in the document outline, and the inline onclick couples markup to a global function name, which is a maintainability point rather than a correctness one. Say explicitly which of these you would block on and which you would leave as a comment, because in a live review the interviewer is listening for your threshold as much as your list.',
+    ],
+    keyPoints: [
+      'Leads with the div-as-button as a functional defect, not a style preference',
+      'Separates the missing label association from the wrong input type',
+      'Notes that a display:none error is invisible to assistive technology',
+      'States explicitly which findings block and which are comments',
+    ],
+    followUps: ['Which of those would you fix before merge and which would you file?', 'How would you verify the fix rather than assuming it works?'],
+  },
+  {
+    id: 'hm-052',
+    round: 'hm',
+    category: 'Live code review',
+    question: 'The active link colour is not applying and someone has reached for !important. Review this CSS.',
+    code: `#app .sidebar ul li a.nav-link { color: #333; }
+
+.nav-link { color: #0066cc; }
+
+.nav-link.is-active { color: #003366 !important; }
+
+a:hover { color: blue; }`,
+    answer: [
+      'Diagnose before prescribing: the first rule carries an ID plus a chain of descendants, so it outweighs both of the class-only rules regardless of source order. The author saw a rule that would not apply, reached for !important to win, and the !important worked, which is exactly why the underlying problem is still there and will recur on the next colour.',
+      'Name the actual fix rather than the symptom: flatten the first selector to the class it is really targeting. Specificity is not a scoring game to win, it is a signal of how tightly a rule is bound to a place in the DOM, and a five-part selector claims that a link only looks like this inside that exact structure, which is almost never what anyone meant. Once it is flat, source order decides and !important is unnecessary.',
+      'Flag the hover rule as its own defect: a bare element selector styles every link on the page, so it leaks well beyond the sidebar, and more importantly there is no focus-visible style anywhere in this block. A keyboard user gets no indication of where they are. That is the finding I would raise loudest, because it is invisible to anyone testing with a mouse.',
+      'Leave the smaller points as comments so the review does not read as a pile-on: raw hex values rather than the design tokens the codebase presumably has, and if the project uses cascade layers, this whole class of conflict has a structural answer rather than a per-rule one. Both are worth saying once, not worth blocking on.',
+    ],
+    keyPoints: [
+      'Explains why the ID chain wins rather than only noting the !important',
+      'Prescribes flattening the selector, not raising specificity elsewhere',
+      'Catches the missing focus-visible style, not just the over-broad hover',
+      'Separates the structural fix from the token and layers comments',
+    ],
+    followUps: ['When is !important legitimate?', 'How would you stop this recurring across the codebase?'],
+  },
+  {
+    id: 'hm-053',
+    round: 'hm',
+    category: 'Live code review',
+    question: 'What concerns you about this layout CSS?',
+    code: `.header { height: 64px; }
+
+.content {
+  margin-top: 64px;
+  height: calc(100vh - 64px);
+  overflow: auto;
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  margin-left: -200px;
+  width: 400px;
+  z-index: 9999;
+}`,
+    answer: [
+      'Start with the coupling, since it is the finding with the longest tail: 64px appears three times and each occurrence must change together. A custom property makes the relationship explicit and the next header redesign a one-line change instead of a grep. This is the kind of comment worth making concrete, because "use a variable" sounds pedantic until you point at the three places that silently drift apart.',
+      'Raise 100vh as a correctness issue on mobile rather than a preference: vh does not account for the collapsing browser chrome, so the content area is taller than the visible viewport and the bottom is cut off exactly where the important controls usually are. The dynamic viewport units exist for this, and it is worth asking whether this needs a fixed height at all.',
+      'On the modal, the negative margin centring is a technique that only works because the width is hardcoded, and the hardcoded width is itself the problem on a narrow screen. A transform-based or grid-based centre removes the coupling and works at any width, and a max-width with a percentage keeps it on screen at 320px. Two findings, one fix, worth saying in that order so the interviewer hears the reasoning rather than the recipe.',
+      'Treat the z-index as the smallest but most diagnostic point: 9999 means there is no layering scale, only an escalation, and the next overlay will be 10000. Ask whether the project has a token scale for stacking, and mention that z-index only orders siblings within a stacking context, so this number may not even be doing what the author believes.',
+    ],
+    keyPoints: [
+      'Names the repeated magic number as a coupling problem with a concrete fix',
+      'Treats 100vh as a real mobile defect rather than a nit',
+      'Ties the negative-margin centring to the hardcoded width as one issue',
+      'Points at the missing z-index scale and how stacking contexts limit it',
+    ],
+    followUps: ['How would you introduce a layering scale to an existing codebase?', 'When is a fixed pixel height genuinely the right call?'],
+  },
+  {
+    id: 'hm-054',
+    round: 'hm',
+    category: 'Live code review',
+    question: 'Clicking any row opens the wrong detail panel. Review this and explain why.',
+    code: `function attachRowHandlers(rows) {
+  for (var i = 0; i < rows.length; i++) {
+    document.querySelectorAll('.row')[i]
+      .addEventListener('click', function () {
+        showDetail(rows[i].id);
+      });
+  }
+}`,
+    answer: [
+      'Give the diagnosis precisely, because a vague answer here reads as pattern-matching: var is function-scoped, so every handler closes over the same binding, and by the time any click fires the loop has finished and i equals rows.length. Every handler reads one past the end and throws or passes undefined. The one-character fix is let, which gives a fresh binding per iteration.',
+      'Then say what you would actually write instead, since the minimal fix is not the review outcome you want: one delegated listener on the container reads the id from a data attribute on the clicked row. That removes the per-row listener cost, survives rows being added or removed without reattaching anything, and drops the querySelectorAll from inside the loop, which is re-querying the whole document on every iteration.',
+      'Raise the leak as a separate finding: nothing here removes listeners, so if this function runs again after a re-render you accumulate handlers on elements that may already be detached. Delegation solves this too, which is worth pointing out explicitly so the suggestion lands as one change fixing three problems rather than three suggestions.',
+      'Close on the structural smell underneath all of it: the code assumes the DOM order of .row matches the order of the rows array. That coupling is invisible, unenforced, and will break the first time anything filters or sorts one and not the other. Reading the id from the element rather than the index removes the assumption entirely.',
+    ],
+    keyPoints: [
+      'Explains the var closure capture precisely rather than gesturing at it',
+      'Proposes delegation as the real fix, not just swapping var for let',
+      'Identifies the listener leak on re-render as a separate problem',
+      'Names the hidden coupling between DOM order and array index',
+    ],
+    followUps: ['How would you test that the handler passes the right id?', 'When is a per-element listener still the right choice over delegation?'],
+  },
+  {
+    id: 'hm-055',
+    round: 'hm',
+    category: 'Live code review',
+    question: 'This logs "all saved" before anything is saved. What is wrong, and what would you write instead?',
+    code: `async function saveAll(items) {
+  items.forEach(async (item) => {
+    await save(item);
+  });
+  console.log('all saved');
+}`,
+    answer: [
+      'State the mechanism, not the symptom: forEach ignores the return value of its callback, so the promise each async callback returns is dropped on the floor. The loop finishes synchronously after kicking off every save, the log runs immediately, and any rejection becomes an unhandled promise rejection with no path back to the caller. This is the most common async mistake in review and worth being able to explain in one sentence.',
+      'Ask the question the code does not answer before choosing a fix, because it changes the answer: are these saves meant to run in parallel or in sequence? If order does not matter, Promise.all over a map is right and gives you concurrency. If they must be sequential, because they hit a rate limit or depend on each other, a for...of with await inside is right. Picking one without asking is how a reviewer introduces a different bug.',
+      'Raise partial failure as its own finding, since it is the part that survives to production: with Promise.all the first rejection abandons the results of the rest, which for a save operation usually means you do not know what did and did not persist. If the caller needs to report which items failed, allSettled and an explicit summary is the honest shape.',
+      'Close on the caller contract: this function is async but returns nothing and swallows every error, so no caller can tell success from failure. Whatever concurrency choice is made, the fix is not complete until the failure is either thrown or returned in a form the UI can act on.',
+    ],
+    keyPoints: [
+      'Explains that forEach discards the callback promise, precisely',
+      'Asks whether the intent is parallel or sequential before prescribing',
+      'Raises partial-failure semantics rather than only fixing the await',
+      'Notes that the function currently gives its caller no way to detect failure',
+    ],
+    followUps: ['How would you limit concurrency if save hits a rate limit?', 'What would the UI show while this is in flight?'],
+  },
+  {
+    id: 'hm-056',
+    round: 'hm',
+    category: 'Live code review',
+    question: 'This renders fine and passes review from three people. What would you block on?',
+    code: `function renderComments(comments) {
+  const list = document.getElementById('comments');
+  list.innerHTML = comments
+    .map((c) => '<li class="comment">' + c.author + ': ' + c.body + '</li>')
+    .join('');
+}`,
+    answer: [
+      'Block, and say why in one sentence before elaborating: comment bodies are user-controlled and they are being concatenated into innerHTML, which is a stored cross-site scripting vulnerability. Anything an attacker puts in a comment executes in every other viewer session with their credentials. This is the rare review finding that is worth stopping the merge for regardless of deadline.',
+      'Give the fix at the right level, since "escape it" invites a hand-rolled escaper that will be wrong: build the elements and set textContent, so the browser never parses the value as markup and there is nothing to escape. If the framework in use renders text nodes by default, the correct fix is to stop bypassing it rather than to sanitise on the way in.',
+      'Raise the second, quieter problem: replacing innerHTML wholesale destroys and recreates every node, which loses focus, text selection, and scroll position in the list. If a user is midway through selecting a comment when a new one arrives, it vanishes under them. That is a real bug that will be reported as flakiness and never reproduced.',
+      'Say how you would phrase the block, because the interviewer is assessing the reviewer as much as the finding: name the class of vulnerability, show the shape of the fix, and offer to pair on it. A security block delivered as an accusation gets argued with, and the same block delivered as "this is XSS, here is the two-line fix, want me to push it" gets fixed in ten minutes.',
+    ],
+    keyPoints: [
+      'Identifies stored XSS and treats it as a genuine blocker',
+      'Prescribes textContent over a hand-written escaping function',
+      'Separately catches the lost focus, selection and scroll from full re-render',
+      'Frames the blocking comment so it lands as help rather than as an accusation',
+    ],
+    followUps: ['What if the product genuinely needs to render rich text in comments?', 'What check would stop this reaching review next time?'],
+  },
+  {
+    id: 'hm-057',
+    round: 'hm',
+    category: 'Live code review',
+    question: 'The cards overflow their container and the layout breaks between 768px and 900px. Review this.',
+    code: `.card-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.card {
+  width: 33%;
+  padding: 16px;
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .card { width: 100%; }
+}`,
+    answer: [
+      'Diagnose the overflow first because it is the reported bug: without border-box sizing, the 16px of padding is added outside the 33% width, so three cards plus their padding exceed the row and one wraps. Whether the fix is a global border-box rule or a per-component one depends on what the codebase already does, which is worth asking rather than assuming.',
+      'Then explain the reported breakpoint gap, since it is the more interesting finding: below 768px each card is full width and above it each is a third, so between roughly 768px and 900px you get three cramped columns with no rule covering that range. This is the structural weakness of hardcoded breakpoints, and it is why the answer is not to add a fourth media query.',
+      'Offer the intrinsic layout as the real fix: a grid with repeat(auto-fill, minmax(<min>, 1fr)) and a gap lets the number of columns fall out of the available width, which deletes the media query entirely and behaves correctly at every width including ones nobody tested. Flex plus percentage widths plus a breakpoint is three mechanisms doing one job.',
+      'Leave two smaller comments rather than expanding the review: 12px is below a comfortable reading size and, being in px, ignores a user who has raised their browser font size, so rem is the more respectful unit here. And max-width breakpoints run against a mobile-first codebase if the rest of the project uses min-width, which is a consistency point worth raising once.',
+    ],
+    keyPoints: [
+      'Traces the overflow to box-sizing rather than guessing at the width',
+      'Explains the uncovered range between the breakpoint and the layout intent',
+      'Proposes an intrinsic grid that removes the media query rather than adding one',
+      'Notes that px font sizes ignore the user browser font preference',
+    ],
+    followUps: ['How would you pick the minmax minimum?', 'What would you check before making border-box global in an existing codebase?'],
+  },
+  {
+    id: 'hm-058',
+    round: 'hm',
+    category: 'Live code review',
+    question: 'The interviewer shares one HTML and CSS file and says "review this". There is no ticket, no description, and they are watching. How do you run the first two minutes?',
+    answer: [
+      'Ask what it is for before reading a line, because a review without intent is only a style opinion. One question is enough: what is this screen, who uses it, and is it new code or something being changed. In a real review that context comes from the PR description, and saying that out loud tells the interviewer you know what you are missing rather than that you did not notice.',
+      'Then read the whole thing once without commenting. Narrate that you are doing it and why, because two minutes of silence is uncomfortable for both of you and unexplained silence reads as being stuck. The purpose of the first pass is to find the shape and the risk, and commenting from the top down means you spend your best attention on whatever happened to be first in the file.',
+      'Give your findings in risk order and say the order out loud: anything a user cannot do at all, then anything that is wrong but recoverable, then maintainability, then preference. In HTML and CSS specifically the first bucket is almost always keyboard operability, form semantics, and anything that only works at the width the author had open, so those are where to look first rather than at naming and formatting.',
+      'End the pass by saying what you would not comment on, which is the part most candidates skip. Naming, ordering of properties, and anything a formatter or linter owns are not worth a human review comment, and saying that explicitly signals that you understand review as a scarce resource rather than as a completeness exercise.',
+    ],
+    keyPoints: [
+      'Asks for the intent of the code before reviewing it',
+      'Reads once end to end and narrates that pass rather than going top-down',
+      'Delivers findings in explicit risk order, not file order',
+      'States what is deliberately not worth commenting on',
+    ],
+    followUps: ['How does this change if it is a 900-line file rather than a small one?', 'What do you do if you find nothing significant?'],
+  },
+
+  // Web fundamentals (8)
+  {
+    id: 'hm-059',
+    round: 'hm',
+    category: 'Web fundamentals',
+    question: 'Walk me through what the browser does between a user click and the next frame on screen, and where your JavaScript sits in that.',
+    answer: [
+      'Lay out the loop in order rather than listing concepts: the click is dispatched as a task, your handler runs to completion, then the microtask queue drains fully, then the browser may run requestAnimationFrame callbacks, then style, layout, paint and composite produce the frame. Everything you do in the handler happens before any pixel moves, which is the point of the question.',
+      'Draw the distinction that most answers blur: promise callbacks and queueMicrotask go on the microtask queue and run before the next frame, while setTimeout schedules a new task that runs after it. So awaiting a resolved promise does not yield to rendering, and an unbounded chain of microtasks can starve the frame just as effectively as a long synchronous function.',
+      'Make the practical consequence explicit, because that is what separates a staff answer from a textbook one: a handler that takes 200ms delays the frame by 200ms, and the user perceives it as the click not working rather than as a slow animation. The fixes follow directly from the model, which is to break the work into tasks, move it off the main thread, or do less of it.',
+      'Close by naming where reads and writes fit: reading a layout property mid-handler forces the browser to compute layout early, so an alternating read-write loop over many elements forces it repeatedly. Batching reads and then writes is not a trick, it is a direct consequence of the sequence you have just described, and saying it that way shows the model is doing work rather than being recited.',
+    ],
+    keyPoints: [
+      'Gives the ordered sequence: task, microtasks, rAF, style, layout, paint',
+      'Distinguishes microtask from task with a consequence, not just a label',
+      'Connects a long handler to perceived input delay rather than to slow animation',
+      'Explains layout thrashing as a consequence of the model just described',
+    ],
+    followUps: ['Where would you move work that must not block the frame?', 'How would you find which handler is blocking in a real app?'],
+  },
+  {
+    id: 'hm-060',
+    round: 'hm',
+    category: 'Web fundamentals',
+    question: 'Two rules set the same property on the same element. How does the browser decide which one wins?',
+    answer: [
+      'Give the ordered algorithm rather than jumping straight to specificity, because specificity is only one step of it: origin and importance first, then cascade layers, then specificity, then source order. Most day-to-day conflicts are resolved by the last two, which is why they get remembered as the whole rule, but the ones that confuse people are always resolved higher up.',
+      'Be precise about specificity itself: it is three counters, for IDs, for classes and attributes and pseudo-classes, and for element types and pseudo-elements, compared left to right. It is not a single number, so no quantity of classes ever outweighs one ID. Mention that :where takes zero specificity and :is takes that of its most specific argument, since that is the mechanism modern resets use to stay overridable.',
+      'Separate inheritance from the cascade, because they are commonly conflated: the cascade decides between declarations that target the element, inheritance supplies a value when no declaration targets it at all. That is why setting a colour on a container reaches the text inside it but setting a border does not, and why a rule with a lower specificity can still be the one that applies.',
+      'Close with the practical position: rather than winning specificity contests, keep selectors flat and let source order or cascade layers do the deciding. Say plainly that reaching for !important is almost always a signal that a selector elsewhere is more specific than the thing it targets deserves, and that the fix is upstream.',
+    ],
+    keyPoints: [
+      'Gives the full order: origin and importance, layers, specificity, source order',
+      'Describes specificity as three separate counters, not one number',
+      'Distinguishes inheritance from the cascade with a concrete example',
+      'Frames !important as a symptom of over-specific selectors',
+    ],
+    followUps: ['What problem do cascade layers actually solve?', 'How would you make a design system overridable by product code?'],
+  },
+  {
+    id: 'hm-061',
+    round: 'hm',
+    category: 'Web fundamentals',
+    question: 'An absolutely positioned element lands somewhere you did not expect, and raising its z-index does nothing. Explain what is going on.',
+    answer: [
+      'Answer the position half with the containing block: an absolutely positioned element is placed relative to its nearest ancestor that establishes a containing block, which is any ancestor with a position other than static, and also any ancestor with a transform, filter, will-change on those, or containment. That last group is what surprises people, because adding a transform for an animation silently reparents every absolutely positioned descendant.',
+      'Answer the z-index half with stacking contexts: z-index only orders an element among its siblings inside the stacking context it belongs to. If an ancestor forms its own stacking context, the whole subtree is painted as one unit, so no value on a descendant can lift it above something outside. This is why a 9999 sometimes does nothing at all.',
+      'Name what creates a stacking context, since the answer is only useful if you can find the culprit: a positioned element with a z-index other than auto, opacity below 1, transform, filter, mix-blend-mode, isolation, and a few others. Add how you would locate it in practice, by walking up the ancestors in devtools looking for the first one with any of those properties.',
+      'Close with the structural fix rather than a bigger number: render overlays in a portal at the top level of the document so they are never trapped in a subtree, and keep a small named scale for the few layers that genuinely exist. That is the answer that shows you have debugged this before rather than read about it.',
+    ],
+    keyPoints: [
+      'Explains the containing block including transform and filter, not just position',
+      'States that z-index orders siblings within one stacking context',
+      'Lists the common stacking context creators and how to find them in devtools',
+      'Prescribes portals and a layer scale rather than escalating z-index',
+    ],
+    followUps: ['How do you keep a tooltip inside a scrolling container from being clipped?', 'What are the accessibility implications of portalling an overlay?'],
+  },
+  {
+    id: 'hm-062',
+    round: 'hm',
+    category: 'Web fundamentals',
+    question: 'What determines the value of this in a JavaScript function, and why do people get it wrong?',
+    answer: [
+      'Give the rule as a precedence order, since that is what makes it predictable: new binding first, then an explicit bind, call or apply, then the object the function was called as a method of, then the default, which is undefined in modules and strict mode. The key sentence is that it is decided by how the function is called, not where it was written, for every function except arrows.',
+      'Explain arrows as the exception that makes the rest usable: an arrow has no binding of its own and closes over the enclosing scope, which is why they are correct by default in callbacks and why converting one to a regular function for the sake of a name can silently break it. Class fields assigned an arrow behave the same way, which is the pattern most codebases have settled on.',
+      'Name the specific way people get it wrong, because the interviewer is checking for real experience: passing a method as a callback detaches it from its object, so the receiver is lost by the time it runs. That is the same underlying cause behind a handler that works when called directly and throws when passed to addEventListener or to a promise chain.',
+      'Close with the honest position rather than an exhaustive taxonomy: in modern code this rarely comes up because arrows and modules make the common cases correct, and the remaining places it matters are event handlers, prototype-based library code, and anything that reassigns methods. Saying that is more credible than reciting all four rules with equal weight.',
+    ],
+    keyPoints: [
+      'Gives the precedence order and states that the call site decides',
+      'Explains arrows as lexical rather than as a style preference',
+      'Names detaching a method as a callback as the common real failure',
+      'Puts the rule in modern context instead of reciting it exhaustively',
+    ],
+    followUps: ['How would you fix a handler that loses its receiver?', 'Where do closures cause problems in a long-lived page?'],
+  },
+  {
+    id: 'hm-063',
+    round: 'hm',
+    category: 'Web fundamentals',
+    question: 'Why does it matter whether a control is a button element or a div with a click handler? Give me the full answer.',
+    answer: [
+      'List what the element gives you rather than appealing to correctness: a role and an accessible name in the accessibility tree, keyboard activation on Enter and Space, membership in the tab order, a focus ring, disabled semantics, and form submission behaviour. A div gets none of those, so recreating a button means writing all of them and keeping them working.',
+      'Explain the accessibility tree as the mechanism, since that is the part that shows depth: assistive technology does not read your CSS, it reads a parallel tree the browser builds from the elements and attributes, where each node has a role, a name, and a state. Semantic elements populate that tree correctly for free, and ARIA is a way to patch it when no element fits, not a way to add behaviour.',
+      'Make the practical point that the roles are not equivalent: a button submits or acts, a link navigates, and they respond to different keys, so swapping one for the other breaks user expectations even when both are styled identically. The same reasoning covers headings giving the page an outline that people navigate by, and lists communicating item counts.',
+      'Close with the honest counterweight so it does not read as dogma: the reason people reach for a div is styling frustration, and modern CSS removes most of that, so the answer to "the button is hard to style" is a reset rather than a different element. If a genuinely novel control has no native equivalent, then you take on the full ARIA pattern deliberately and test it with a keyboard and a screen reader, rather than adding role="button" and calling it done.',
+    ],
+    keyPoints: [
+      'Enumerates the concrete behaviours the native element provides',
+      'Explains the accessibility tree as role, name and state',
+      'Distinguishes button from link semantics rather than treating them as styling',
+      'Acknowledges the styling motivation and answers it with a reset',
+    ],
+    followUps: ['What does it actually take to build an accessible custom dropdown?', 'How would you test this beyond an automated audit?'],
+  },
+  {
+    id: 'hm-064',
+    round: 'hm',
+    category: 'Web fundamentals',
+    question: 'Explain event propagation, and when you would use delegation.',
+    answer: [
+      'Describe all three phases, not two: an event travels from the document down to the target, which is capture, fires on the target, then travels back up, which is bubbling. Listeners default to the bubble phase, and passing capture true opts into the way down. Say that some events do not bubble, focus and blur being the common ones people trip on, with focusin and focusout as the bubbling counterparts.',
+      'Define delegation in terms of that model: one listener on a common ancestor inspects event.target to work out which descendant was interacted with. The benefit is not primarily performance, it is that content added or removed later needs no listener bookkeeping, which is what makes it correct for lists that change.',
+      'Be precise about stopping things, because this is where subtle bugs come from: preventDefault cancels the default action, stopPropagation halts the journey and therefore breaks any delegated listener above you, and stopImmediatePropagation also blocks other listeners on the same element. Calling stopPropagation defensively is a common cause of a feature two layers up mysteriously not firing.',
+      'Close with the cases where delegation is the wrong tool: when you need the listener on a specific element for a non-bubbling event, when the handler must be removed independently, or when a framework already owns the binding and delegation would fight it. Add passive listeners for scroll and touch as a related point, since a non-passive listener there blocks scrolling until your handler returns.',
+    ],
+    keyPoints: [
+      'Covers capture, target and bubble, and names events that do not bubble',
+      'Justifies delegation by dynamic content rather than only by performance',
+      'Distinguishes preventDefault, stopPropagation and stopImmediatePropagation',
+      'Names cases where delegation is the wrong choice',
+    ],
+    followUps: ['How would delegation interact with a framework that already delegates?', 'What breaks if a third-party script calls stopPropagation above you?'],
+  },
+  {
+    id: 'hm-065',
+    round: 'hm',
+    category: 'Web fundamentals',
+    question: 'Which CSS properties are cheap to animate, and why?',
+    answer: [
+      'Answer with the pipeline rather than a memorised list: style, layout, paint, composite. A property that changes geometry forces layout and everything after it. A property that changes appearance skips layout but repaints. Transform and opacity can be handled by the compositor on already-painted layers, which is why they are the cheap pair, and why the list is a consequence rather than a rule to memorise.',
+      'Give the substitution that follows: animate transform instead of top and left, and opacity instead of visibility toggles or colour fades where possible. Say that this is why a movement animation implemented with left stutters on a busy main thread while the same animation with translate stays smooth, because the compositor keeps running when the main thread is blocked.',
+      'Be accurate about will-change rather than recommending it broadly: it promotes an element to its own layer ahead of time, which costs memory and can hurt if applied to many elements or left on permanently. It is a targeted fix for a measured problem, applied just before the animation and removed after, not a general performance attribute.',
+      'Close on measurement, since the interviewer is listening for whether you guess or check: the performance panel shows which frames dropped and whether the cost was layout, paint or script, and paint flashing shows what is actually repainting. The useful answer to "is this animation expensive" is a recording, not an opinion about the property list.',
+    ],
+    keyPoints: [
+      'Derives the cheap properties from the render pipeline rather than listing them',
+      'Explains why compositor animations survive a blocked main thread',
+      'Treats will-change as a targeted fix with real memory cost',
+      'Ends on measurement rather than assertion',
+    ],
+    followUps: ['How would you animate height, which cannot be composited?', 'What would you check first if an animation is smooth locally and janky in production?'],
+  },
+  {
+    id: 'hm-066',
+    round: 'hm',
+    category: 'Web fundamentals',
+    question: 'How do script loading attributes and stylesheet placement affect when a page becomes usable?',
+    answer: [
+      'Start from why it matters: a classic script tag in the head blocks the parser, so the document stops being built until the script is fetched and executed. Everything else in this area is a way of not doing that, which is a cleaner framing than listing the attributes and their differences one by one.',
+      'Give the three behaviours precisely: defer fetches in parallel and executes after parsing, in document order, which is the sensible default for application code. Async fetches in parallel and executes as soon as it arrives, out of order, which suits independent third-party scripts and is wrong for anything with dependencies. Module scripts are deferred by default, which is why modern bundles rarely need the attribute spelled out.',
+      'Cover stylesheets as the other half, because scripts are only half the answer: a stylesheet in the head is render-blocking by design, since rendering unstyled content and then restyling it is worse than waiting. The lever is not to move it but to keep the critical set small and load the rest without blocking, and to preload the fonts and assets that first paint genuinely depends on.',
+      'Close by connecting it to what users actually feel: parser-blocking work delays first paint, and deferred script that is nevertheless enormous delays interactivity, so a page can paint quickly and still ignore clicks. Naming both failure modes, and that they are fixed differently, is what makes this a staff answer rather than a recital of three attributes.',
+    ],
+    keyPoints: [
+      'Frames the whole area around not blocking the parser',
+      'States defer, async and module semantics including execution order',
+      'Covers render-blocking CSS and the critical set, not only scripts',
+      'Separates delayed first paint from delayed interactivity as distinct failures',
+    ],
+    followUps: ['How would you decide what belongs in the critical CSS?', 'A third-party tag is slowing first paint. What are your options?'],
+  },
+
+  // Situational (8)
+  {
+    id: 'hm-067',
+    round: 'hm',
+    category: 'Situational',
+    question: 'A teammate is blocked on something you could unblock in an hour, but that hour pushes your own committed work past the sprint. What do you do?',
+    answer: [
+      'Answer the question they are actually asking, which is whether you optimise for your own visible output or for the team throughput. Say plainly that one person blocked for a day costs the team more than your item landing a day later, so you unblock them, and then say the part that makes it a senior answer rather than a generous one: you make the trade-off visible instead of absorbing it silently.',
+      'Describe the mechanics concretely, because this is where the answer stops being a platitude: you tell them roughly when you can help so they are not waiting on an unknown, you say in standup or in the team channel that your item is now at risk and why, and you let the person who owns the priorities decide if that is the wrong call. Nobody is surprised at the end of the sprint.',
+      'Add the judgement that stops it becoming a pattern, since a hiring manager is also listening for whether you can be diverted indefinitely: if the same unblocking keeps recurring, the hour is not the problem, the missing documentation or the single point of knowledge is. Fixing the cause is the higher-leverage version of the same instinct, and worth naming as the thing you would do after the second or third time.',
+      'Close with a short concrete instance if you have one: [a time you paused your own work to unblock someone, what it cost, and what you did afterwards so it did not recur]. Keep it to a few sentences, because the question is situational and the story is supporting evidence rather than the answer.',
+    ],
+    keyPoints: [
+      'Chooses team throughput over personal output and says why in cost terms',
+      'Makes the trade-off visible rather than absorbing the slip quietly',
+      'Lets the priority owner overrule the decision with the information',
+      'Names fixing the recurring cause as the higher-leverage follow-up',
+    ],
+    followUps: ['What if it happens every week with the same person?', 'When would you not stop to help?'],
+  },
+  {
+    id: 'hm-068',
+    round: 'hm',
+    category: 'Situational',
+    question: 'The team decides on an approach you argued against. How do you behave in the weeks after the decision?',
+    answer: [
+      'State the position first, because any hedging here reads badly: you commit, fully and visibly. A decision that half the team is quietly undermining costs more than either option would have, and the person who keeps relitigating it in code review and side channels is the most expensive person in the room even when they turn out to be right.',
+      'Then describe what committing actually looks like, since everyone says the word: you argue your case once, properly and in the open, with the reasoning and the evidence you have. Once the call is made you support it in front of others, you do not re-run the argument on every related pull request, and you do not attach a knowing comment to every problem the approach causes.',
+      'Distinguish committing from silence, which is the nuance that makes this answer credible: you write down what you expect to go wrong and what would tell you it is going wrong, and you agree when the team will look at it again. That turns a disagreement into a hypothesis with a review date rather than into resentment, and it means being right later becomes useful information instead of a told-you-so.',
+      'Draw the one line worth drawing: this holds for judgement calls about design, tooling and sequencing, which is nearly all of them. It does not hold for something unsafe, illegal, or that puts user data at genuine risk, where escalating is the correct action rather than the disloyal one. Say that boundary explicitly, because a candidate who commits to literally anything is a different kind of concern.',
+    ],
+    keyPoints: [
+      'Commits visibly rather than complying while undermining',
+      'Argues once in the open rather than relitigating in review',
+      'Records expected failure signals and a review point, not resentment',
+      'Names the narrow boundary where escalation replaces commitment',
+    ],
+    followUps: ['What if six months later it is clearly going wrong?', 'How do you disagree in a way that does not cost you the room?'],
+  },
+  {
+    id: 'hm-069',
+    round: 'hm',
+    category: 'Situational',
+    question: 'You join the team and find the codebase well below the standard you are used to. What do you do in your first month?',
+    answer: [
+      'Lead with restraint and say why it is not passivity: you are the person with the least context in the room, and most of what looks wrong is either a constraint you cannot see yet or a deliberate trade-off someone made under pressure. The first month is for finding out which, and a newcomer who opens with a quality verdict spends the rest of the year paying for it.',
+      'Describe what you do instead of critiquing: ship something real, because you learn more about a codebase from one end-to-end change than from a week of reading, and it earns you the standing to have the conversation later. Ask about the history of the parts that surprise you, with genuine curiosity rather than as a rhetorical device, and write down what you find while you can still see it, since the strangeness becomes invisible within a couple of months.',
+      'Then give the escalation path in priority order, because a hiring manager wants to know you would eventually act: raise anything that is a live risk to users or data immediately regardless of your tenure, and hold the rest until you can present it as a pattern with a cost attached rather than as a list of complaints. One well-evidenced proposal that fixes a recurring pain lands; a broad critique of the code style does not.',
+      'Close on how you would introduce change: through the work rather than alongside it, improving what you touch and making the better pattern easy to copy, and picking the single highest-value thing to argue for rather than all of them at once. If you have an instance, keep it brief: [a time you joined something messy and what you changed first].',
+    ],
+    keyPoints: [
+      'Assumes missing context before assuming poor judgement',
+      'Ships something real first to earn standing and understanding',
+      'Escalates genuine user or data risk immediately regardless of tenure',
+      'Introduces change through the work rather than as a separate critique',
+    ],
+    followUps: ['What would you raise in week one regardless?', 'How do you avoid becoming the person who complains about the codebase?'],
+  },
+  {
+    id: 'hm-070',
+    round: 'hm',
+    category: 'Situational',
+    question: 'Deploys keep breaking in the same way. Nobody owns the problem and everyone works around it. What do you do?',
+    answer: [
+      'Start by making the cost legible, because that is the actual blocker rather than the technical fix. A recurring problem everybody routes around has no owner precisely because its cost is spread thin and invisible. Counting it, even roughly, over the last month or quarter turns a shared irritation into a number, and a number is something a manager can prioritise against a feature.',
+      'Then investigate the cause rather than the instances, and be specific about the difference: three broken deploys with the same shape usually share one missing check, one flaky step, or one manual action that someone forgets. Fixing the shared cause once is cheaper than the workaround everyone is already paying for, and that comparison is the argument you take to the team.',
+      'Describe how you would get it done without becoming the self-appointed owner of everything: propose it in the open with the cost and the estimate, ask for a small explicit slice of time rather than doing it invisibly at night, and make the fix something the team can maintain rather than something only you understand. Volunteering to do it alone and unrecorded teaches the organisation that these things are free.',
+      'Close with the check that separates improvement from tinkering: define beforehand what tells you it worked, and go back and look. If the same failure does not recur next month, say so publicly, because that is what makes the next improvement easier to get funded. If it does recur, you diagnosed the wrong cause and that is worth saying too.',
+    ],
+    keyPoints: [
+      'Quantifies the recurring cost to make it prioritisable',
+      'Targets the shared cause rather than the individual incidents',
+      'Asks for explicit time rather than doing it invisibly',
+      'Defines a success signal and revisits it afterwards',
+    ],
+    followUps: ['What if you are told there is no time for it?', 'How do you decide this is worth fixing and something else is not?'],
+  },
+  {
+    id: 'hm-071',
+    round: 'hm',
+    category: 'Situational',
+    question: 'How do you keep improving when the work itself does not force you to?',
+    answer: [
+      'Answer honestly and specifically rather than listing content, because everyone claims to read and watch things. Say what you actually do: [the specific habit, whether that is building something small end to end, reading source of a library you depend on, or taking on the unfamiliar part of a project deliberately]. One concrete habit described in detail is worth more than five named resources.',
+      'Distinguish two different kinds of improvement, since conflating them is what makes the answer vague: depth in what you already do, which mostly comes from post-mortems and from reading code written by people better than you, and breadth into what you do not, which needs deliberate choice because the work will never hand it to you. Say which you have been doing lately and why.',
+      'Make it visible at team scale, because this is a hiring manager question and the interesting half is whether your learning stays yours: what you do with it, whether that is a short write-up, a change to how the team does something, or a session where you show what you found. Learning that never leaves one head is a hobby, and saying so shows you understand what they are assessing.',
+      'Close with the failure mode you avoid, which reads as self-aware rather than boastful: chasing every new tool is not improvement, it is churn, and the discipline is deciding what not to adopt. Naming one thing you deliberately did not adopt, and why, is a strong close: [a technology you evaluated and passed on, with the reasoning].',
+    ],
+    keyPoints: [
+      'Gives one concrete habit rather than a list of resources',
+      'Separates deepening existing skill from deliberately adding breadth',
+      'Explains how learning is fed back to the team rather than kept private',
+      'Names deciding what not to adopt as part of the discipline',
+    ],
+    followUps: ['What have you learned recently that changed how you work?', 'How would you help a team that has stopped learning?'],
+  },
+  {
+    id: 'hm-072',
+    round: 'hm',
+    category: 'Situational',
+    question: 'The same complaint comes up in retro for the third time and nothing has changed. What do you do?',
+    answer: [
+      'Name why it keeps happening rather than proposing a better retro: an item that recurs is usually one of three things, either too vague to act on, owned by nobody, or genuinely outside the team control. They need different responses, and diagnosing which one it is takes a single direct question in the room rather than another round of discussion.',
+      'For the vague version, the fix is to convert it into one specific change with a named owner and a date, and to accept a smaller change that will actually happen over a broad one that will not. Say directly that a retro producing five aspirations is worse than one producing a single completed action, because the former teaches the team that retro output is decorative.',
+      'For the version outside the team control, be equally direct: keep raising it upward with the accumulated cost attached, and stop putting it on the retro board where it demoralises everyone weekly. Telling the team plainly that this one is not ours to fix, and that you are carrying it elsewhere, is more respectful than letting it recur as a ritual complaint.',
+      'Close with what you do personally rather than what the process should do, since a hiring manager is assessing you not the ceremony: you take one of them yourself, do it, and report back, because the fastest way to restore belief that retro leads anywhere is one visible completed item. Then the next one gets a real owner because the team has seen it work.',
+    ],
+    keyPoints: [
+      'Diagnoses why the item recurs instead of redesigning the ceremony',
+      'Converts vague items into one owned, dated, smaller action',
+      'Escalates out-of-team items upward and removes them from the board',
+      'Takes and completes one personally to restore belief in the process',
+    ],
+    followUps: ['What if the blocker is the manager running the retro?', 'How do you tell a genuine process problem from ordinary friction?'],
+  },
+  {
+    id: 'hm-073',
+    round: 'hm',
+    category: 'Situational',
+    question: 'You spot a serious risk in an area nobody has asked you to look at and that is on no roadmap. What do you do?',
+    answer: [
+      'Start with verification rather than escalation, because credibility is the currency you spend here: confirm it is real, establish how it would actually be triggered, and work out roughly what it would cost if it happened. A raised alarm that turns out to be theoretical makes the next one, which may be real, much harder to raise.',
+      'Then match the response to the severity honestly. Something exploitable or actively losing data goes to the right person immediately, through whatever the security or incident channel is, and it goes today. Something that will hurt in six months is written up as a short note with the risk, the trigger and the rough cost, and given to the person who owns that area, because handing it to an owner is the proactive move and quietly fixing someone else area is not.',
+      'Say what you do when it is nobody area, since that is the real version of this question: you either take it and say publicly that you are taking it, or you make sure it lands with someone who can decide, and you get an explicit answer either way. The failure mode is mentioning it once in a channel, seeing no reply, and treating that as having handled it.',
+      'Close with the part that shows judgement rather than zeal: accept that the answer may be a deliberate not now, and that a documented, understood, accepted risk is a legitimate outcome. What you avoid is the undocumented version where it is simply forgotten. If you have an instance, keep it to two sentences: [a risk you found outside your remit, and what happened to it].',
+    ],
+    keyPoints: [
+      'Verifies and estimates cost before raising, to preserve credibility',
+      'Matches urgency to severity rather than escalating everything equally',
+      'Routes it to an owner or takes it openly instead of fixing it silently',
+      'Accepts an explicit deferral as a valid outcome, but not silence',
+    ],
+    followUps: ['What if you raise it and nothing happens?', 'How do you decide when to just fix it yourself?'],
+  },
+  {
+    id: 'hm-074',
+    round: 'hm',
+    category: 'Situational',
+    question: 'You pick up a ticket with a thin, ambiguous description and the person who wrote it is away for two days. What do you do?',
+    answer: [
+      'Reject both extremes explicitly, since the question is designed to see which one you fall into: sitting idle for two days wastes them, and building your best guess for two days risks throwing all of it away. The answer is to find out how much of the work does not depend on the ambiguity, which is usually most of it.',
+      'Describe the sequence concretely: write down what you believe the ticket means and specifically what you are unsure about, look for the answer where it may already exist, in the code, the designs, related tickets or whoever else touched this area, and then start on the parts that are true under every reading of the ambiguity. Ambiguity is rarely uniform across a task.',
+      'Say what you do with the assumption you cannot resolve: state it in writing on the ticket, proceed on it deliberately, and structure the work so that reversing it is cheap if you guessed wrong. That is the difference between assuming and guessing, and it is what lets the author correct you in one comment when they return rather than discovering it at review.',
+      'Close on the follow-through, because proactivity without it is just speed: when they are back, confirm the assumption before it is baked in, and if the description was thin in a way that will recur, say so once, kindly and with a concrete suggestion. Fixing the pattern is worth more than absorbing it silently a second time.',
+    ],
+    keyPoints: [
+      'Rejects both waiting idle and building the whole guess',
+      'Looks for the answer in existing artefacts before assuming',
+      'Starts with the work that is invariant under the ambiguity',
+      'Documents the assumption and keeps the reversal cheap',
+    ],
+    followUps: ['What if the whole task depends on the ambiguous part?', 'How do you raise the thin-description pattern without it sounding like blame?'],
+  },
+
+  // Questions to ask them (4)
+  {
+    id: 'hm-075',
+    round: 'hm',
+    category: 'Questions to ask them',
+    question: 'Why is "What would make you say at ninety days that this hire is going well?" a good question to ask the hiring manager, and what separates a strong answer from a concerning one?',
+    answer: [
+      'It is a good question because it converts a vague role description into a concrete expectation you can be measured against, and because the manager has to answer as themselves rather than from the job posting. It also signals that you intend to be evaluated, which is a different posture from asking what the role involves.',
+      'A strong answer is specific and mostly about outcomes rather than activity: a particular area you would own, a specific thing that would be working better, or a relationship you would have built. It usually includes something about the team as well as the code, because a senior hire who ships alone and changes nothing around them has not succeeded at this level.',
+      'A concerning answer is either entirely output-based, meaning volume of tickets, which suggests the role is more junior than advertised, or so vague that it is clear nobody has thought about what this person is for. Both are worth probing with a follow-up rather than nodding through.',
+      'Listen also for whether the answer matches what the rest of the loop implied. If the interviews have all been about architecture and the manager describes success as clearing a backlog, that gap is real information about the role, and it is better to find it now than in month three.',
+    ],
+    keyPoints: [
+      'Turns the role description into a concrete, measurable expectation',
+      'Strong answers name outcomes and include team impact, not only output',
+      'Pure ticket-volume answers suggest a more junior role than advertised',
+      'Checks the answer against what the rest of the loop implied',
+    ],
+    followUps: ['What would you ask if the answer is vague?', 'How would you use this answer in your first weeks if you joined?'],
+  },
+  {
+    id: 'hm-076',
+    round: 'hm',
+    category: 'Questions to ask them',
+    question: 'Why is "How does work reach the team, and how much say do engineers have in how it is built?" a good question to ask the hiring manager, and what separates a strong answer from a concerning one?',
+    answer: [
+      'It is the question that reveals whether the role is genuinely senior, because autonomy over the how is what distinguishes a staff-level seat from a well-paid implementation seat. It is also hard to answer with a slogan, since it asks about a process the manager lives with daily.',
+      'A strong answer describes a real path, naming who decides what gets built and how much engineering input happens before that decision is fixed, and admits the friction in it. Managers who describe their own process honestly, including where it is imperfect, are usually describing something that exists rather than something aspirational.',
+      'A concerning answer is fully finished specifications arriving with deadlines already attached and no described route for engineering to influence scope, or the opposite extreme where nobody owns priorities and the team switches direction constantly. Both predict a lot of your energy going into the process rather than the work.',
+      'A good follow-up gets you the specifics: ask for the last thing the team pushed back on and what happened. The answer to that is usually more informative than the description of the process, because it is a real instance rather than a policy.',
+    ],
+    keyPoints: [
+      'Targets autonomy over the how, which defines the seniority of the seat',
+      'Strong answers describe a real path and admit its friction',
+      'Fixed specs with fixed dates, or no priorities at all, are both warning signs',
+      'Follows up by asking for the last real instance of pushback',
+    ],
+    followUps: ['What would you ask a peer engineer to sanity-check this answer?', 'How much fixed scope would be a dealbreaker for you?'],
+  },
+  {
+    id: 'hm-077',
+    round: 'hm',
+    category: 'Questions to ask them',
+    question: 'Why is "What slows this team down more than it should?" a good question to ask the hiring manager, and what separates a strong answer from a concerning one?',
+    answer: [
+      'It is a good question because it invites an honest answer without requiring the manager to criticise anyone, and because the response is usually the closest thing you will get to a description of your actual first year. Whatever they name is likely to be near the top of what you would work on.',
+      'A strong answer is specific and self-aware: a named bottleneck, some sense of why it has persisted, and ideally what has already been tried. A manager who can describe their team weakness precisely is usually one who can also describe your development precisely, which matters more over two years than the technology stack does.',
+      'A concerning answer is that nothing does, which is not true of any team, or an answer that locates every problem in another department with no reflection on what this team owns. Both suggest the retrospective culture is thinner than the process diagram implies.',
+      'It also gives you a natural opening to say what you would do about it, which is a far better use of the last minutes than a rehearsed closing statement. Keep that brief and provisional, since you have known about the problem for thirty seconds, and ask a question rather than delivering a solution.',
+    ],
+    keyPoints: [
+      'Elicits an honest constraint without asking the manager to blame anyone',
+      'Strong answers are specific, self-aware and include what has been tried',
+      '"Nothing" or "another department" both indicate weak reflection',
+      'Creates an opening to respond briefly and provisionally, not to pitch',
+    ],
+    followUps: ['How would you respond if what they name is something you have fixed before?', 'What if the answer is something you would find intolerable?'],
+  },
+  {
+    id: 'hm-078',
+    round: 'hm',
+    category: 'Questions to ask them',
+    question: 'Why is "Who would I be working with day to day, and where does this role sit among them?" a good question to ask the hiring manager, and what separates a strong answer from a concerning one?',
+    answer: [
+      'It is a good question because team shape determines your day far more than the stack does, and because a manager describing their own team tells you how they think about people. It also surfaces the thing job descriptions systematically omit, which is whether this role is filling a gap, replacing someone, or adding capacity.',
+      'A strong answer describes real people and real seams: who reviews whose code, where the boundary with backend, design or product sits, and who you would most often be blocked by or unblocking. Detail here means the manager is close enough to the work to know it, which is a good sign in itself.',
+      'A concerning answer is an org chart with no texture, or a description where every dependency lives in another team with no described relationship, which usually means slow work regardless of how good the team is. Also listen for whether this seat exists because someone left, which is worth asking about directly and gently.',
+      'Follow up with the composition question that matters at this level: how many people are at what experience level, since a team of mostly junior engineers is a very different job from a team of peers, and both can be good. Knowing which one it is before you accept is worth more than any answer about the technology.',
+    ],
+    keyPoints: [
+      'Team shape determines the day-to-day more than the stack does',
+      'Strong answers name real seams: review, boundaries, dependencies',
+      'A textureless org chart or all-external dependencies predict slow work',
+      'Follows up on seniority mix and on why the seat is open',
+    ],
+    followUps: ['How would the answer change what you asked in the rest of the loop?', 'What would you want to know about the person who held the role before?'],
+  },
 ];
