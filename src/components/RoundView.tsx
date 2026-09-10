@@ -10,7 +10,7 @@ import { ProgressBar } from './ProgressBar';
 type Tab = 'practice' | 'browse';
 
 export function RoundView({ roundId, state, dispatch }: { roundId: RoundId; state: Persisted; dispatch: Dispatch<Action> }) {
-  const round = rounds.find((r) => r.id === roundId)!;
+  const round = rounds.find((r) => r.id === roundId);
   const all = useMemo(() => questionsByRound(roundId), [roundId]);
   const categories = useMemo(() => [...new Set(all.map((q) => q.category))], [all]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -26,6 +26,15 @@ export function RoundView({ roundId, state, dispatch }: { roundId: RoundId; stat
     `rounded-full border px-3 py-1 text-xs ${active ? 'border-emerald-500 bg-emerald-50 font-medium dark:bg-emerald-950' : 'border-zinc-300 dark:border-zinc-700'}`;
   const tabBtn = (active: boolean) =>
     `border-b-2 px-3 py-2 text-sm ${active ? 'border-emerald-500 font-medium' : 'border-transparent text-zinc-500 dark:text-zinc-400'}`;
+
+  if (!round) {
+    return (
+      <main className="mx-auto max-w-3xl p-4 sm:p-6">
+        <p className="mb-2">Round not found.</p>
+        <a href="#" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">← All rounds</a>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6">

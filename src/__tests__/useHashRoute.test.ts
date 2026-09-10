@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { useHashRoute } from '../hooks/useHashRoute';
 
@@ -10,46 +10,31 @@ describe('useHashRoute', () => {
   test('reads a valid round id from the initial hash', () => {
     window.location.hash = '#hm';
     const { result } = renderHook(() => useHashRoute());
-    expect(result.current[0]).toBe('hm');
+    expect(result.current).toBe('hm');
   });
 
   test('reads the drill routes from the hash', () => {
     window.location.hash = '#weak';
     const weak = renderHook(() => useHashRoute());
-    expect(weak.result.current[0]).toBe('weak');
+    expect(weak.result.current).toBe('weak');
 
     window.location.hash = '#notes';
     const notes = renderHook(() => useHashRoute());
-    expect(notes.result.current[0]).toBe('notes');
+    expect(notes.result.current).toBe('notes');
 
     window.location.hash = '#stories';
     const stories = renderHook(() => useHashRoute());
-    expect(stories.result.current[0]).toBe('stories');
+    expect(stories.result.current).toBe('stories');
 
     window.location.hash = '#mock';
     const mock = renderHook(() => useHashRoute());
-    expect(mock.result.current[0]).toBe('mock');
+    expect(mock.result.current).toBe('mock');
   });
 
   test('falls back to null for an invalid hash', () => {
     window.location.hash = '#not-a-round';
     const { result } = renderHook(() => useHashRoute());
-    expect(result.current[0]).toBeNull();
-  });
-
-  test('navigate updates both the hash and the returned route', () => {
-    const { result } = renderHook(() => useHashRoute());
-    act(() => result.current[1]('case'));
-    expect(result.current[0]).toBe('case');
-    expect(window.location.hash).toBe('#case');
-  });
-
-  test('navigate(null) clears the hash', () => {
-    const { result } = renderHook(() => useHashRoute());
-    act(() => result.current[1]('hoe'));
-    act(() => result.current[1](null));
-    expect(result.current[0]).toBeNull();
-    expect(window.location.hash).toBe('');
+    expect(result.current).toBeNull();
   });
 
   test('an external hashchange (e.g. clicking a link) updates the route', () => {
@@ -58,6 +43,17 @@ describe('useHashRoute', () => {
       window.location.hash = '#debrief';
       window.dispatchEvent(new HashChangeEvent('hashchange'));
     });
-    expect(result.current[0]).toBe('debrief');
+    expect(result.current).toBe('debrief');
+  });
+
+  test('an external hashchange scrolls back to the top', () => {
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    renderHook(() => useHashRoute());
+    act(() => {
+      window.location.hash = '#hoe';
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+    expect(scrollTo).toHaveBeenCalledWith(0, 0);
+    scrollTo.mockRestore();
   });
 });

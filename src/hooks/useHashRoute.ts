@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { ROUTES } from '../data';
 import type { Route } from '../types';
@@ -17,21 +17,17 @@ const withViewTransition = (update: () => void) => {
   else update();
 };
 
-export function useHashRoute(): [Route | null, (id: Route | null) => void] {
+export function useHashRoute(): Route | null {
   const [route, setRoute] = useState<Route | null>(fromHash);
 
   useEffect(() => {
-    const onChange = () => withViewTransition(() => setRoute(fromHash()));
+    const onChange = () => {
+      withViewTransition(() => setRoute(fromHash()));
+      window.scrollTo(0, 0);
+    };
     window.addEventListener('hashchange', onChange);
     return () => window.removeEventListener('hashchange', onChange);
   }, []);
 
-  const navigate = useCallback((id: Route | null) => {
-    withViewTransition(() => {
-      window.location.hash = id ?? '';
-      setRoute(id);
-    });
-  }, []);
-
-  return [route, navigate];
+  return route;
 }

@@ -10,7 +10,7 @@ import { ThemeToggle } from './components/ThemeToggle';
 
 export default function App() {
   const { state, dispatch, saveFailed } = useAppState();
-  const [route] = useHashRoute();
+  const route = useHashRoute();
 
   return (
     <>
