@@ -57,6 +57,11 @@ export function Practice({
   // meant re-visiting a question via Back always showed an empty checklist.
   const [checkedByQuestion, setCheckedByQuestion] = useState<Record<string, Set<number>>>({});
 
+  // Same reason as checkedByQuestion: the card remounts per question, so going Back
+  // used to discard whatever you had drafted before revealing. Lap-scoped on purpose —
+  // it is a self-check against the model answer, not an artefact worth persisting.
+  const [answerByQuestion, setAnswerByQuestion] = useState<Record<string, string>>({});
+
   useEffect(() => {
     if (lapDone) {
       clearLap();
@@ -235,6 +240,8 @@ export function Practice({
         strictMode={strictMode}
         checked={checkedByQuestion[current.id]}
         onCheckedChange={(next) => setCheckedByQuestion((prev) => ({ ...prev, [current.id]: next }))}
+        yourAnswer={answerByQuestion[current.id] ?? ''}
+        onYourAnswerChange={(next) => setAnswerByQuestion((prev) => ({ ...prev, [current.id]: next }))}
         stories={state.stories}
         onRehearse={(id) => dispatch({ type: 'rehearseStory', id, now: Date.now() })}
         onReveal={() => setRevealed(true)}

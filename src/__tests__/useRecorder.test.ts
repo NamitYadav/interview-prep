@@ -46,16 +46,16 @@ describe('useRecorder', () => {
     expect(result.current.supported).toBe(false);
   });
 
-  test('start requests the mic and begins recording; stop produces a url', async () => {
+  test('toggling on requests the mic; toggling off produces a url', async () => {
     setup();
     const { result } = renderHook(() => useRecorder());
     expect(result.current.supported).toBe(true);
 
-    await act(() => result.current.start());
+    await act(async () => result.current.toggle());
     expect(result.current.recording).toBe(true);
     expect(result.current.url).toBeNull();
 
-    act(() => result.current.stop());
+    act(() => result.current.toggle());
     await waitFor(() => expect(result.current.url).toBe('blob:mock-url'));
     expect(result.current.recording).toBe(false);
   });
@@ -63,7 +63,7 @@ describe('useRecorder', () => {
   test('a denied mic permission fails silently, staying not-recording with no url', async () => {
     setup({ permissionDenied: true });
     const { result } = renderHook(() => useRecorder());
-    await act(() => result.current.start());
+    await act(async () => result.current.toggle());
     expect(result.current.recording).toBe(false);
     expect(result.current.url).toBeNull();
   });
@@ -71,8 +71,47 @@ describe('useRecorder', () => {
   test('unmount stops any open media tracks', async () => {
     const { tracks } = setup();
     const { result, unmount } = renderHook(() => useRecorder());
-    await act(() => result.current.start());
+    await act(async () => result.current.toggle());
     unmount();
+    for (const t of tracks) expect(t.stop).toHaveBeenCalled();
+  });
+
+  // The bug this replaced hold-to-record for: start() awaited getUserMedia while the
+  // release read a still-null recorderRef, no-opped, and then the await resolved and
+  // opened a recording nothing would ever stop — leaving the mic live for the session.
+  test('stopping while the permission prompt is still up never opens the mic', async () => {
+    const tracks = [mockTrack()];
+    let resolveMedia: (s: MediaStream) => void = () => {};
+    const getUserMedia = vi.fn(() => new Promise<MediaStream>((res) => { resolveMedia = res; }));
+    vi.stubGlobal('MediaRecorder', MockMediaRecorder);
+    vi.stubGlobal('navigator', { mediaDevices: { getUserMedia } });
+    vi.stubGlobal('URL', { createObjectURL: vi.fn(() => 'blob:mock-url'), revokeObjectURL: vi.fn() });
+
+    const { result } = renderHook(() => useRecorder());
+    act(() => result.current.toggle());          // starts, awaiting the prompt
+    act(() => result.current.toggle());          // user taps again before it resolves
+    await act(async () => {
+      resolveMedia({ getTracks: () => tracks } as unknown as MediaStream);
+    });
+
+    expect(result.current.recording).toBe(false);
+    for (const t of tracks) expect(t.stop).toHaveBeenCalled();
+  });
+
+  test('unmounting while the permission prompt is up also releases the mic', async () => {
+    const tracks = [mockTrack()];
+    let resolveMedia: (s: MediaStream) => void = () => {};
+    const getUserMedia = vi.fn(() => new Promise<MediaStream>((res) => { resolveMedia = res; }));
+    vi.stubGlobal('MediaRecorder', MockMediaRecorder);
+    vi.stubGlobal('navigator', { mediaDevices: { getUserMedia } });
+    vi.stubGlobal('URL', { createObjectURL: vi.fn(() => 'blob:mock-url'), revokeObjectURL: vi.fn() });
+
+    const { result, unmount } = renderHook(() => useRecorder());
+    act(() => result.current.toggle());
+    unmount();
+    await act(async () => {
+      resolveMedia({ getTracks: () => tracks } as unknown as MediaStream);
+    });
     for (const t of tracks) expect(t.stop).toHaveBeenCalled();
   });
 });

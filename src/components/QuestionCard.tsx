@@ -35,10 +35,11 @@ const withPlaceholders = (text: string) =>
 
 export function QuestionCard({
   question, revealed, note, rating, strictMode = false, checked, onCheckedChange, focusOnMount = true,
-  stories, onRehearse, onReveal, onNote, onRate,
+  yourAnswer, onYourAnswerChange, stories, onRehearse, onReveal, onNote, onRate,
 }: {
   question: Question; revealed: boolean; note: string; rating?: Rating; strictMode?: boolean;
   checked?: Set<number>; onCheckedChange?: (next: Set<number>) => void; focusOnMount?: boolean;
+  yourAnswer?: string; onYourAnswerChange?: (next: string) => void;
   stories?: Stories; onRehearse?: (id: string) => void;
   onReveal: () => void; onNote: (text: string) => void; onRate: (r: Rating) => void;
 }) {
@@ -69,7 +70,11 @@ export function QuestionCard({
   // Ephemeral, never persisted — a self-check against the model answer, not a
   // stored draft. Resets per question via Practice's `key={current.id}` remount,
   // same as every other piece of local state here.
-  const [yourAnswer, setYourAnswer] = useState('');
+  // Hoisted by Practice for the same reason checked is: `key={current.id}` remounts the
+  // card, so without an owner above it, going Back discarded what you had written.
+  const [ownAnswer, setOwnAnswer] = useState('');
+  const answerText = yourAnswer ?? ownAnswer;
+  const setAnswerText = onYourAnswerChange ?? setOwnAnswer;
 
   // Reveal one follow-up at a time, pre-reveal, each with its own running clock
   // from the moment it was probed — rehearsing the follow-up before you've even
@@ -197,8 +202,8 @@ export function QuestionCard({
             <label htmlFor={`your-answer-${question.id}`} className="mb-1 block font-semibold">Your answer</label>
             <textarea
               id={`your-answer-${question.id}`}
-              value={yourAnswer}
-              onChange={(e) => setYourAnswer(e.target.value)}
+              value={answerText}
+              onChange={(e) => setAnswerText(e.target.value)}
               rows={3}
               placeholder="Your answer in 3 bullets, before you look"
               aria-label="Your answer"
@@ -210,12 +215,11 @@ export function QuestionCard({
             <div>
               <button
                 type="button"
-                onPointerDown={recorder.start}
-                onPointerUp={recorder.stop}
-                onPointerLeave={recorder.stop}
+                onClick={recorder.toggle}
+                aria-pressed={recorder.recording}
                 className={`rounded border px-3 py-1.5 text-xs ${recorder.recording ? 'border-red-500 text-red-600 dark:text-red-400' : 'border-zinc-300 hover:border-emerald-500 dark:border-zinc-700'}`}
               >
-                {recorder.recording ? 'Recording…' : 'Hold to record'}
+                {recorder.recording ? 'Stop recording' : 'Record'}
               </button>
             </div>
           )}
@@ -239,10 +243,10 @@ export function QuestionCard({
               {targetSeconds !== undefined && ` · target ${formatTime(targetSeconds * 1000)}`}
             </p>
           )}
-          {yourAnswer.trim() !== '' && (
+          {answerText.trim() !== '' && (
             <section>
               <h3 className="mb-1 font-semibold">Your answer</h3>
-              <p className="whitespace-pre-wrap text-zinc-600 dark:text-zinc-400">{yourAnswer}</p>
+              <p className="whitespace-pre-wrap text-zinc-600 dark:text-zinc-400">{answerText}</p>
             </section>
           )}
           {recorder.url && (

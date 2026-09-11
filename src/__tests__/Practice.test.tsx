@@ -358,3 +358,39 @@ describe('lap position survives a reload', () => {
     expect(screen.getByText('First question?')).toBeInTheDocument();
   });
 });
+
+describe('your-answer draft survives Back', () => {
+  // The card remounts per question (key={current.id}), so without Practice owning this,
+  // going Back discarded what you had drafted before revealing. Back returns the
+  // question already revealed, so the draft shows in the read-only comparison view
+  // rather than the textarea.
+  test('going back shows what you wrote against the model answer', async () => {
+    render(<Harness3 />);
+    fireEvent.change(screen.getByLabelText(/your answer/i), { target: { value: 'my first draft' } });
+    await userEvent.click(screen.getByRole('button', { name: /skip/i }));
+    expect(screen.getByLabelText(/your answer/i)).toHaveValue('');
+
+    await userEvent.click(screen.getByRole('button', { name: /back/i }));
+    expect(screen.getByRole('heading', { name: /your answer/i })).toBeInTheDocument();
+    expect(screen.getByText('my first draft')).toBeInTheDocument();
+  });
+
+  test('each question keeps its own draft', async () => {
+    render(<Harness3 />);
+    fireEvent.change(screen.getByLabelText(/your answer/i), { target: { value: 'draft one' } });
+    await userEvent.click(screen.getByRole('button', { name: /skip/i }));
+    fireEvent.change(screen.getByLabelText(/your answer/i), { target: { value: 'draft two' } });
+
+    await userEvent.click(screen.getByRole('button', { name: /back/i }));
+    expect(screen.getByText('draft one')).toBeInTheDocument();
+    expect(screen.queryByText('draft two')).not.toBeInTheDocument();
+  });
+
+  test('a draft is not shared between questions', async () => {
+    render(<Harness3 />);
+    fireEvent.change(screen.getByLabelText(/your answer/i), { target: { value: 'only mine' } });
+    await userEvent.click(screen.getByRole('button', { name: /skip/i }));
+    expect(screen.getByLabelText(/your answer/i)).toHaveValue('');
+    expect(screen.queryByText('only mine')).not.toBeInTheDocument();
+  });
+});
