@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { Progress, Question } from '../types';
-import { nextQuestion, orderQueue, roundStats } from '../lib/queue';
+import { SOLID_DECAY_MS, nextQuestion, orderQueue, roundStats } from '../lib/queue';
 
 const q = (id: string): Question => ({
   id, round: 'hm', category: 'X', question: id, answer: ['a'], keyPoints: ['k'],
@@ -15,7 +15,24 @@ describe('orderQueue', () => {
       c: { rating: 2, seen: 1, lastSeen: 10 },
       // d, e never rated
     };
-    expect(orderQueue(qs, progress).map((x) => x.id)).toEqual(['b', 'd', 'e', 'c', 'a']);
+    // `now` is pinned just after lastSeen so nothing has decayed yet.
+    expect(orderQueue(qs, progress, 20).map((x) => x.id)).toEqual(['b', 'd', 'e', 'c', 'a']);
+  });
+
+  test('a solid decays into the ok bucket after the decay window', () => {
+    const progress: Progress = {
+      a: { rating: 3, seen: 1, lastSeen: 0 },
+      c: { rating: 2, seen: 1, lastSeen: 100 },
+    };
+    // Fresh: the solid stays behind the ok.
+    expect(orderQueue([q('a'), q('c')], progress, 1000).map((x) => x.id)).toEqual(['c', 'a']);
+    // Stale: it joins the ok bucket, and the oldest-lastSeen tiebreak puts it first.
+    expect(orderQueue([q('a'), q('c')], progress, SOLID_DECAY_MS + 1).map((x) => x.id)).toEqual(['a', 'c']);
+  });
+
+  test('a decayed solid still ranks behind weak and unrated', () => {
+    const progress: Progress = { a: { rating: 3, seen: 1, lastSeen: 0 }, b: { rating: 1, seen: 1, lastSeen: 0 } };
+    expect(orderQueue(qs, progress, SOLID_DECAY_MS + 1).map((x) => x.id)).toEqual(['b', 'c', 'd', 'e', 'a']);
   });
 
   test('within a bucket, oldest lastSeen sorts first', () => {
@@ -24,7 +41,7 @@ describe('orderQueue', () => {
       c: { rating: 1, seen: 1, lastSeen: 10 },
       b: { rating: 1, seen: 1, lastSeen: 20 },
     };
-    expect(orderQueue(qs, progress).map((x) => x.id)).toEqual(['c', 'b', 'a', 'd', 'e']);
+    expect(orderQueue(qs, progress, 40).map((x) => x.id)).toEqual(['c', 'b', 'a', 'd', 'e']);
   });
 
   test('ties (e.g. all unrated) preserve original order (stable sort)', () => {
@@ -61,6 +78,15 @@ describe('roundStats', () => {
       c: { rating: 2, seen: 1, lastSeen: 1 },
       zzz: { rating: 3, seen: 1, lastSeen: 1 }, // not in this round, ignored
     };
-    expect(roundStats(qs, progress)).toEqual({ total: 5, unrated: 2, weak: 1, ok: 1, solid: 1 });
+    // `now` pinned just after lastSeen so nothing has decayed.
+    expect(roundStats(qs, progress, 2)).toEqual({ total: 5, unrated: 2, weak: 1, ok: 1, solid: 1 });
+  });
+
+  // Counts go through the same bucket() the queue orders by, so the progress bar can't
+  // claim "solid" for a question the drill is about to serve you again as OK.
+  test('a decayed solid is counted as ok, matching the queue', () => {
+    const progress: Progress = { a: { rating: 3, seen: 1, lastSeen: 0 } };
+    expect(roundStats(qs, progress, 1)).toMatchObject({ solid: 1, ok: 0 });
+    expect(roundStats(qs, progress, SOLID_DECAY_MS + 1)).toMatchObject({ solid: 0, ok: 1 });
   });
 });

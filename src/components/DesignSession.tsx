@@ -4,6 +4,8 @@ import type { Action } from '../hooks/useAppState';
 import { questionsByRound } from '../data';
 import { nextQuestion } from '../lib/queue';
 import { useQuestionTimer } from '../hooks/useQuestionTimer';
+import { useDraft } from '../hooks/useDraft';
+import { draftKey } from '../lib/drafts';
 import { formatTime } from '../lib/format';
 import { RATINGS } from './QuestionCard';
 
@@ -39,6 +41,7 @@ export function DesignSession({ state, dispatch }: { state: Persisted; dispatch:
       // deadline instead of getting its own 45 minutes.
       key={`${question.id}-${attempt}`}
       question={question}
+      attempt={attempt}
       state={state}
       dispatch={dispatch}
       onRestart={() => {
@@ -50,11 +53,11 @@ export function DesignSession({ state, dispatch }: { state: Persisted; dispatch:
 }
 
 function DesignPrompt({
-  question, state, dispatch, onRestart,
-}: { question: Question; state: Persisted; dispatch: Dispatch<Action>; onRestart: () => void }) {
+  question, attempt, state, dispatch, onRestart,
+}: { question: Question; attempt: number; state: Persisted; dispatch: Dispatch<Action>; onRestart: () => void }) {
   const [finished, setFinished] = useState(false);
   const [checkedPhases, setCheckedPhases] = useState<Set<number>>(new Set());
-  const [scratch, setScratch] = useState('');
+  const scratch = useDraft(draftKey(question.id, `design-scratch-${attempt}`));
 
   // Visible 45-minute countdown that never forces anything — a real loop doesn't
   // cut you off, it just tells you the clock is running.
@@ -105,8 +108,9 @@ function DesignPrompt({
             <label htmlFor="design-scratch" className="mb-1 block font-semibold">Scratch</label>
             <textarea
               id="design-scratch"
-              value={scratch}
-              onChange={(e) => setScratch(e.target.value)}
+              value={scratch.draft}
+              onChange={(e) => scratch.onChange(e.target.value)}
+              onBlur={scratch.onBlur}
               rows={10}
               placeholder="Sketch your design out loud as you go — requirements, API shape, components, trade-offs."
               className="w-full rounded border border-zinc-300 bg-transparent p-2 text-sm dark:border-zinc-700"

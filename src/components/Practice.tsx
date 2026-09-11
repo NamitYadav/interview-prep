@@ -4,6 +4,7 @@ import type { Action } from '../hooks/useAppState';
 import { nextQuestion, roundStats } from '../lib/queue';
 import { rounds } from '../data';
 import { formatTime } from '../lib/format';
+import { clearLap, lapKey, readLap, writeLap } from '../lib/lap';
 import { QuestionCard } from './QuestionCard';
 
 const isTyping = (target: EventTarget | null) =>
@@ -30,24 +31,68 @@ export function Practice({
   // `history` is every question id shown this lap, in order; `historyPos` is which one
   // is on screen. Advancing appends and moves the pointer to the end; Back just moves
   // the pointer back over ids already recorded, no separate undo stack needed.
+  // A reload — or a phone discarding a backgrounded tab — used to drop you back to the
+  // top of a 287-question queue. `saved` restores the lap when the stored position
+  // belongs to THIS question set; a key mismatch starts fresh.
+  const key = useMemo(() => lapKey(questions), [questions]);
+  // lapKey is a heuristic (length + endpoints), and the bank's content changes between
+  // sessions, so a restored history can name ids this set no longer contains — which
+  // would render "No questions match" with no way out. Drop those, and fall back to a
+  // fresh lap if the position no longer survives.
+  const [saved] = useState(() => {
+    const stored = readLap(key);
+    if (!stored) return undefined;
+    const known = new Set(questions.map((q) => q.id));
+    const history = stored.history.filter((id) => known.has(id));
+    if (history.length === 0) return undefined;
+    const currentId = stored.history[stored.historyPos];
+    const historyPos = currentId !== undefined && known.has(currentId)
+      ? history.indexOf(currentId)
+      : history.length - 1;
+    return {
+      ...stored,
+      history,
+      historyPos: historyPos < 0 ? history.length - 1 : historyPos,
+      requeued: stored.requeued.filter((r) => known.has(r.id)),
+    };
+  });
+
   const [history, setHistory] = useState<string[]>(() => {
+    if (saved) return saved.history;
     const first = pickNext(state.progress, new Set())?.id;
     return first ? [first] : [];
   });
-  const [historyPos, setHistoryPos] = useState(0);
+  const [historyPos, setHistoryPos] = useState(() => saved?.historyPos ?? 0);
   const [revealed, setRevealed] = useState(false);
   const [lapDone, setLapDone] = useState(false);
 
   // A weak rating doesn't end its question's turn for the lap — it schedules a
   // requeue instead, so the same question comes back around roughly REQUEUE_GAP
   // questions later rather than being marked "seen" and gone for the rest of the lap.
-  const [requeued, setRequeued] = useState<RequeueEntry[]>([]);
-  const [step, setStep] = useState(0);
+  const [requeued, setRequeued] = useState<RequeueEntry[]>(() => saved?.requeued ?? []);
+  const [step, setStep] = useState(() => saved?.step ?? 0);
 
   // Hoisted out of QuestionCard so Back doesn't discard ticks: QuestionCard used to
   // keep this as its own state, reset by Practice's `key={current.id}` remount, which
   // meant re-visiting a question via Back always showed an empty checklist.
   const [checkedByQuestion, setCheckedByQuestion] = useState<Record<string, Set<number>>>({});
+
+  // Same reason as checkedByQuestion: the card remounts per question, so going Back
+  // used to discard whatever you had drafted before revealing. Lap-scoped on purpose —
+  // it is a self-check against the model answer, not an artefact worth persisting.
+  const [answerByQuestion, setAnswerByQuestion] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (lapDone) {
+      clearLap(key);
+      return;
+    }
+    if (history.length === 0) return;
+    // Nothing has happened yet — don't write a lap that is just "question 1", which
+    // would otherwise let merely opening a set count as progress in it.
+    if (!saved && historyPos === 0 && step === 0) return;
+    writeLap({ key, history, historyPos, requeued, step });
+  }, [key, saved, history, historyPos, requeued, step, lapDone]);
 
   const currentId = history[historyPos];
   const current = useMemo(() => questions.find((q) => q.id === currentId), [questions, currentId]);
@@ -218,6 +263,8 @@ export function Practice({
         strictMode={strictMode}
         checked={checkedByQuestion[current.id]}
         onCheckedChange={(next) => setCheckedByQuestion((prev) => ({ ...prev, [current.id]: next }))}
+        yourAnswer={answerByQuestion[current.id] ?? ''}
+        onYourAnswerChange={(next) => setAnswerByQuestion((prev) => ({ ...prev, [current.id]: next }))}
         stories={state.stories}
         onRehearse={(id) => dispatch({ type: 'rehearseStory', id, now: Date.now() })}
         onReveal={() => setRevealed(true)}

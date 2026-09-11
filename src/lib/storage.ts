@@ -19,10 +19,7 @@ const isEntry = (v: unknown): v is ProgressEntry =>
   isRecord(v) &&
   (v.rating === 1 || v.rating === 2 || v.rating === 3) &&
   isFiniteNumber(v.seen) &&
-  isFiniteNumber(v.lastSeen) &&
-  isOptionalFiniteNumber(v.dueAt) &&
-  isOptionalFiniteNumber(v.interval) &&
-  isOptionalFiniteNumber(v.easeFactor);
+  isFiniteNumber(v.lastSeen);
 
 const isStory = (v: unknown): v is Story =>
   isRecord(v) &&

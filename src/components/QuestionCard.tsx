@@ -3,6 +3,8 @@ import type { Question, Rating, Stories } from '../types';
 import { rounds, isStoryPrompt } from '../data';
 import { useQuestionTimer } from '../hooks/useQuestionTimer';
 import { useDebouncedField } from '../hooks/useDebouncedField';
+import { useDraft } from '../hooks/useDraft';
+import { draftKey } from '../lib/drafts';
 import { useRecorder } from '../hooks/useRecorder';
 import { formatTime } from '../lib/format';
 
@@ -33,16 +35,21 @@ const withPlaceholders = (text: string) =>
 
 export function QuestionCard({
   question, revealed, note, rating, strictMode = false, checked, onCheckedChange, focusOnMount = true,
-  stories, onRehearse, onReveal, onNote, onRate,
+  yourAnswer, onYourAnswerChange, stories, onRehearse, onReveal, onNote, onRate,
 }: {
   question: Question; revealed: boolean; note: string; rating?: Rating; strictMode?: boolean;
   checked?: Set<number>; onCheckedChange?: (next: Set<number>) => void; focusOnMount?: boolean;
+  yourAnswer?: string; onYourAnswerChange?: (next: string) => void;
   stories?: Stories; onRehearse?: (id: string) => void;
   onReveal: () => void; onNote: (text: string) => void; onRate: (r: Rating) => void;
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const answerRef = useRef<HTMLDivElement>(null);
-  const checkedSet = checked ?? new Set<number>();
+  // Practice controls this so ticks survive Back; Browse and #search pass neither prop,
+  // and without a fallback every checkbox there was pinned to false and unticka-ble.
+  const [ownChecked, setOwnChecked] = useState<Set<number>>(() => new Set());
+  const checkedSet = checked ?? ownChecked;
+  const setChecked = onCheckedChange ?? setOwnChecked;
 
   const targetSeconds = rounds.find((r) => r.id === question.round)?.targetSeconds;
   const { elapsedMs, remainingMs, autoRevealed, markRevealed } = useQuestionTimer({
@@ -55,12 +62,19 @@ export function QuestionCard({
   const showCountdown = strictMode && !revealed && targetSeconds !== undefined && remainingMs !== null;
 
   const note_ = useDebouncedField(note, onNote);
+  // The scratch editor was uncontrolled — defaultValue with no onChange — so anything
+  // typed into it during a live-coding drill was captured nowhere and lost on advance.
+  const scratch = useDraft(draftKey(question.id, 'scratch'), question.code ?? '');
   const recorder = useRecorder();
 
   // Ephemeral, never persisted — a self-check against the model answer, not a
   // stored draft. Resets per question via Practice's `key={current.id}` remount,
   // same as every other piece of local state here.
-  const [yourAnswer, setYourAnswer] = useState('');
+  // Hoisted by Practice for the same reason checked is: `key={current.id}` remounts the
+  // card, so without an owner above it, going Back discarded what you had written.
+  const [ownAnswer, setOwnAnswer] = useState('');
+  const answerText = yourAnswer ?? ownAnswer;
+  const setAnswerText = onYourAnswerChange ?? setOwnAnswer;
 
   // Reveal one follow-up at a time, pre-reveal, each with its own running clock
   // from the moment it was probed — rehearsing the follow-up before you've even
@@ -110,10 +124,12 @@ export function QuestionCard({
         question.scratch ? (
           <textarea
             key={question.id}
-            defaultValue={question.code}
+            value={scratch.draft}
+            onChange={(e) => scratch.onChange(e.target.value)}
+            onBlur={scratch.onBlur}
             spellCheck={false}
             wrap="off"
-            rows={question.code.split('\n').length + 2}
+            rows={Math.max(question.code.split('\n').length + 2, scratch.draft.split('\n').length + 2)}
             aria-label="Scratch editor"
             className="mb-4 w-full overflow-x-auto rounded bg-zinc-100 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-800"
           />
@@ -186,8 +202,8 @@ export function QuestionCard({
             <label htmlFor={`your-answer-${question.id}`} className="mb-1 block font-semibold">Your answer</label>
             <textarea
               id={`your-answer-${question.id}`}
-              value={yourAnswer}
-              onChange={(e) => setYourAnswer(e.target.value)}
+              value={answerText}
+              onChange={(e) => setAnswerText(e.target.value)}
               rows={3}
               placeholder="Your answer in 3 bullets, before you look"
               aria-label="Your answer"
@@ -199,12 +215,11 @@ export function QuestionCard({
             <div>
               <button
                 type="button"
-                onPointerDown={recorder.start}
-                onPointerUp={recorder.stop}
-                onPointerLeave={recorder.stop}
+                onClick={recorder.toggle}
+                aria-pressed={recorder.recording}
                 className={`rounded border px-3 py-1.5 text-xs ${recorder.recording ? 'border-red-500 text-red-600 dark:text-red-400' : 'border-zinc-300 hover:border-emerald-500 dark:border-zinc-700'}`}
               >
-                {recorder.recording ? 'Recording…' : 'Hold to record'}
+                {recorder.recording ? 'Stop recording' : 'Record'}
               </button>
             </div>
           )}
@@ -228,10 +243,10 @@ export function QuestionCard({
               {targetSeconds !== undefined && ` · target ${formatTime(targetSeconds * 1000)}`}
             </p>
           )}
-          {yourAnswer.trim() !== '' && (
+          {answerText.trim() !== '' && (
             <section>
               <h3 className="mb-1 font-semibold">Your answer</h3>
-              <p className="whitespace-pre-wrap text-zinc-600 dark:text-zinc-400">{yourAnswer}</p>
+              <p className="whitespace-pre-wrap text-zinc-600 dark:text-zinc-400">{answerText}</p>
             </section>
           )}
           {recorder.url && (
@@ -265,7 +280,7 @@ export function QuestionCard({
                       onChange={(e) => {
                         const next = new Set(checkedSet);
                         if (e.target.checked) next.add(i); else next.delete(i);
-                        onCheckedChange?.(next);
+                        setChecked(next);
                       }}
                       className="mt-1"
                     />

@@ -9,14 +9,7 @@ export interface Question {
   deeper?: string[];
 }
 export type Rating = 1 | 2 | 3;
-export interface ProgressEntry {
-  rating: Rating;
-  seen: number;
-  lastSeen: number;
-  dueAt?: number;
-  interval?: number;
-  easeFactor?: number;
-}
+export interface ProgressEntry { rating: Rating; seen: number; lastSeen: number }
 export type Progress = Record<string, ProgressEntry>;
 export type Notes = Record<string, string>;
 export interface Story { title: string; body: string; lastRehearsed?: number }

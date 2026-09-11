@@ -17,7 +17,7 @@ import { ThemeToggle } from './components/ThemeToggle';
 const isRoundId = (r: Route): r is RoundId => (ROUND_IDS as readonly string[]).includes(r);
 
 export default function App() {
-  const { state, dispatch, saveFailed } = useAppState();
+  const { state, dispatch, saveFailed, staleTab, dismissStaleTab } = useAppState();
   const route = useHashRoute();
   const [strictMode, setStrictMode] = useStrictMode();
 
@@ -38,6 +38,17 @@ export default function App() {
       {saveFailed && (
         <div role="status" className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-900 dark:bg-amber-900 dark:text-amber-100">
           Progress is not being saved (storage unavailable). Export before closing the tab.
+        </div>
+      )}
+      {staleTab && !saveFailed && (
+        <div role="status" className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-900 dark:bg-amber-900 dark:text-amber-100">
+          Another tab changed your progress. Reload to see it — saving from here will overwrite that change.{' '}
+          <button type="button" onClick={() => window.location.reload()} className="underline underline-offset-2">
+            Reload
+          </button>{' '}
+          <button type="button" onClick={dismissStaleTab} className="underline underline-offset-2">
+            Dismiss
+          </button>
         </div>
       )}
       <header className="mx-auto flex max-w-3xl items-center justify-end gap-2 px-4 pt-4 sm:px-6">

@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
@@ -283,5 +283,36 @@ describe('QuestionCard deeper material', () => {
     renderCard(base, true);
     expect(screen.getByText('Answer one.')).toBeInTheDocument();
     expect(screen.queryByText(/if they dig deeper/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('QuestionCard scratch editor', () => {
+  const scratchQ: Question = { ...base, id: 'coding-099', code: 'function solve() {}', scratch: true };
+
+  afterEach(() => localStorage.clear());
+
+  // It was uncontrolled — defaultValue with no onChange — so code written during a
+  // live-coding drill was captured nowhere and died on the next question.
+  test('keeps what you typed across a remount', async () => {
+    vi.useRealTimers();
+    const { unmount } = renderCard(scratchQ);
+    const editor = screen.getByLabelText(/scratch editor/i);
+    expect(editor).toHaveValue('function solve() {}');
+    fireEvent.change(editor, { target: { value: 'function solve() { return 42; }' } });
+    fireEvent.blur(editor);
+    unmount();
+
+    renderCard(scratchQ);
+    expect(screen.getByLabelText(/scratch editor/i)).toHaveValue('function solve() { return 42; }');
+  });
+
+  test('a different question gets its own scratch', async () => {
+    const { unmount } = renderCard(scratchQ);
+    fireEvent.change(screen.getByLabelText(/scratch editor/i), { target: { value: 'mine' } });
+    fireEvent.blur(screen.getByLabelText(/scratch editor/i));
+    unmount();
+
+    renderCard({ ...scratchQ, id: 'coding-098', code: 'other()' });
+    expect(screen.getByLabelText(/scratch editor/i)).toHaveValue('other()');
   });
 });

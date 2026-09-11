@@ -18,7 +18,7 @@ export function StoriesView({ state, dispatch }: { state: Persisted; dispatch: D
   );
 
   const addStory = () => {
-    dispatch({ type: 'saveStory', id: crypto.randomUUID(), title: '', body: '' });
+    dispatch({ type: 'createStory', id: crypto.randomUUID() });
   };
 
   return (

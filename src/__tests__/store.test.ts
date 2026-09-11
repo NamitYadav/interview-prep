@@ -23,16 +23,31 @@ describe('reducer', () => {
     expect(s.notes).toEqual({});
   });
   test('saveStory merges a partial update against the current story, not a caller-supplied snapshot', () => {
-    let s = reducer(EMPTY, { type: 'saveStory', id: 'a', title: 'Migration', body: 'Situation...' });
+    let s = reducer(EMPTY, { type: 'createStory', id: 'a' });
+    s = reducer(s, { type: 'saveStory', id: 'a', title: 'Migration', body: 'Situation...' });
     // Commit only the body — as if two independently-debounced fields fired close
     // together and this one's closure never knew the title had just changed.
     s = reducer(s, { type: 'saveStory', id: 'a', body: 'Situation... Task... Action...' });
     expect(s.stories.a).toEqual({ title: 'Migration', body: 'Situation... Task... Action...' });
   });
 
-  test('saveStory on a new id defaults missing fields to empty rather than undefined', () => {
-    const s = reducer(EMPTY, { type: 'saveStory', id: 'new', title: 'Just a title' });
-    expect(s.stories.new).toEqual({ title: 'Just a title', body: '' });
+  test('createStory makes an empty story and never clobbers an existing one', () => {
+    let s = reducer(EMPTY, { type: 'createStory', id: 'a' });
+    expect(s.stories.a).toEqual({ title: '', body: '' });
+    s = reducer(s, { type: 'saveStory', id: 'a', title: 'Kept' });
+    expect(reducer(s, { type: 'createStory', id: 'a' }).stories.a).toEqual({ title: 'Kept', body: '' });
+  });
+
+  // useDebouncedField flushes on unmount, so a save can land AFTER the delete. When it
+  // did, the story came back with a blank title — the user deleted it, confirmed the
+  // deletion, and it reappeared.
+  test('a save landing after a delete does not resurrect the story', () => {
+    let s = reducer(EMPTY, { type: 'createStory', id: 'a' });
+    s = reducer(s, { type: 'saveStory', id: 'a', title: 'Migration', body: 'Situation...' });
+    s = reducer(s, { type: 'deleteStory', id: 'a' });
+    s = reducer(s, { type: 'saveStory', id: 'a', body: 'a late debounced flush' });
+    expect(s.stories.a).toBeUndefined();
+    expect(s.stories).toEqual({});
   });
 
   test('import replaces state', () => {

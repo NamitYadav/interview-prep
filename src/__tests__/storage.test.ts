@@ -79,7 +79,7 @@ describe('parseBackup', () => {
     [JSON.stringify({ version: 1, progress: { a: { rating: 4, seen: 1, lastSeen: 1 } }, notes: {} }), 'Invalid progress entry for a'],
     // 1e999 overflows to Infinity on JSON.parse — must be rejected, not accepted as a
     // "number" that later serializes to `null` and fails re-validation on next load.
-    ['{"version":2,"progress":{"a":{"rating":1,"seen":1,"lastSeen":1,"dueAt":1e999}},"notes":{},"stories":{}}', 'Invalid progress entry for a'],
+    ['{"version":2,"progress":{"a":{"rating":1,"seen":1,"lastSeen":1e999}},"notes":{},"stories":{}}', 'Invalid progress entry for a'],
     [JSON.stringify({ version: 1, progress: {}, notes: { a: 1 } }), 'Invalid note for a'],
     [JSON.stringify({ version: 2, progress: {}, notes: {}, stories: [] }), 'stories must be an object'],
     [JSON.stringify({ version: 2, progress: {}, notes: {}, stories: { a: { title: 1 } } }), 'Invalid story for a'],
@@ -90,4 +90,16 @@ describe('parseBackup', () => {
 
 test('backupFilename uses the date', () => {
   expect(backupFilename(new Date('2026-09-08T10:00:00Z'))).toBe('interview-prep-backup-2026-09-08.json');
+});
+
+describe('backward compatibility', () => {
+  // dueAt/interval/easeFactor were an SM-2 schema nothing ever wrote or read; they were
+  // deleted along with their validation. Backups written while they existed must still
+  // load — validate() ignores unknown keys — and the fields are simply dropped.
+  test('imports a backup carrying the removed SM-2 fields', () => {
+    const legacy = '{"version":2,"progress":{"a":{"rating":3,"seen":2,"lastSeen":5,"dueAt":99,"interval":3,"easeFactor":2.5}},"notes":{},"stories":{}}';
+    const parsed = parseBackup(legacy);
+    expect(parsed.progress.a).toEqual({ rating: 3, seen: 2, lastSeen: 5, dueAt: 99, interval: 3, easeFactor: 2.5 });
+    expect(save(parsed)).toBe(true);
+  });
 });

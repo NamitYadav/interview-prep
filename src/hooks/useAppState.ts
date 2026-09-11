@@ -1,10 +1,11 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import type { Persisted, Rating } from '../types';
-import { emptyState, load, save } from '../lib/storage';
+import { STORAGE_KEY, emptyState, load, save } from '../lib/storage';
 
 export type Action =
   | { type: 'rate'; id: string; rating: Rating; now: number }
   | { type: 'note'; id: string; text: string }
+  | { type: 'createStory'; id: string }
   | { type: 'saveStory'; id: string; title?: string; body?: string }
   | { type: 'rehearseStory'; id: string; now: number }
   | { type: 'deleteStory'; id: string }
@@ -34,14 +35,16 @@ export function reducer(state: Persisted, action: Action): Persisted {
       return { ...state, notes };
     }
     case 'saveStory': {
-      // Unlike notes, a story never auto-deletes on going blank — it is a first-class
-      // item the user creates and removes explicitly via 'deleteStory'. title/body
-      // are each optional and merged against the CURRENT stories[id] at apply time —
-      // never reconstructed from a caller's own stale snapshot of the other field —
-      // so two independently-debounced fields committing close together can't have
-      // one silently revert the other back to whatever it was when that commit's
-      // closure was created.
-      const existing = state.stories[action.id] ?? { title: '', body: '' };
+      // title/body are each optional and merged against the CURRENT stories[id] at
+      // apply time — never reconstructed from a caller's own stale snapshot of the
+      // other field — so two independently-debounced fields committing close together
+      // can't have one silently revert the other.
+      //
+      // Merge-only, never create: useDebouncedField flushes on unmount, so a save that
+      // lands after 'deleteStory' would otherwise resurrect the story with a blank
+      // title. Creation is explicit, via 'createStory'.
+      const existing = state.stories[action.id];
+      if (!existing) return state;
       return {
         ...state,
         stories: {
@@ -53,6 +56,10 @@ export function reducer(state: Persisted, action: Action): Persisted {
           },
         },
       };
+    }
+    case 'createStory': {
+      if (state.stories[action.id]) return state;
+      return { ...state, stories: { ...state.stories, [action.id]: { title: '', body: '' } } };
     }
     case 'rehearseStory': {
       const existing = state.stories[action.id];
@@ -119,5 +126,21 @@ export function useAppState() {
     };
   }, []);
 
-  return { state, dispatch, saveFailed };
+  // Each tab writes the whole Persisted blob, so two tabs open across a study session
+  // means the last debounced write wins and the other tab's ratings, notes and stories
+  // are gone. Detect and surface it rather than merging: a real merge needs per-field
+  // causality this app has no reason to carry, and silently clobbering is the bug.
+  const [staleTab, setStaleTab] = useState(false);
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      // key === null is a storage.clear() from another tab; newValue === null is a
+      // removal. Both mean what we hold no longer matches what is on disk.
+      if (e.key !== null && e.key !== STORAGE_KEY) return;
+      setStaleTab(true);
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  return { state, dispatch, saveFailed, staleTab, dismissStaleTab: () => setStaleTab(false) };
 }
