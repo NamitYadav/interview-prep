@@ -1,5 +1,5 @@
 import { useState, type Dispatch } from 'react';
-import type { Persisted } from '../types';
+import type { Persisted, Question } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { questionsByRound } from '../data';
 import { nextQuestion } from '../lib/queue';
@@ -20,30 +20,47 @@ const noop = () => {};
 export function DesignSession({ state, dispatch }: { state: Persisted; dispatch: Dispatch<Action> }) {
   const designQuestions = questionsByRound('design');
   const pickQuestionId = () => nextQuestion(designQuestions, state.progress)?.id;
-
   const [questionId, setQuestionId] = useState(pickQuestionId);
+  // Bumped on every restart so the key below changes even when the next prompt
+  // happens to be the very same question (e.g. restarting without rating it) —
+  // relying on question.id alone wouldn't force a remount in that case.
+  const [attempt, setAttempt] = useState(0);
+
+  const question = designQuestions.find((q) => q.id === questionId);
+  if (!question) {
+    return <p className="rounded border border-dashed p-6 text-center text-zinc-500 dark:text-zinc-400">No design prompts available.</p>;
+  }
+
+  return (
+    <DesignPrompt
+      // A fresh prompt must be a full remount, not just a state reset —
+      // useQuestionTimer's clock starts from its own mount, so without this every
+      // later prompt in the same visit would inherit the very first prompt's
+      // deadline instead of getting its own 45 minutes.
+      key={`${question.id}-${attempt}`}
+      question={question}
+      state={state}
+      dispatch={dispatch}
+      onRestart={() => {
+        setQuestionId(pickQuestionId());
+        setAttempt((a) => a + 1);
+      }}
+    />
+  );
+}
+
+function DesignPrompt({
+  question, state, dispatch, onRestart,
+}: { question: Question; state: Persisted; dispatch: Dispatch<Action>; onRestart: () => void }) {
   const [finished, setFinished] = useState(false);
   const [checkedPhases, setCheckedPhases] = useState<Set<number>>(new Set());
   const [scratch, setScratch] = useState('');
-
-  const question = designQuestions.find((q) => q.id === questionId);
 
   // Visible 45-minute countdown that never forces anything — a real loop doesn't
   // cut you off, it just tells you the clock is running.
   const { remainingMs } = useQuestionTimer({
     targetSeconds: TARGET_SECONDS, strictMode: true, revealed: finished, onAutoReveal: noop, autoReveal: false,
   });
-
-  const restart = () => {
-    setQuestionId(pickQuestionId());
-    setFinished(false);
-    setCheckedPhases(new Set());
-    setScratch('');
-  };
-
-  if (!question) {
-    return <p className="rounded border border-dashed p-6 text-center text-zinc-500 dark:text-zinc-400">No design prompts available.</p>;
-  }
 
   const rating = state.progress[question.id]?.rating;
 
@@ -130,7 +147,7 @@ export function DesignSession({ state, dispatch }: { state: Persisted; dispatch:
           </div>
           <button
             type="button"
-            onClick={restart}
+            onClick={onRestart}
             className="rounded border border-zinc-300 px-4 py-2 text-sm hover:border-emerald-500 dark:border-zinc-700"
           >
             Another prompt

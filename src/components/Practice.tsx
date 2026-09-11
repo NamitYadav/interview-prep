@@ -61,7 +61,11 @@ export function Practice({
   }, [questions]);
   const previousId = historyPos > 0 ? history[historyPos - 1] : undefined;
   const previousQuestion = useMemo(() => questions.find((q) => q.id === previousId), [questions, previousId]);
-  const roundBoundary = current && (!previousQuestion || previousQuestion.round !== current.round)
+  // Only in `ordered` mode does "Round k of n" mean anything — a bucket-sorted set
+  // (plain round Practice, Weak drill) jumps between rounds by rating recency, not
+  // round order, so the same banner there would flicker on every jump rather than
+  // marking a real transition.
+  const roundBoundary = ordered && current && (!previousQuestion || previousQuestion.round !== current.round)
     ? { index: distinctRounds.indexOf(current.round), total: distinctRounds.length, round: rounds.find((r) => r.id === current.round) }
     : null;
 
@@ -118,6 +122,15 @@ export function Practice({
     // The current id is excluded from `seen` either way, so the pre-rate progress
     // is fine here — re-running the reducer just to get progress with this one
     // entry updated was a provable no-op for what advance() actually uses it for.
+    //
+    // Note: the setRequeued call above hasn't landed in state yet when advance()
+    // reads `requeued` a line down (same render's closure) — so rating the very
+    // last question of a lap Weak does not actually reschedule it: advance() sees
+    // the requeue list as still empty, finds nothing else to serve either, and
+    // ends the lap on the spot. There's nothing else to interleave it with in that
+    // case anyway, so ending the lap is the right call — see the final rating in
+    // Practice.test.tsx's "a pending requeue keeps the lap open past the point
+    // every other question is shown" test.
     advance(state.progress, seenInPath());
   };
 

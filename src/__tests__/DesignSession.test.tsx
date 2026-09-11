@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
 import { EMPTY } from './helpers';
@@ -54,5 +54,28 @@ describe('DesignSession', () => {
     expect(screen.getByRole('button', { name: /finish/i })).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: /requirements/i })).not.toBeChecked();
     expect(screen.getByLabelText(/scratch/i)).toHaveValue('');
+  });
+
+  test('another prompt gets its own fresh 45-minute clock, even without rating first', async () => {
+    vi.useFakeTimers();
+    try {
+      render(<Harness />);
+      act(() => vi.advanceTimersByTime(250));
+      expect(screen.getByRole('timer')).toHaveTextContent(/time left: 45:00/i);
+
+      // Spend 10 minutes on this prompt, then restart without rating it — the next
+      // prompt (which may well be this same one again) must not inherit this
+      // elapsed time as a head start on its own clock.
+      act(() => vi.advanceTimersByTime(10 * 60 * 1000));
+      expect(screen.getByRole('timer')).toHaveTextContent(/time left: 35:00/i);
+
+      fireEvent.click(screen.getByRole('button', { name: /finish/i }));
+      fireEvent.click(screen.getByRole('button', { name: /another prompt/i }));
+
+      act(() => vi.advanceTimersByTime(250));
+      expect(screen.getByRole('timer')).toHaveTextContent(/time left: 45:00/i);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -33,6 +33,11 @@ const rateVisible = async () => {
 };
 
 describe('Practice', () => {
+  test('no round-boundary banner outside ordered mode, even on the first question', () => {
+    render(<Harness />);
+    expect(screen.queryByText(/round \d+ of \d+/i)).not.toBeInTheDocument();
+  });
+
   test('reveal shows answer, key points, and follow-ups as a plain list', async () => {
     render(<Harness />);
     expect(screen.getByText('First question?')).toBeInTheDocument();
