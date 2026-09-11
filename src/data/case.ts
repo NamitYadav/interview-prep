@@ -425,7 +425,7 @@ export const caseStudy: Question[] = [
       'States the decision and real constraint plainly, without over-apologizing',
       'Names a specific, credible better alternative rather than a vague regret',
       'Moves on promptly rather than dwelling',
-      'Spends under a minute on it before moving on',
+      'Says why the alternative would have been better, not only what it was',
     ],
     followUps: ['What would you have needed to know earlier to avoid that decision?', 'How do you decide when a decision is worth revisiting mid-build versus living with it?'],
   },

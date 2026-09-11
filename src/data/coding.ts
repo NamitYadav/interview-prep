@@ -29,13 +29,14 @@ export const coding: Question[] = [
     answer: [
       'Narrate decisions, not keystrokes. "I am putting the selected index in state rather than deriving it, because the list can reorder" is useful; "now I am typing a div" is noise. The interviewer is scoring judgement, and judgement is only visible when you say the alternative you rejected.',
       'Use the silence deliberately when you genuinely need to think: say "give me twenty seconds to work through this edge case" and then go quiet. An announced pause reads as composure; an unannounced two-minute silence reads as being stuck.',
-      'Narrate at boundaries rather than continuously: before starting a piece, say what you are about to do; after finishing it, say what you know works and what is still missing. That rhythm gives the interviewer natural places to steer you without interrupting. When you are debugging rather than building, the same rhythm becomes hypothesis and test in one breath — "I think the effect is re-running every render, and I will check by logging at the top of it" — followed by what the result ruled out, so a wrong guess reads as narrowing rather than wandering.',
+      'Narrate at boundaries rather than continuously: before starting a piece, say what you are about to do; after finishing it, say what you know works and what is still missing. That rhythm gives the interviewer natural places to steer you without interrupting. When you are debugging rather than building, the same rhythm becomes hypothesis and test in one breath — "I think the effect is re-running every render, and I will check by logging at the top of it" — followed by what the result ruled out, so a wrong guess reads as narrowing rather than wandering. Keep the ruled-out list spoken and cumulative — "so it is not the fetch and not the reducer" — and hold a second theory in reserve before you test the first, so a disproved guess turns straight into the next test instead of a restart.',
       'If you notice you are talking to avoid admitting confusion, stop and name the confusion instead. "I am not sure whether this should live in state or a ref, here is the trade-off" is a strong staff-level move; filling air is not.',
     ],
     keyPoints: [
       'Narrates decisions and rejected alternatives, not keystrokes',
       'Announces thinking pauses rather than going silent unexpectedly',
       'Speaks at task boundaries so the interviewer can steer',
+      'When debugging, says what each test ruled out and keeps a second theory in reserve',
       'Names confusion directly instead of talking around it',
     ],
     followUps: ['How do you adapt if the interviewer is completely silent back?', 'What do you do when narrating is visibly slowing your typing down?'],
@@ -180,7 +181,7 @@ export const coding: Question[] = [
     answer: [
       'Stop coding. A half-finished edit at the buzzer is worth less than a clear spoken account of where things stand, and interviewers write their notes from the last thing they heard.',
       'Give the same three-part summary every time: what works and how you know, what is missing or stubbed, and what you would do next in priority order. Being able to state your own gaps accurately is a strong signal that you would be honest about status on a real team.',
-      'If you finished early instead, do not sit on it. Re-run the original failing case rather than declaring victory, then say whether the same mistake exists in sibling call sites — fixing one instance of a class of bug while five others remain is the most common way a real fix fails to help.',
+      'If you finished early instead, do not sit on it. Re-run the original failing case rather than declaring victory, then say whether the same mistake exists in sibling call sites — fixing one instance of a class of bug while five others remain is the most common way a real fix fails to help. Then ask the question that outlives the session: how did this get past review and CI, and what check would have caught it?',
       'Name one thing you would change about your own approach in hindsight. Volunteering a real self-criticism, rather than a fake modest one, is the closest thing to a free point in these rounds.',
       'Then ask one question about how they work: how they pair in practice, or what the review culture is like. It converts the last minute from evaluation into conversation, and it is genuinely useful information for you.',
     ],
@@ -188,6 +189,7 @@ export const coding: Question[] = [
       'Stops editing in time to summarise deliberately',
       'Reports what works, what is missing, and what comes next',
       'If finished early, re-runs the original failing case and checks sibling call sites',
+      'Asks how the bug escaped review and CI, not only how to fix it',
       'Volunteers one genuine hindsight criticism of the approach',
       'Closes with a real question about how the team works',
     ],
@@ -437,7 +439,7 @@ export const coding: Question[] = [
       'Say plainly that it is blocking and why, because softening the signal is its own failure mode. A comment written so gently that the author reads it as optional wastes a round trip; "this needs to change before merge, because it can crash a paid flow" is kinder than three hedged sentences that get skipped.',
       'Separate the requirement from the solution. State the problem as non-negotiable and the fix as a suggestion: it leaves the author room to solve it better than you would have, and it avoids review turning into dictation.',
       'Assume competence in the wording. "Was there a reason to skip the guard here, or is this an oversight?" costs one clause and protects against the case where they know something you do not, which happens more often than review culture likes to admit.',
-      'Two habits keep the same thing true at the level of the whole review. Block only on correctness, clarity, or consistency with the existing codebase: approve working, tested code you would have built differently, and if the alternative is worth saying at all, say it labelled explicitly as non-blocking. And prioritise rather than pile on — name the two or three findings that must change, comment once on the first instance of a repeated mistake and say it applies throughout, and let the rest go or fold them into the summary. Fifteen inline comments read as a verdict on the author and leave them guessing which ones actually matter.',
+      'The same principle scales up to the review as a whole: make the required change unmistakable and everything else visibly optional. That means blocking only on correctness, clarity, or consistency with the existing codebase — approving working, tested code you would have built differently, and labelling any alternative explicitly as non-blocking — and it means commenting once on the first instance of a repeated mistake, saying it applies throughout, and folding the remainder into the summary rather than inline. Fifteen inline comments read as a verdict on the author and leave them guessing which two actually matter; naming those two is the job.',
     ],
     keyPoints: [
       'Anchors the comment on a concrete failing case, not on the code style',
@@ -529,7 +531,7 @@ class NotifierFactory {
     followUps: ['Which of these have you caught in a real review recently?', 'What would you automate away first so review can focus on the rest?'],
   },
 
-  // Build prompts (12)
+  // Build prompts (13)
   {
     id: 'coding-028',
     round: 'coding',
@@ -855,5 +857,33 @@ function useStore<T>(store: ReturnType<typeof createStore<T>>): T {
       'Connects the pattern to a concrete real-world case (shared lookups across components)',
     ],
     followUps: ['How would you add a TTL so cached values expire?', 'How would you support cache invalidation for a specific key after a mutation?'],
+  },
+  {
+    id: 'coding-040',
+    round: 'coding',
+    category: 'Build prompts',
+    question: 'Implement debounce and throttle from scratch, each with a cancel() method, and tell me when you would reach for one over the other. Talk me through your approach.',
+    code: `function debounce<A extends unknown[]>(fn: (...args: A) => void, wait: number) {
+  // TODO: call fn only after "wait" ms have passed with no further calls
+  // TODO: expose cancel() to drop a pending call
+}
+
+function throttle<A extends unknown[]>(fn: (...args: A) => void, wait: number) {
+  // TODO: call fn at most once per "wait" ms
+  // TODO: expose cancel() to drop a pending trailing call
+}`,
+    answer: [
+      'Say what each one means before writing either, because the two get used interchangeably and they are not interchangeable. Debounce waits for quiet: every call resets the timer, and fn runs only once no call has arrived for the whole wait window — so a burst of a hundred calls produces exactly one invocation, at the end. Throttle enforces a rate: fn runs immediately, then at most once per window however many calls arrive — so a burst of a hundred produces a call at the start and one per window after. Debounce can starve forever under continuous input; throttle never does. That difference is the whole of the choice.',
+      'Debounce is a closure over one timer id. Each call clears the pending timeout and schedules a new one, and the scheduled callback applies fn with the most recent arguments — the last arguments, not the first, which is the part people get wrong when they capture args outside the handler. Keep this over a variable so a method passed in still gets its receiver. cancel() clears the timeout and nulls the id so a later call schedules cleanly rather than clearing a stale handle.',
+      'Throttle needs a last-run timestamp and a trailing timer, because leading-only throttle silently drops the final call of a burst, which is the bug that shows up as a filter that never applies the last keystroke. On a call, if the elapsed time since the last run is at least wait, run immediately and record the time; otherwise store the arguments and schedule a trailing run for the remainder of the window, replacing any already-scheduled trailing call so the newest arguments win. cancel() clears the trailing timer and drops the stored arguments.',
+      'Then say where each belongs. Debounce for work that only matters once the user stops: a search-as-you-type request, a resize handler recomputing layout, autosaving a form field. Throttle for work that must stay responsive during a continuous stream: scroll position, pointer move, a progress readout, a rate-limited API. And name the cases where neither is right — requestAnimationFrame for anything painting per frame, since a timer does not align to the frame, and an AbortController rather than a debounce when the real requirement is that a stale in-flight request must not overwrite a newer one.',
+    ],
+    keyPoints: [
+      'States the behavioural difference: debounce fires once after quiet, throttle fires at a bounded rate during the burst',
+      'Debounce resets the timer on every call and applies the most recent arguments, not the first',
+      'Throttle handles the trailing call so the last event of a burst is not dropped',
+      'cancel() clears the pending timer and any stored trailing arguments on both',
+    ],
+    followUps: ['How would you add a leading/trailing option to debounce, and what does each combination do to a single isolated call?', 'How would you test these deterministically without waiting real milliseconds?'],
   },
 ];

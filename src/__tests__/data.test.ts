@@ -32,7 +32,7 @@ describe('question bank', () => {
   });
 
   test('every round has its expected exact question count', () => {
-    const expected: Record<string, number> = { hr: 37, hm: 102, coding: 34, design: 29, case: 34, debrief: 33, hoe: 33 };
+    const expected: Record<string, number> = { hr: 37, hm: 102, coding: 35, design: 29, case: 34, debrief: 33, hoe: 33 };
     for (const id of ROUND_IDS) {
       expect(questions.filter((q) => q.round === id).length, id).toBe(expected[id]);
     }

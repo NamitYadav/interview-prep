@@ -136,7 +136,7 @@ export const debrief: Question[] = [
     id: 'debrief-008',
     round: 'debrief',
     category: 'Trade-off probes',
-    question: 'One of us thinks your structure is over-engineered for this brief. Pick a file and defend where it lives.',
+    question: 'One of us thinks your structure is over-engineered for this brief. How do you respond?',
     answer: [
       'Ask what they pointed at first — "over-engineered" usually means one concrete thing (an abstraction with a single caller, a store for state one component reads, a folder tree deeper than the app) and the specific criticism is answerable in a way the label is not.',
       'Name the organizing principle plainly — by feature, by layer (components/hooks/utils), or a hybrid — and connect it to the project\'s actual size: a small take-home favors a flatter, scannable structure over deep feature folders that only pay off at larger scale.',
@@ -390,8 +390,8 @@ export const debrief: Question[] = [
     keyPoints: [
       'Gives two or three concrete items, prioritized by impact',
       'States specifically what "done" looks like for each item, not just a topic',
-      'Points to where the item was already written down before being asked',
-      'References any known-limitations note already written, if applicable',
+      'Orders them deliberately: biggest known gap first, structural improvement second, polish last',
+      'Shows the list came from self-review inside the time-box — a known-limitations note, say — rather than from the panel\'s questions just now',
     ],
     followUps: ['What made you stop where you did instead of doing this already?', 'If you had a full week instead of one more day, what would change on that list?'],
   },
@@ -428,7 +428,7 @@ export const debrief: Question[] = [
       'Names one concrete, submission-specific learning, not a platitude',
       'Names the decision the learning changed, and what it was before',
       'Keeps the answer short and single-example rather than a long list',
-      'Names one specific thing they would do differently',
+      'Draws it from the build itself: a pattern re-derived, an assumption revisited, or a brief constraint that shaped the design more than expected',
     ],
     followUps: ['What would you do differently from the start now, knowing that?', 'Has that same lesson come up in real production work before?'],
   },
