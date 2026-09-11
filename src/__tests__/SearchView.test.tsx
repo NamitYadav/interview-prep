@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { useReducer } from 'react';
-import { EMPTY } from '../lib/storage';
+import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { questions } from '../data';
 import { SearchView } from '../components/SearchView';

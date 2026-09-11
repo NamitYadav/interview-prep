@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { BackLink } from './BackLink';
 
 export class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
@@ -16,9 +17,19 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { hasError
       return (
         <main className="mx-auto max-w-md p-6 text-center">
           <h1 className="mb-2 text-lg font-semibold">Something broke</h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
             Export your data from the home screen if you can, then reload the page.
           </p>
+          <div className="flex justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => location.reload()}
+              className="rounded bg-zinc-900 px-4 py-2 text-sm text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            >
+              Reload
+            </button>
+            <BackLink className="rounded border border-zinc-300 px-4 py-2 text-sm hover:border-emerald-500 dark:border-zinc-700" />
+          </div>
         </main>
       );
     }

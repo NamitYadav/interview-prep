@@ -1,4 +1,5 @@
 import type { Persisted } from '../types';
+import { BackLink } from './BackLink';
 import { questions, rounds } from '../data';
 
 const titleOf = (id: string) => rounds.find((r) => r.id === id)?.title ?? id;
@@ -10,8 +11,8 @@ export function NotesView({ state }: { state: Persisted }) {
 
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
-      <a href="#" className="mb-4 inline-block text-sm text-zinc-500 dark:text-zinc-400 hover:underline">← All rounds</a>
-      <h1 className="text-2xl font-semibold">My notes</h1>
+      <BackLink />
+      <h1 tabIndex={-1} className="text-2xl font-semibold">My notes</h1>
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
         Every note you have written, in round order. Edit them on the question itself.
       </p>

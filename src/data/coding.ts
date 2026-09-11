@@ -536,6 +536,7 @@ class NotifierFactory {
     id: 'coding-028',
     round: 'coding',
     category: 'Build prompts',
+    scratch: true,
     question: 'Build an autocomplete input: as the user types, fetch suggestions and show them in a list. In-flight requests must not race — a slow response for an earlier keystroke must never overwrite a later, faster one. Talk me through your approach.',
     code: `function Autocomplete({ fetchSuggestions }: { fetchSuggestions: (q: string) => Promise<string[]> }) {
   // state: query, suggestions, loading
@@ -562,6 +563,7 @@ class NotifierFactory {
     id: 'coding-029',
     round: 'coding',
     category: 'Build prompts',
+    scratch: true,
     question: 'Build a virtualised list that can smoothly render 100,000 rows of fixed height. Only the rows currently in (or near) the viewport should exist in the DOM. Talk me through your approach.',
     code: `function VirtualList({ items, rowHeight, viewportHeight }: { items: string[]; rowHeight: number; viewportHeight: number }) {
   // state: scrollTop
@@ -588,6 +590,7 @@ class NotifierFactory {
     id: 'coding-030',
     round: 'coding',
     category: 'Build prompts',
+    scratch: true,
     question: 'Build an accessible combobox: a text input with a filtered, keyboard-navigable listbox of options, following the ARIA Authoring Practices Guide pattern. Talk me through your approach.',
     code: `function Combobox({ options }: { options: string[] }) {
   // state: query, activeIndex, open
@@ -613,6 +616,7 @@ class NotifierFactory {
     id: 'coding-031',
     round: 'coding',
     category: 'Build prompts',
+    scratch: true,
     question: 'Build an accessible tabs component (tab list, tabs, panels) following the ARIA Authoring Practices Guide pattern, with roving tabindex keyboard navigation. Talk me through your approach.',
     code: `function Tabs({ tabs }: { tabs: { id: string; label: string; panel: string }[] }) {
   // state: activeId
@@ -638,6 +642,7 @@ class NotifierFactory {
     id: 'coding-032',
     round: 'coding',
     category: 'Build prompts',
+    scratch: true,
     question: 'Build a transactions table: around 2,000 rows of { id, date, counterparty, amountMinor, currency, status }, with sortable columns, a text filter, and pagination at 50 rows a page. Amounts render formatted for their currency. Talk me through your approach.',
     code: `type Transaction = {
   id: string;
@@ -675,6 +680,7 @@ function TransactionsTable({ rows }: { rows: Transaction[] }) {
     id: 'coding-033',
     round: 'coding',
     category: 'Build prompts',
+    scratch: true,
     question: 'Build a promise pool: given an array of tasks (functions returning promises) and a concurrency limit N, run them with at most N in flight at once, resolving with all results in original order. Talk me through your approach.',
     code: `async function promisePool<T>(tasks: (() => Promise<T>)[], limit: number): Promise<T[]> {
   // TODO: run at most "limit" tasks concurrently
@@ -701,6 +707,7 @@ function TransactionsTable({ rows }: { rows: Transaction[] }) {
     id: 'coding-034',
     round: 'coding',
     category: 'Build prompts',
+    scratch: true,
     question: 'Build an amount input — an amount field plus a currency select — submitted with a React 19 form Action. The action validates that the amount parses to integer minor units, and the form shows pending state and a field-level error. Talk me through your approach.',
     code: `type FormState = { error?: string; amountMinor?: number };
 
@@ -737,6 +744,7 @@ function AmountForm() {
     id: 'coding-035',
     round: 'coding',
     category: 'Build prompts',
+    scratch: true,
     question: 'Build a drag-to-reorder list: dragging an item to a new position updates the list order, keyboard-operable, no external DnD library. Talk me through your approach.',
     code: `function ReorderableList({ items, onReorder }: { items: string[]; onReorder: (next: string[]) => void }) {
   // TODO: draggable items, onDragStart/onDragOver/onDrop to compute the new order
@@ -761,6 +769,7 @@ function AmountForm() {
     id: 'coding-036',
     round: 'coding',
     category: 'Build prompts',
+    scratch: true,
     question: 'Build a tiny external store (get, set, subscribe) and a React hook that reads it via useSyncExternalStore, with no external state library. Talk me through your approach.',
     code: `function createStore<T>(initial: T) {
   // TODO: getSnapshot(), setState(next: T | ((prev: T) => T)), subscribe(listener: () => void)
@@ -788,6 +797,7 @@ function useStore<T>(store: ReturnType<typeof createStore<T>>): T {
     id: 'coding-037',
     round: 'coding',
     category: 'Build prompts',
+    scratch: true,
     question: 'Build an LRU (least-recently-used) cache with get and put, both O(1), fixed capacity. Talk me through your approach.',
     code: `class LRUCache<K, V> {
   constructor(private capacity: number) {}
@@ -812,6 +822,7 @@ function useStore<T>(store: ReturnType<typeof createStore<T>>): T {
     id: 'coding-038',
     round: 'coding',
     category: 'Build prompts',
+    scratch: true,
     question: 'Build a fetch wrapper that retries a failed request with exponential backoff and jitter, up to a max number of attempts. Talk me through your approach.',
     code: `async function fetchWithRetry(url: string, options: RequestInit = {}, maxAttempts = 3): Promise<Response> {
   // TODO: retry on network error, 5xx, 408 and 429; honour Retry-After; other 4xx are not retried
@@ -838,6 +849,7 @@ function useStore<T>(store: ReturnType<typeof createStore<T>>): T {
     id: 'coding-039',
     round: 'coding',
     category: 'Build prompts',
+    scratch: true,
     question: 'Build a memoized async lookup: given an expensive async function, return a wrapped version that caches results by argument and de-duplicates concurrent calls for the same argument (only one real call in flight per key at a time). Talk me through your approach.',
     code: `function memoizeAsync<A extends string, R>(fn: (arg: A) => Promise<R>): (arg: A) => Promise<R> {
   // TODO: cache resolved results by argument
@@ -862,6 +874,7 @@ function useStore<T>(store: ReturnType<typeof createStore<T>>): T {
     id: 'coding-040',
     round: 'coding',
     category: 'Build prompts',
+    scratch: true,
     question: 'Implement debounce and throttle from scratch, each with a cancel() method, and tell me when you would reach for one over the other. Talk me through your approach.',
     code: `function debounce<A extends unknown[]>(fn: (...args: A) => void, wait: number) {
   // TODO: call fn only after "wait" ms have passed with no further calls

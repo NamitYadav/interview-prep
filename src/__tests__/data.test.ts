@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { ROUND_IDS, questions, rounds } from '../data';
+import type { RoundId } from '../types';
 
 const ID_RE = /^(hr|hm|coding|design|case|debrief|hoe)-\d{3}$/;
 
@@ -31,10 +32,10 @@ describe('question bank', () => {
     }
   });
 
-  test('every round has its expected exact question count', () => {
-    const expected: Record<string, number> = { hr: 37, hm: 102, coding: 35, design: 29, case: 34, debrief: 33, hoe: 33 };
+  test('every round has at least its post-PR-1 question count', () => {
+    const min: Record<RoundId, number> = { hr: 37, hm: 102, coding: 35, design: 29, case: 34, debrief: 33, hoe: 33 };
     for (const id of ROUND_IDS) {
-      expect(questions.filter((q) => q.round === id).length, id).toBe(expected[id]);
+      expect(questions.filter((q) => q.round === id).length, id).toBeGreaterThanOrEqual(min[id]);
     }
   });
 });

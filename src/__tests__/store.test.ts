@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
-import { EMPTY, STORAGE_KEY } from '../lib/storage';
+import { STORAGE_KEY } from '../lib/storage';
+import { EMPTY } from './helpers';
 import { reducer, useAppState } from '../hooks/useAppState';
 import { DEFAULT_EASE_FACTOR, nextDueAt, nextInterval } from '../lib/queue';
 

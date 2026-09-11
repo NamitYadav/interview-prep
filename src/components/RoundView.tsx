@@ -1,4 +1,5 @@
-import { useMemo, useState, type Dispatch } from 'react';
+import { useEffect, useMemo, useRef, useState, type Dispatch } from 'react';
+import { BackLink } from './BackLink';
 import type { Persisted, RoundId } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { questionsByRound, rounds } from '../data';
@@ -8,6 +9,7 @@ import { Practice } from './Practice';
 import { ProgressBar } from './ProgressBar';
 
 type Tab = 'practice' | 'browse';
+const TABS: Tab[] = ['practice', 'browse'];
 
 export function RoundView({
   roundId, state, dispatch, strictMode,
@@ -17,6 +19,22 @@ export function RoundView({
   const categories = useMemo(() => [...new Set(all.map((q) => q.category))], [all]);
   const [selected, setSelected] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('practice');
+
+  // Switching tabs remounts Practice/Browse's content, and QuestionCard grabs focus
+  // for its own heading on mount — this runs after that child effect (React commits
+  // child effects before parent ones), so it reliably wins and keeps focus on the
+  // tab itself, matching the roving-tabindex pattern above. Skip the first run
+  // (mount) the same way App's own route-focus effect does — landing straight on
+  // this round is not a tab switch the user asked for, so don't steal focus onto
+  // the tab button for it.
+  const isFirstTab = useRef(true);
+  useEffect(() => {
+    if (isFirstTab.current) {
+      isFirstTab.current = false;
+      return;
+    }
+    document.getElementById(`tab-${tab}`)?.focus();
+  }, [tab]);
 
   const filtered = useMemo(
     () => (selected === null ? all : all.filter((q) => q.category === selected)),
@@ -33,15 +51,15 @@ export function RoundView({
     return (
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
         <p className="mb-2">Round not found.</p>
-        <a href="#" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">← All rounds</a>
+        <BackLink className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline" />
       </main>
     );
   }
 
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
-      <a href="#" className="mb-4 inline-block text-sm text-zinc-500 dark:text-zinc-400 hover:underline">← All rounds</a>
-      <h1 className="text-2xl font-semibold">{round.title}</h1>
+      <BackLink />
+      <h1 tabIndex={-1} className="text-2xl font-semibold">{round.title}</h1>
       <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">{round.blurb}</p>
       <ProgressBar value={stats.solid} max={stats.total} label={`${round.title} progress`} />
       <p className="mb-4 mt-1 text-xs text-zinc-500 dark:text-zinc-400">{stats.solid}/{stats.total} solid · {stats.ok} ok · {stats.weak} weak · {stats.unrated} unrated</p>
@@ -53,14 +71,42 @@ export function RoundView({
         ))}
       </div>
 
-      <div className="mb-4 flex border-b border-zinc-200 dark:border-zinc-800">
-        <button type="button" aria-pressed={tab === 'practice'} className={tabBtn(tab === 'practice')} onClick={() => setTab('practice')}>Practice</button>
-        <button type="button" aria-pressed={tab === 'browse'} className={tabBtn(tab === 'browse')} onClick={() => setTab('browse')}>Browse</button>
+      <div role="tablist" aria-label="View" className="mb-4 flex border-b border-zinc-200 dark:border-zinc-800">
+        {TABS.map((t) => (
+          <button
+            key={t}
+            type="button"
+            role="tab"
+            id={`tab-${t}`}
+            aria-selected={tab === t}
+            aria-controls={`tabpanel-${t}`}
+            tabIndex={tab === t ? 0 : -1}
+            className={tabBtn(tab === t)}
+            onClick={() => setTab(t)}
+            onKeyDown={(e) => {
+              if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Home' && e.key !== 'End') return;
+              e.preventDefault();
+              const i = TABS.indexOf(tab);
+              const nextIndex =
+                e.key === 'Home' ? 0 :
+                e.key === 'End' ? TABS.length - 1 :
+                e.key === 'ArrowLeft' ? (i - 1 + TABS.length) % TABS.length :
+                (i + 1) % TABS.length;
+              const next = TABS[nextIndex]!;
+              setTab(next);
+              document.getElementById(`tab-${next}`)?.focus();
+            }}
+          >
+            {t === 'practice' ? 'Practice' : 'Browse'}
+          </button>
+        ))}
       </div>
 
-      {tab === 'practice'
-        ? <Practice key={selected ?? ''} questions={filtered} state={state} dispatch={dispatch} strictMode={strictMode} />
-        : <Browse questions={filtered} state={state} dispatch={dispatch} />}
+      <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>
+        {tab === 'practice'
+          ? <Practice key={selected ?? ''} questions={filtered} state={state} dispatch={dispatch} strictMode={strictMode} />
+          : <Browse questions={filtered} state={state} dispatch={dispatch} />}
+      </div>
     </main>
   );
 }

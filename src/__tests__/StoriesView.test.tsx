@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
 import type { Persisted } from '../types';
-import { EMPTY } from '../lib/storage';
+import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { StoriesView } from '../components/StoriesView';
 

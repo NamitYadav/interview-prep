@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import type { Persisted } from '../types';
-import { EMPTY } from '../lib/storage';
+import { EMPTY } from './helpers';
 import { NotesView } from '../components/NotesView';
 
 const withNotes = (notes: Record<string, string>): Persisted => ({ ...EMPTY, notes });

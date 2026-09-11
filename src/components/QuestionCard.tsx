@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Question, Rating } from '../types';
 import { rounds } from '../data';
+import { useQuestionTimer } from '../hooks/useQuestionTimer';
+import { useDebouncedField } from '../hooks/useDebouncedField';
 
 const RATINGS: { value: Rating; label: string; className: string }[] = [
   { value: 1, label: 'Weak', className: 'border-red-500 text-red-600 dark:text-red-400' },
@@ -35,72 +37,29 @@ const withPlaceholders = (text: string) =>
   );
 
 export function QuestionCard({
-  question, revealed, note, rating, strictMode = false, onReveal, onNote, onRate,
+  question, revealed, note, rating, strictMode = false, checked, onCheckedChange, focusOnMount = true,
+  onReveal, onNote, onRate,
 }: {
   question: Question; revealed: boolean; note: string; rating?: Rating; strictMode?: boolean;
+  checked?: Set<number>; onCheckedChange?: (next: Set<number>) => void; focusOnMount?: boolean;
   onReveal: () => void; onNote: (text: string) => void; onRate: (r: Rating) => void;
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const answerRef = useRef<HTMLDivElement>(null);
-  const [checked, setChecked] = useState<Set<number>>(() => new Set());
+  const checkedSet = checked ?? new Set<number>();
   const [followUpsShown, setFollowUpsShown] = useState(false);
 
-  // Runs from mount to the Reveal click — a stopwatch, not a countdown, so it never
-  // forces a hide. Stays null in Browse, which renders already-revealed and never
-  // fires this click. Set in an effect, not `useRef(Date.now())` in the render body —
-  // Date.now() is impure, and the effect always commits before a user could click
-  // Reveal, so the timing is equivalent in practice.
-  const mountedAt = useRef<number | null>(null);
-  useEffect(() => {
-    mountedAt.current = Date.now();
-  }, []);
-  const [elapsedMs, setElapsedMs] = useState<number | null>(null);
-  const [autoRevealed, setAutoRevealed] = useState(false);
   const targetSeconds = rounds.find((r) => r.id === question.round)?.targetSeconds;
+  const { elapsedMs, remainingMs, autoRevealed, markRevealed } = useQuestionTimer({
+    targetSeconds, strictMode, revealed, onAutoReveal: onReveal,
+  });
   const handleReveal = () => {
-    setElapsedMs(Date.now() - mountedAt.current!);
+    markRevealed();
     onReveal();
   };
-
-  // Latest onReveal in a ref so the countdown effect below doesn't need it as a
-  // dependency — onReveal is a fresh closure every render, and depending on it would
-  // restart the countdown any time the parent re-renders for an unrelated reason
-  // (typing a note, ticking seconds elsewhere).
-  const onRevealRef = useRef(onReveal);
-  useEffect(() => {
-    onRevealRef.current = onReveal;
-  });
-
-  // Strict mode: instead of the stopwatch just counting up in the background, running
-  // out of the round's target time force-reveals the answer — the interview clock
-  // doesn't wait for you to decide you're done.
-  // Doesn't reset `autoRevealed`/mountedAt on a question change itself — like every
-  // other piece of local state in this component (checked, followUpsShown), it relies
-  // on Practice's `key={current.id}` remounting the whole card per question. If that
-  // key is ever removed, this state needs to move to explicit question.id-keyed resets.
-  useEffect(() => {
-    if (!strictMode || revealed || targetSeconds === undefined) return;
-    const timer = setTimeout(() => {
-      setElapsedMs(Date.now() - mountedAt.current!);
-      setAutoRevealed(true);
-      onRevealRef.current();
-    }, targetSeconds * 1000);
-    return () => clearTimeout(timer);
-  }, [strictMode, revealed, targetSeconds]);
-
-  // Visible countdown for the effect above — without it the answer would just pop
-  // with no warning, which is a worse experience than the plain stopwatch it replaces.
-  // Guarded the same way in the render below (not reset here) so toggling strict mode
-  // off mid-question hides it immediately without this effect needing to setState
-  // synchronously on its own early-return path.
-  const [remainingMs, setRemainingMs] = useState<number | null>(null);
-  useEffect(() => {
-    if (!strictMode || revealed || targetSeconds === undefined) return;
-    const deadline = (mountedAt.current ?? Date.now()) + targetSeconds * 1000;
-    const interval = setInterval(() => setRemainingMs(Math.max(0, deadline - Date.now())), 250);
-    return () => clearInterval(interval);
-  }, [strictMode, revealed, targetSeconds]);
   const showCountdown = strictMode && !revealed && targetSeconds !== undefined && remainingMs !== null;
+
+  const note_ = useDebouncedField(note, onNote);
 
   // Declared before the heading effect so that on mount (Browse renders revealed) the
   // heading wins; on a Practice reveal only this one re-runs and focus lands on the answer
@@ -110,8 +69,8 @@ export function QuestionCard({
   }, [revealed]);
 
   useEffect(() => {
-    headingRef.current?.focus();
-  }, [question.id]);
+    if (focusOnMount) headingRef.current?.focus();
+  }, [question.id, focusOnMount]);
 
   return (
     <article className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
@@ -122,7 +81,7 @@ export function QuestionCard({
       <h2 ref={headingRef} tabIndex={-1} className="mb-4 text-lg font-medium outline-none">{question.question}</h2>
 
       {question.code && (
-        question.round === 'coding' && question.category === 'Build prompts' ? (
+        question.scratch ? (
           <textarea
             key={question.id}
             defaultValue={question.code}
@@ -142,7 +101,9 @@ export function QuestionCard({
       {!revealed ? (
         <>
           {showCountdown && (
-            <p className="mb-2 text-xs text-zinc-500 dark:text-zinc-400">Time left: {formatTime(remainingMs!)}</p>
+            <p role="timer" aria-live="off" className="mb-2 text-xs text-zinc-500 dark:text-zinc-400">
+              Time left: {formatTime(remainingMs!)}
+            </p>
           )}
           <button
             type="button"
@@ -154,6 +115,9 @@ export function QuestionCard({
         </>
       ) : (
         <div ref={answerRef} tabIndex={-1} className="animate-fade-in space-y-4 text-sm outline-none">
+          {autoRevealed && (
+            <p role="status" className="sr-only">Time&apos;s up — answer revealed</p>
+          )}
           {elapsedMs !== null && (
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
               {autoRevealed ? 'Out of time' : `Answered in ${formatTime(elapsedMs)}`}
@@ -172,11 +136,11 @@ export function QuestionCard({
                   <label className="flex items-start gap-2">
                     <input
                       type="checkbox"
-                      checked={checked.has(i)}
+                      checked={checkedSet.has(i)}
                       onChange={(e) => {
-                        const next = new Set(checked);
+                        const next = new Set(checkedSet);
                         if (e.target.checked) next.add(i); else next.delete(i);
-                        setChecked(next);
+                        onCheckedChange?.(next);
                       }}
                       className="mt-1"
                     />
@@ -186,10 +150,10 @@ export function QuestionCard({
               ))}
             </ul>
             {(() => {
-              const s = suggestedRating(checked.size, question.keyPoints.length);
+              const s = suggestedRating(checkedSet.size, question.keyPoints.length);
               return s && (
                 <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  {checked.size}/{question.keyPoints.length} key points hit · suggested: {RATINGS.find((r) => r.value === s)!.label}
+                  {checkedSet.size}/{question.keyPoints.length} key points hit · suggested: {RATINGS.find((r) => r.value === s)!.label}
                 </p>
               );
             })()}
@@ -214,26 +178,28 @@ export function QuestionCard({
             <label htmlFor={`note-${question.id}`} className="mb-1 block font-semibold">Your note</label>
             <textarea
               id={`note-${question.id}`}
-              value={note}
-              onChange={(e) => onNote(e.target.value)}
+              value={note_.draft}
+              onChange={(e) => note_.onChange(e.target.value)}
+              onBlur={note_.onBlur}
               rows={3}
               placeholder="Your real story for this question. Stays in this browser only."
               className="w-full rounded border border-zinc-300 bg-transparent p-2 dark:border-zinc-700"
             />
           </section>
-          <section className="flex flex-wrap gap-2" aria-label="Rate yourself">
+          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Rate yourself">
             {RATINGS.map((r) => (
               <button
                 key={r.value}
                 type="button"
+                role="radio"
                 onClick={() => onRate(r.value)}
-                aria-pressed={rating === r.value}
+                aria-checked={rating === r.value}
                 className={`rounded border px-4 py-2 ${r.className} ${rating === r.value ? 'bg-zinc-100 dark:bg-zinc-800' : ''}`}
               >
                 {r.label} <kbd className="ml-1 text-xs opacity-70 [@media(hover:none)]:hidden">{r.value}</kbd>
               </button>
             ))}
-          </section>
+          </div>
         </div>
       )}
     </article>

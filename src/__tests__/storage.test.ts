@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 import type { Persisted } from '../types';
-import { CORRUPT_KEY, EMPTY, STORAGE_KEY, backupFilename, load, parseBackup, save } from '../lib/storage';
+import { CORRUPT_KEY, STORAGE_KEY, backupFilename, load, parseBackup, save } from '../lib/storage';
+import { EMPTY } from './helpers';
 
 const valid: Persisted = {
   version: 2,

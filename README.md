@@ -1,7 +1,7 @@
 # Interview Prep
 
 Interactive mock-interview drill for staff frontend engineer loops in Berlin / EU.
-Seven rounds, 302 curated questions with model answers, key points and likely
+Seven rounds, 303 curated questions with model answers, key points and likely
 follow-ups. Reveal, rate yourself, and weak questions come back first.
 
 **Live:** https://namityadav.github.io/interview-prep/
@@ -80,4 +80,14 @@ npm run build      # tsc + vite build
 ```
 
 ## Stack
-Vite · React 19 · TypeScript · Tailwind CSS 4 · Geist / Geist Mono · Vitest · GitHub Pages
+Vite · React 19 · TypeScript · Tailwind CSS 4 · Geist / Geist Mono (self-hosted via
+@fontsource) · Vitest · GitHub Pages
+
+One JS bundle, ~270KB gzipped — most of it is the question bank's own text, not
+code. Measured, not optimized: code-splitting would trim the initial load, but this
+is a single-user app run from a laptop, so it isn't worth the added complexity.
+Skipped for the same reason: a CSP `<meta>` tag (the inline pre-paint theme script
+would need a build-time hash to keep it, which is fragile for the gain on a static
+page with no user input to sanitize), type-aware ESLint rules (`recommendedTypeChecked`
+surfaces a long tail of findings unrelated to this app's actual bugs), and Prettier
+(the codebase is formatted consistently by hand).

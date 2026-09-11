@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
 import type { Persisted } from '../types';
-import { EMPTY } from '../lib/storage';
+import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { WeakDrill } from '../components/WeakDrill';
 
@@ -33,7 +33,7 @@ describe('WeakDrill', () => {
   test('the drill set stays put when the current question is rated up', async () => {
     render(<Harness initial={weakOn('hr-001')} />);
     await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
-    await userEvent.click(screen.getByRole('button', { name: /^solid/i }));
+    await userEvent.click(screen.getByRole('radio', { name: /^solid/i }));
 
     // Frozen set: the question must not vanish and strand Practice with nothing to show.
     expect(screen.getByText(/0 of 1 still weak/i)).toBeInTheDocument();

@@ -1,9 +1,9 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
 import type { Question } from '../types';
-import { EMPTY } from '../lib/storage';
+import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { Practice } from '../components/Practice';
 
@@ -29,7 +29,7 @@ function Harness3() {
 
 const rateVisible = async () => {
   await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
-  await userEvent.click(screen.getByRole('button', { name: /solid/i }));
+  await userEvent.click(screen.getByRole('radio', { name: /solid/i }));
 };
 
 describe('Practice', () => {
@@ -55,7 +55,7 @@ describe('Practice', () => {
   test('rating advances to the next question and hides the answer', async () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
-    await userEvent.click(screen.getByRole('button', { name: /solid/i }));
+    await userEvent.click(screen.getByRole('radio', { name: /solid/i }));
     expect(screen.getByText('Second question?')).toBeInTheDocument();
     expect(screen.queryByText('Answer two.')).not.toBeInTheDocument();
   });
@@ -75,11 +75,11 @@ describe('Practice', () => {
   test('a lap ends once every question has been shown, with a way to start another', async () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
-    await userEvent.click(screen.getByRole('button', { name: /solid/i }));
+    await userEvent.click(screen.getByRole('radio', { name: /solid/i }));
     expect(screen.getByText('Second question?')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
-    await userEvent.click(screen.getByRole('button', { name: /solid/i }));
+    await userEvent.click(screen.getByRole('radio', { name: /solid/i }));
 
     expect(screen.getByText(/lap done/i)).toBeInTheDocument();
     expect(screen.getByText(/2 solid/i)).toBeInTheDocument();
@@ -97,11 +97,20 @@ describe('Practice', () => {
     expect(screen.getByText('First question?')).toBeInTheDocument();
   });
 
+  test('space on a revealed card does not preventDefault, so it can still scroll the page', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    const event = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+    const spy = vi.spyOn(event, 'preventDefault');
+    fireEvent(window, event);
+    expect(spy).not.toHaveBeenCalled();
+  });
+
   test('space activates a focused button instead of being swallowed by the global reveal shortcut', async () => {
     const user = userEvent.setup();
     render(<Harness />);
     await user.click(screen.getByRole('button', { name: /reveal/i }));
-    screen.getByRole('button', { name: /solid/i }).focus();
+    screen.getByRole('radio', { name: /solid/i }).focus();
     await user.keyboard(' ');
     expect(screen.getByText('Second question?')).toBeInTheDocument();
   });
@@ -111,20 +120,20 @@ describe('Practice', () => {
     expect(screen.getByRole('button', { name: /back/i })).toBeDisabled();
 
     await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
-    await userEvent.click(screen.getByRole('button', { name: /solid/i }));
+    await userEvent.click(screen.getByRole('radio', { name: /solid/i }));
     expect(screen.getByText('Second question?')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: /back/i }));
     expect(screen.getByText('First question?')).toBeInTheDocument();
     expect(screen.getByText('Answer one.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /solid/i })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('radio', { name: /solid/i })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByRole('button', { name: /back/i })).toBeDisabled();
   });
 
   test('keyboard: b goes back', async () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
-    await userEvent.click(screen.getByRole('button', { name: /solid/i }));
+    await userEvent.click(screen.getByRole('radio', { name: /solid/i }));
     fireEvent.keyDown(window, { key: 'b' });
     expect(screen.getByText('First question?')).toBeInTheDocument();
   });
@@ -139,10 +148,35 @@ describe('Practice', () => {
     expect(screen.getByText('Second question?')).toBeInTheDocument();
 
     // Back leaves the card already revealed, so re-rating needs no Reveal click.
-    await userEvent.click(screen.getByRole('button', { name: /solid/i })); // Q2 -> should reach Q3 again, not repeat it
+    await userEvent.click(screen.getByRole('radio', { name: /solid/i })); // Q2 -> should reach Q3 again, not repeat it
     expect(screen.getByText('Third question?')).toBeInTheDocument();
 
     await rateVisible(); // every question shown once now -> lap done
+    expect(screen.getByText(/lap done/i)).toBeInTheDocument();
+  });
+
+  test('a double Back followed by a re-rating can resurface a skipped question later in the same lap', async () => {
+    // Documents a known, accepted edge case (see the comment on seenInPath in
+    // Practice.tsx): re-rating Q1 after backing up two steps changes its due date,
+    // which can make the queue jump straight to Q3 — skipping past Q2 without
+    // forgetting it. Q2 still comes back before the lap ends; nothing is lost or
+    // stuck, it just takes one extra rating for this 3-question lap.
+    render(<Harness3 />);
+    await rateVisible(); // Q1 -> Q2
+    await rateVisible(); // Q2 -> Q3
+
+    await userEvent.click(screen.getByRole('button', { name: /back/i })); // -> Q2
+    await userEvent.click(screen.getByRole('button', { name: /back/i })); // -> Q1
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('radio', { name: /solid/i })); // re-rate Q1
+    expect(screen.getByText('Third question?')).toBeInTheDocument();
+
+    await rateVisible(); // Q3 rated, but Q2 was skipped over — not lap done yet
+    expect(screen.getByText('Second question?')).toBeInTheDocument();
+    expect(screen.queryByText(/lap done/i)).not.toBeInTheDocument();
+
+    await rateVisible(); // Q2 finally rated -> now every question has been shown
     expect(screen.getByText(/lap done/i)).toBeInTheDocument();
   });
 
@@ -155,6 +189,18 @@ describe('Practice', () => {
     await userEvent.click(screen.getByRole('button', { name: /start another lap/i }));
     expect(screen.getByText('First question?')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /back/i })).toBeDisabled();
+  });
+
+  test('the key-points checklist is empty for a new question after advancing', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Point one' }));
+    expect(screen.getByRole('checkbox', { name: 'Point one' })).toBeChecked();
+
+    await userEvent.click(screen.getByRole('radio', { name: /solid/i }));
+    expect(screen.getByText('Second question?')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    expect(screen.getByRole('checkbox', { name: 'Point two' })).not.toBeChecked();
   });
 
   test('empty state when no questions', () => {

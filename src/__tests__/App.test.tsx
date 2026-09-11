@@ -1,10 +1,12 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
+import { STORAGE_KEY } from '../lib/storage';
 import App from '../App';
 
 afterEach(() => {
   vi.restoreAllMocks();
   window.location.hash = '';
+  localStorage.clear();
 });
 
 describe('App', () => {
@@ -23,6 +25,23 @@ describe('App', () => {
       render(<App />);
       await vi.advanceTimersByTimeAsync(500);
       expect(screen.getByRole('status')).toHaveTextContent(/not being saved/i);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('golden path: reveal, rate, advance, and the rating persists to storage', async () => {
+    vi.useFakeTimers();
+    try {
+      window.location.hash = '#hr';
+      render(<App />);
+      fireEvent.click(screen.getByRole('button', { name: /reveal/i }));
+      fireEvent.click(screen.getByRole('radio', { name: /solid/i }));
+      // Advancing to the next question is synchronous (no fake-timer advance needed);
+      // the debounced save is what we wait for below.
+      await act(() => vi.advanceTimersByTimeAsync(500));
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
+      expect(Object.values(saved.progress).some((e) => (e as { rating: number }).rating === 3)).toBe(true);
     } finally {
       vi.useRealTimers();
     }
