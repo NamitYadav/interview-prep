@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { BackLink } from './BackLink';
 
 export class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
@@ -27,10 +28,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { hasError
             >
               Reload
             </button>
-            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid -- home is the empty hash route, this is real in-app navigation */}
-            <a href="#" className="rounded border border-zinc-300 px-4 py-2 text-sm hover:border-emerald-500 dark:border-zinc-700">
-              Home
-            </a>
+            <BackLink className="rounded border border-zinc-300 px-4 py-2 text-sm hover:border-emerald-500 dark:border-zinc-700" />
           </div>
         </main>
       );

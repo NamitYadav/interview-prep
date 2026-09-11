@@ -155,6 +155,31 @@ describe('Practice', () => {
     expect(screen.getByText(/lap done/i)).toBeInTheDocument();
   });
 
+  test('a double Back followed by a re-rating can resurface a skipped question later in the same lap', async () => {
+    // Documents a known, accepted edge case (see the comment on seenInPath in
+    // Practice.tsx): re-rating Q1 after backing up two steps changes its due date,
+    // which can make the queue jump straight to Q3 — skipping past Q2 without
+    // forgetting it. Q2 still comes back before the lap ends; nothing is lost or
+    // stuck, it just takes one extra rating for this 3-question lap.
+    render(<Harness3 />);
+    await rateVisible(); // Q1 -> Q2
+    await rateVisible(); // Q2 -> Q3
+
+    await userEvent.click(screen.getByRole('button', { name: /back/i })); // -> Q2
+    await userEvent.click(screen.getByRole('button', { name: /back/i })); // -> Q1
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('radio', { name: /solid/i })); // re-rate Q1
+    expect(screen.getByText('Third question?')).toBeInTheDocument();
+
+    await rateVisible(); // Q3 rated, but Q2 was skipped over — not lap done yet
+    expect(screen.getByText('Second question?')).toBeInTheDocument();
+    expect(screen.queryByText(/lap done/i)).not.toBeInTheDocument();
+
+    await rateVisible(); // Q2 finally rated -> now every question has been shown
+    expect(screen.getByText(/lap done/i)).toBeInTheDocument();
+  });
+
   test('starting another lap resets history so Back is disabled again on its first question', async () => {
     render(<Harness />);
     await rateVisible(); // Q1 -> Q2

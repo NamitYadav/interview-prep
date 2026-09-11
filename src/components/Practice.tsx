@@ -34,6 +34,12 @@ export function Practice({
   // Ids already used in the current path — derived from history up to the current
   // position rather than a separately-tracked set, so a Back-then-advance that
   // overwrites the old forward path automatically drops those ids from "seen" too.
+  // Known edge case: a multi-step Back followed by re-rating can land on a question
+  // further along than the one immediately after it (SM-2's due-date reordering
+  // after the re-rating), silently un-seeing whatever sat in between — that
+  // question resurfaces later in the same lap rather than being lost, so a lap can
+  // occasionally need more ratings than it has questions. No data loss, no stuck
+  // state; see the "extra rating after a double Back" test in Practice.test.tsx.
   const seenInPath = () => new Set(history.slice(0, historyPos + 1));
 
   // A lap ends when every question in this set has been shown once — nextQuestion

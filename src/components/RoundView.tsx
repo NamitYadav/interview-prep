@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type Dispatch } from 'react';
+import { useEffect, useMemo, useRef, useState, type Dispatch } from 'react';
 import { BackLink } from './BackLink';
 import type { Persisted, RoundId } from '../types';
 import type { Action } from '../hooks/useAppState';
@@ -23,8 +23,16 @@ export function RoundView({
   // Switching tabs remounts Practice/Browse's content, and QuestionCard grabs focus
   // for its own heading on mount — this runs after that child effect (React commits
   // child effects before parent ones), so it reliably wins and keeps focus on the
-  // tab itself, matching the roving-tabindex pattern above.
+  // tab itself, matching the roving-tabindex pattern above. Skip the first run
+  // (mount) the same way App's own route-focus effect does — landing straight on
+  // this round is not a tab switch the user asked for, so don't steal focus onto
+  // the tab button for it.
+  const isFirstTab = useRef(true);
   useEffect(() => {
+    if (isFirstTab.current) {
+      isFirstTab.current = false;
+      return;
+    }
     document.getElementById(`tab-${tab}`)?.focus();
   }, [tab]);
 
