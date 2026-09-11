@@ -4,18 +4,27 @@ import type { Progress, Question } from '../types';
 // (it needs the work), then unseen, then ok, then solid — a real loop doesn't wait
 // days for a rating to come due. Tiebreak oldest-seen-first within a bucket so a
 // stale rating surfaces before one you just gave a moment ago.
-const bucket = (progress: Progress, id: string): number => {
-  const rating = progress[id]?.rating;
-  if (rating === 1) return 0;
-  if (rating === undefined) return 1;
-  return rating === 2 ? 2 : 3;
+// A lap only ends once every question has been shown, and with ~287 questions that
+// never happens in one sitting — so without decay, bucket 3 is unreachable and a
+// question rated Solid in week 1 never comes back for the rest of your prep. Seven days
+// is the whole benefit of spacing for this use case, without carrying a scheduler.
+export const SOLID_DECAY_MS = 7 * 24 * 60 * 60 * 1000;
+
+const bucket = (progress: Progress, id: string, now: number): number => {
+  const entry = progress[id];
+  if (entry?.rating === 1) return 0;
+  if (entry === undefined) return 1;
+  if (entry.rating === 2) return 2;
+  return now - entry.lastSeen > SOLID_DECAY_MS ? 2 : 3;
 };
 
 const lastSeen = (progress: Progress, id: string): number => progress[id]?.lastSeen ?? 0;
 
-export function orderQueue(questions: Question[], progress: Progress): Question[] {
+export function orderQueue(questions: Question[], progress: Progress, now: number = Date.now()): Question[] {
   return [...questions].sort(
-    (a, b) => bucket(progress, a.id) - bucket(progress, b.id) || lastSeen(progress, a.id) - lastSeen(progress, b.id),
+    (a, b) =>
+      bucket(progress, a.id, now) - bucket(progress, b.id, now) ||
+      lastSeen(progress, a.id) - lastSeen(progress, b.id),
   );
 }
 
@@ -25,8 +34,9 @@ export function nextQuestion(
   questions: Question[],
   progress: Progress,
   exclude: ReadonlySet<string> = new Set(),
+  now: number = Date.now(),
 ): Question | undefined {
-  return orderQueue(questions, progress).find((q) => !exclude.has(q.id));
+  return orderQueue(questions, progress, now).find((q) => !exclude.has(q.id));
 }
 
 export interface RoundStats {

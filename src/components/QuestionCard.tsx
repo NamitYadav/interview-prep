@@ -42,7 +42,11 @@ export function QuestionCard({
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const answerRef = useRef<HTMLDivElement>(null);
-  const checkedSet = checked ?? new Set<number>();
+  // Practice controls this so ticks survive Back; Browse and #search pass neither prop,
+  // and without a fallback every checkbox there was pinned to false and unticka-ble.
+  const [ownChecked, setOwnChecked] = useState<Set<number>>(() => new Set());
+  const checkedSet = checked ?? ownChecked;
+  const setChecked = onCheckedChange ?? setOwnChecked;
 
   const targetSeconds = rounds.find((r) => r.id === question.round)?.targetSeconds;
   const { elapsedMs, remainingMs, autoRevealed, markRevealed } = useQuestionTimer({
@@ -265,7 +269,7 @@ export function QuestionCard({
                       onChange={(e) => {
                         const next = new Set(checkedSet);
                         if (e.target.checked) next.add(i); else next.delete(i);
-                        onCheckedChange?.(next);
+                        setChecked(next);
                       }}
                       className="mt-1"
                     />

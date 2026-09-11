@@ -47,3 +47,24 @@ describe('App', () => {
     }
   });
 });
+
+describe('cross-tab overwrite warning', () => {
+  // Each tab writes the whole blob on a debounce, so without this the last write
+  // silently wipes the other tab's ratings, notes and stories.
+  test('warns when another tab writes to the same storage key', () => {
+    render(<App />);
+    expect(screen.queryByText(/another tab changed your progress/i)).not.toBeInTheDocument();
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY, newValue: '{}' }));
+    });
+    expect(screen.getByText(/another tab changed your progress/i)).toBeInTheDocument();
+  });
+
+  test('ignores writes to unrelated storage keys', () => {
+    render(<App />);
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: 'interview-prep:theme', newValue: 'dark' }));
+    });
+    expect(screen.queryByText(/another tab changed your progress/i)).not.toBeInTheDocument();
+  });
+});
