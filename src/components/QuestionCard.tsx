@@ -244,6 +244,14 @@ export function QuestionCard({
           <section className="space-y-2">
             {question.answer.map((p, i) => <p key={i}>{withPlaceholders(p)}</p>)}
           </section>
+          {question.deeper && question.deeper.length > 0 && (
+            <section className="border-l-2 border-zinc-300 pl-3 dark:border-zinc-600">
+              <h3 className="mb-1 font-semibold">If they dig deeper</h3>
+              <div className="space-y-2 text-zinc-700 dark:text-zinc-300">
+                {question.deeper.map((p, i) => <p key={i}>{withPlaceholders(p)}</p>)}
+              </div>
+            </section>
+          )}
           <section>
             <h3 className="mb-1 font-semibold">Key points</h3>
             <p className="mb-1 text-xs text-zinc-500 dark:text-zinc-400">Check off what you actually said out loud.</p>

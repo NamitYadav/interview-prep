@@ -4,6 +4,9 @@ export interface Round { id: RoundId; title: string; blurb: string; targetSecond
 export interface Question {
   id: string; round: RoundId; category: string; question: string; code?: string; scratch?: true;
   answer: string[]; keyPoints: string[]; followUps?: string[];
+  // Material to use only when the interviewer digs. Kept out of `answer` so the
+  // word-budget test in data.test.ts measures only what you actually say first.
+  deeper?: string[];
 }
 export type Rating = 1 | 2 | 3;
 export interface ProgressEntry {
