@@ -29,13 +29,14 @@ export const coding: Question[] = [
     answer: [
       'Narrate decisions, not keystrokes. "I am putting the selected index in state rather than deriving it, because the list can reorder" is useful; "now I am typing a div" is noise. The interviewer is scoring judgement, and judgement is only visible when you say the alternative you rejected.',
       'Use the silence deliberately when you genuinely need to think: say "give me twenty seconds to work through this edge case" and then go quiet. An announced pause reads as composure; an unannounced two-minute silence reads as being stuck.',
-      'Narrate at boundaries rather than continuously: before starting a piece, say what you are about to do; after finishing it, say what you know works and what is still missing. That rhythm gives the interviewer natural places to steer you without interrupting.',
+      'Narrate at boundaries rather than continuously: before starting a piece, say what you are about to do; after finishing it, say what you know works and what is still missing. That rhythm gives the interviewer natural places to steer you without interrupting. When you are debugging rather than building, the same rhythm becomes hypothesis and test in one breath — "I think the effect is re-running every render, and I will check by logging at the top of it" — followed by what the result ruled out, so a wrong guess reads as narrowing rather than wandering. Keep the ruled-out list spoken and cumulative — "so it is not the fetch and not the reducer" — and hold a second theory in reserve before you test the first, so a disproved guess turns straight into the next test instead of a restart.',
       'If you notice you are talking to avoid admitting confusion, stop and name the confusion instead. "I am not sure whether this should live in state or a ref, here is the trade-off" is a strong staff-level move; filling air is not.',
     ],
     keyPoints: [
       'Narrates decisions and rejected alternatives, not keystrokes',
       'Announces thinking pauses rather than going silent unexpectedly',
       'Speaks at task boundaries so the interviewer can steer',
+      'When debugging, says what each test ruled out and keeps a second theory in reserve',
       'Names confusion directly instead of talking around it',
     ],
     followUps: ['How do you adapt if the interviewer is completely silent back?', 'What do you do when narrating is visibly slowing your typing down?'],
@@ -82,18 +83,19 @@ export const coding: Question[] = [
   );
 }`,
     answer: [
-      'Read it and list what is missing before touching anything, so the interviewer hears your priority order rather than watching you pick at whatever is nearest the cursor. Here the real issues are: a request per keystroke with no debounce, no cancellation so a slow early response can overwrite a newer one, no loading or error state at all, an unencoded query string, a missing key on the list, and an unlabelled input.',
-      'Fix in risk order, not in file order. The race condition is a correctness bug and goes first, then error handling, then the debounce, then the accessibility and the key. Saying "I am fixing the correctness problems before the polish" is itself the answer they are listening for.',
-      'For the race, the shape you want is an abort signal or an ignore flag in the effect cleanup, so a superseded response cannot write to state. Narrate why: this is the bug that survives to production and shows up as "search results sometimes show the wrong thing", which nobody can reproduce.',
-      'Say out loud what you would extract only if it earns it. A starting component like this does not need a custom hook to be correct, so pulling one out is a judgement call about reuse, not a fix, and worth naming as optional rather than doing reflexively.',
+      'Read it and list what is missing before touching anything, so the interviewer hears your priority order rather than watching you pick at whatever is nearest the cursor. Here the real issues are: an unencoded query string, no handling of a rejected fetch or a non-ok response, no loading state at all, a request per keystroke with no debounce, a missing key on the list, and an unlabelled input.',
+      'Fix in risk order, not in file order. The unencoded query goes first, because a query containing an ampersand or a hash silently sends a different request than the user typed, and that is a correctness bug rather than a polish item. Then the failure handling, then the debounce, then the accessibility and the key. Saying "I am fixing the correctness problems before the polish" is itself the answer they are listening for.',
+      'Name what the missing error path costs, concretely: fetch does not reject on a 500, so res.json() either throws on an HTML error page or hands back an error payload that gets rendered as results. With no catch and no res.ok check, the user sees the previous results sitting there forever with no indication that anything failed.',
+      'Say out loud what you would extract only if it earns it. A starting component like this does not need a custom hook to be correct, so pulling one out is a judgement call about reuse, not a fix. The same restraint now applies to memoisation: with the React Compiler enabled, most useMemo and useCallback calls in a component like this are redundant, and manual memoisation is worth writing only where you can name the reason the compiler cannot help — a value crossing into non-compiled code, or a dependency you are stabilising for an effect rather than for a render.',
     ],
     keyPoints: [
       'Enumerates problems before editing, in an explicit priority order',
       'Fixes correctness before polish and says so',
-      'Identifies the stale-response race, not just the missing debounce',
-      'Treats extraction and abstraction as optional, not as part of the fix',
+      'Names the unencoded query string as a bug, not a style point',
+      'Says a res.ok check is needed because fetch does not reject on a 500',
+      'Treats extraction and manual memoisation as optional, and names the React Compiler',
     ],
-    followUps: ['Which of those fixes would you do inline versus leave as a comment?', 'How would you test the race condition you just described?'],
+    followUps: ['Which of those fixes would you do inline versus leave as a comment?', 'What would you render while the request is in flight, and why not just a spinner?'],
   },
   {
     id: 'coding-005',
@@ -179,19 +181,22 @@ export const coding: Question[] = [
     answer: [
       'Stop coding. A half-finished edit at the buzzer is worth less than a clear spoken account of where things stand, and interviewers write their notes from the last thing they heard.',
       'Give the same three-part summary every time: what works and how you know, what is missing or stubbed, and what you would do next in priority order. Being able to state your own gaps accurately is a strong signal that you would be honest about status on a real team.',
+      'If you finished early instead, do not sit on it. Re-run the original failing case rather than declaring victory, then say whether the same mistake exists in sibling call sites — fixing one instance of a class of bug while five others remain is the most common way a real fix fails to help. Then ask the question that outlives the session: how did this get past review and CI, and what check would have caught it?',
       'Name one thing you would change about your own approach in hindsight. Volunteering a real self-criticism, rather than a fake modest one, is the closest thing to a free point in these rounds.',
       'Then ask one question about how they work: how they pair in practice, or what the review culture is like. It converts the last minute from evaluation into conversation, and it is genuinely useful information for you.',
     ],
     keyPoints: [
       'Stops editing in time to summarise deliberately',
       'Reports what works, what is missing, and what comes next',
+      'If finished early, re-runs the original failing case and checks sibling call sites',
+      'Asks how the bug escaped review and CI, not only how to fix it',
       'Volunteers one genuine hindsight criticism of the approach',
       'Closes with a real question about how the team works',
     ],
     followUps: ['What would you say if almost nothing worked?', 'How do you keep the summary from sounding like excuses?'],
   },
 
-  // Debugging (9)
+  // Debugging (7)
   {
     id: 'coding-010',
     round: 'coding',
@@ -279,25 +284,6 @@ export const coding: Question[] = [
     followUps: ['Where else does this same mistake commonly appear?', 'How would you catch this class of bug in review or in CI?'],
   },
   {
-    id: 'coding-013',
-    round: 'coding',
-    category: 'Debugging',
-    question: 'How do you narrate hypotheses while debugging so the interviewer can actually follow you?',
-    answer: [
-      'State the hypothesis and the test in the same breath: "I think the effect is re-running on every render, and I will check by logging at the top of it". A hypothesis without a stated test sounds like a guess; a test without a stated hypothesis looks like poking.',
-      'Say what the result told you, including when it eliminates your idea. "That printed once, so it is not the effect, which means the problem is downstream of the fetch" keeps the interviewer oriented and demonstrates that you are narrowing rather than wandering.',
-      'Keep an explicit list of what you have ruled out, out loud, because in a short session it is easy to loop back onto an eliminated branch under pressure. Saying "so far I have ruled out the network and the effect timing" is cheap and reads as method.',
-      'Resist committing hard to a first theory. Say "my leading theory is X, my second is Y" so that being wrong about X is a step in your plan rather than a visible surprise.',
-    ],
-    keyPoints: [
-      'Pairs every hypothesis with the specific test that would falsify it',
-      'Reports negative results as progress and states what they eliminate',
-      'Maintains a spoken list of ruled-out causes',
-      'Holds a second theory openly instead of over-committing to the first',
-    ],
-    followUps: ['What do you do when three hypotheses in a row are wrong?', 'How do you keep this discipline when the clock is nearly out?'],
-  },
-  {
     id: 'coding-014',
     round: 'coding',
     category: 'Debugging',
@@ -362,25 +348,6 @@ export const coding: Question[] = [
     followUps: ['What would you log, and how would you avoid logging sensitive data?', 'How do you communicate "not reproduced yet" without sounding dismissive?'],
   },
   {
-    id: 'coding-017',
-    round: 'coding',
-    category: 'Debugging',
-    question: 'You find and fix the bug in the first two minutes. What do you do with the rest of the session?',
-    answer: [
-      'Do not treat it as finished. Verify the fix against the original reproduction, out loud, and check that you have not simply moved the symptom somewhere less visible. A candidate who declares victory without re-running the failing case is showing the habit that produces regressions.',
-      'Then go looking for siblings. Ask whether the same mistake exists elsewhere: grep for the pattern, check the other callers of the function you touched, and say what you find. Fixing one instance of a class of bug while five others remain is the most common way a real fix fails to help.',
-      'Offer the guard next: the test that fails on the original code, or the type or lint rule that makes the whole class unrepresentable. This is where a short debugging exercise turns into a demonstration of staff scope.',
-      'Finally, say what you would want to know that the exercise cannot tell you: how this reached production, whether review or CI should have caught it, and what the cheap process change would be. Interviewers usually have follow-up material ready, and asking for it is better than sitting on a fixed bug.',
-    ],
-    keyPoints: [
-      'Re-runs the original reproduction rather than declaring victory',
-      'Searches for the same mistake in sibling call sites',
-      'Proposes the guard: a failing test, a type, or a lint rule',
-      'Raises how it escaped review or CI as a process question',
-    ],
-    followUps: ['How would you search for other instances of the same pattern?', 'What would you do if you found twenty other instances?'],
-  },
-  {
     id: 'coding-018',
     round: 'coding',
     category: 'Debugging',
@@ -410,7 +377,7 @@ export const coding: Question[] = [
     followUps: ['When is useMemo genuinely the right fix for this shape?', 'How would a lint rule have caught this earlier?'],
   },
 
-  // Code review (9)
+  // Code review (6)
   {
     id: 'coding-019',
     round: 'coding',
@@ -421,12 +388,14 @@ export const coding: Question[] = [
       'Then read for correctness in the main path, out loud: does the happy case work, what happens on empty, error, and concurrent use. Only after that do you look at naming, structure, and style. Announcing that order matters, because it stops you from spending the session on formatting while a real bug sits three lines down.',
       'Read the tests as part of the diff rather than as an appendix. A test that asserts nothing, or that would pass against the unfixed code, is a defect in the PR and worth flagging as clearly as the implementation would be.',
       'Finish with an explicit verdict rather than trailing off: approve, approve with nits, or request changes, and name the one or two things that drive that decision. Interviewers are listening for whether you can hold a position, not just generate observations.',
+      'Say what you did not review, if anything. Plenty of a diff travels regardless of domain — whether it does what the description says, whether the tests would fail without it, whether failures are handled visibly, whether names match behaviour — but if a business rule or an unfamiliar subsystem is outside what you can judge, write that in the verdict and name who should also look. An approval that implies more scrutiny than you applied is worse than declining the review.',
     ],
     keyPoints: [
       'Establishes the intent of the change before reading lines',
       'Reads for correctness first, style last, and announces that order',
       'Treats the tests as part of the reviewable diff',
       'Ends with an explicit verdict and the reasons driving it',
+      'States what was outside their scope and routes it to someone who can judge it',
     ],
     followUps: ['What would you do if the PR description was empty?', 'How long would you spend before asking the author to walk you through it?'],
   },
@@ -446,12 +415,14 @@ export const coding: Question[] = [
 }`,
     answer: [
       'Block on the correctness problems. An unknown or absent code makes rule undefined and throws on property access, so any typo becomes a crash on a money path. The fixed-amount branch can return a negative total with no floor at zero. And this is currency arithmetic in floating point, which will produce fractions of a cent that later reconcile badly. Each of those is a real defect on a path where being wrong costs money.',
+      'Then name the defect that is easiest to read past, because each branch looks correct in isolation: rule.value means two different things depending on rule.type. In the percent branch it is a fraction, so 0.2 means twenty percent. In the other branch it is an absolute amount of money. Nothing in the name, the type, or the shape of the data separates them, so a rule authored as { type: "percent", value: 20 } — the obvious reading of "twenty percent" — subtracts twenty times the cart total instead. The fix is a discriminated union so the two branches carry differently named, differently typed fields, not a comment telling the next author which convention applies.',
       'Leave the loose equality as a nit and say which it is. Comparing with double equals here is not going to fail in practice because both sides are strings, so it is a consistency point, not a bug. Being explicit about "this one is a nit, the three above are not" is what makes the review usable rather than a flat list of twelve remarks.',
       'Flag one thing that is neither: there is no test in the diff for a function that computes money and has two branches. That is a request for change, but it is a request about the PR rather than about a line, so it belongs in the summary comment rather than inline.',
       'Say the priority out loud in the summary, because a review with four blocking comments and eight nits and no ordering leaves the author to guess. Name the one thing that must change before this merges: the missing guard on an unknown code.',
     ],
     keyPoints: [
       'Blocks on the crash for unknown codes, the negative total, and float money',
+      'Says rule.value is a fraction in one branch and an absolute amount in the other, and asks for a discriminated union',
       'Explicitly labels the loose equality as a nit rather than mixing it in',
       'Raises the missing test for branching money logic in the summary',
       'Orders the feedback so the author knows what must change first',
@@ -468,12 +439,14 @@ export const coding: Question[] = [
       'Say plainly that it is blocking and why, because softening the signal is its own failure mode. A comment written so gently that the author reads it as optional wastes a round trip; "this needs to change before merge, because it can crash a paid flow" is kinder than three hedged sentences that get skipped.',
       'Separate the requirement from the solution. State the problem as non-negotiable and the fix as a suggestion: it leaves the author room to solve it better than you would have, and it avoids review turning into dictation.',
       'Assume competence in the wording. "Was there a reason to skip the guard here, or is this an oversight?" costs one clause and protects against the case where they know something you do not, which happens more often than review culture likes to admit.',
+      'The same principle scales up to the review as a whole: make the required change unmistakable and everything else visibly optional. That means blocking only on correctness, clarity, or consistency with the existing codebase — approving working, tested code you would have built differently, and labelling any alternative explicitly as non-blocking — and it means commenting once on the first instance of a repeated mistake, saying it applies throughout, and folding the remainder into the summary rather than inline. Fifteen inline comments read as a verdict on the author and leave them guessing which two actually matter; naming those two is the job.',
     ],
     keyPoints: [
       'Anchors the comment on a concrete failing case, not on the code style',
       'States clearly that it blocks, rather than softening the signal away',
-      'Separates the required outcome from a suggested implementation',
-      'Assumes a reason may exist and asks, in one clause',
+      'Separates the required outcome from a suggested implementation, and asks whether a reason exists',
+      'Approves correct, tested code instead of blocking on preference, and labels the alternative non-blocking',
+      'Names the two or three findings that must change rather than listing fifteen',
     ],
     followUps: ['How do you handle it when the author pushes back and you still disagree?', 'What do you do differently when reviewing across a language barrier or timezone?'],
   },
@@ -511,25 +484,6 @@ class NotifierFactory {
     followUps: ['What if the author says the second implementation is in next sprint?', 'Where do you draw the line between premature and prudent abstraction?'],
   },
   {
-    id: 'coding-023',
-    round: 'coding',
-    category: 'Code review',
-    question: 'The PR is correct and tested, but you would have built it differently. What do you say?',
-    answer: [
-      'Approve it. A review is a check on correctness, clarity, and consistency with the codebase, not a vote on whose design taste wins. Blocking working, tested code over a preference is the single most corrosive habit a senior reviewer can have, because it teaches the team that merging requires guessing your aesthetics.',
-      'Say the alternative anyway, labelled clearly as non-blocking, if it carries information worth having: "approving, and for what it is worth I would have kept this derived rather than stored, because the two can drift. Not worth changing now." The author learns something and nothing is held hostage.',
-      'Distinguish preference from consistency, because they feel identical and are not. If the codebase has an established pattern and this PR diverges from it without reason, that is a legitimate comment about the codebase rather than about your taste, and it is worth raising as such.',
-      'If the difference is large enough that you genuinely believe it will cost the team later, that is not a review comment at all. Approve the PR and start a separate conversation about the direction, because a comment thread on a merged-ready diff is the wrong venue for an architecture discussion.',
-    ],
-    keyPoints: [
-      'Approves correct, tested code rather than blocking on preference',
-      'Shares the alternative explicitly labelled as non-blocking',
-      'Separates personal taste from codebase consistency, which is legitimate',
-      'Moves genuine architecture disagreements out of the PR thread',
-    ],
-    followUps: ['How do you tell your preference apart from a real maintainability concern?', 'What do you do if this pattern keeps recurring across many PRs?'],
-  },
-  {
     id: 'coding-024',
     round: 'coding',
     category: 'Code review',
@@ -558,44 +512,6 @@ class NotifierFactory {
     followUps: ['When is an empty-object fallback genuinely the right call?', 'How would you make the failure visible without breaking the whole page?'],
   },
   {
-    id: 'coding-025',
-    round: 'coding',
-    category: 'Code review',
-    question: 'A junior engineer opens a PR with fifteen real issues. How many comments do you leave?',
-    answer: [
-      'Not fifteen. A review that returns a wall of comments reads as a verdict on the person rather than the change, and the author cannot tell which three matter. Pick the blocking issues, pick two or three teaching points that generalise, and let the rest go or fold them into a single summary note.',
-      'Group rather than repeat. If the same mistake appears seven times, comment once on the first instance and say it applies throughout, which turns seven annoyances into one lesson. Repeating the same comment down the file is how reviewers accidentally send a message about the author.',
-      'Take the larger conversation out of the thread. Fifteen issues usually means a gap in shared context, not carelessness, so a fifteen-minute call walking through the change together is faster and considerably kinder than three rounds of written comments. Say the decision out loud in the interview, because knowing when a review is the wrong medium is a staff-level judgement.',
-      'Be explicit about what is required versus optional, and say something true about what worked. Not as decoration, but because a review that only names faults gives the author no signal about which of their instincts to keep.',
-    ],
-    keyPoints: [
-      'Selects blocking issues plus a few generalising teaching points',
-      'Groups a repeated mistake into one comment rather than repeating it',
-      'Escalates to a conversation when the volume signals missing context',
-      'Marks required versus optional and names what genuinely worked',
-    ],
-    followUps: ['How does your approach change if it is a staff peer rather than a junior?', 'What if the same fifteen issues come back in the next PR?'],
-  },
-  {
-    id: 'coding-026',
-    round: 'coding',
-    category: 'Code review',
-    question: 'You are asked to review a PR in an area of the codebase you do not know. How do you handle it?',
-    answer: [
-      'Say what you can and cannot review, up front and in writing. "I have reviewed this for correctness of the React and the error handling, but I do not know this domain well enough to confirm the business rule is right, so it needs someone who does" is a genuinely useful review. An approval that implies more scrutiny than you applied is worse than declining.',
-      'Review what travels regardless of domain, because it is more than people assume: whether the change does what the description says, whether the tests would fail without it, whether failures are handled visibly, whether names match what the code does, and whether anything here is inconsistent with the surrounding file.',
-      'Use your ignorance as a signal rather than hiding it. If you cannot follow the flow after a fair effort, that is data about the code, and "I could not follow this without a walkthrough, which suggests the next person will not either" is legitimate feedback rather than an admission.',
-      'Then name who should also look at it, and say so rather than assuming someone will notice. Routing a review to the person with the missing context is part of doing the review, not a way of avoiding it.',
-    ],
-    keyPoints: [
-      'States the scope of the review and what was not checked',
-      'Reviews the domain-independent properties, which are substantial',
-      'Treats being unable to follow the code as feedback about the code',
-      'Actively routes the PR to someone with the missing context',
-    ],
-    followUps: ['What if you are the only reviewer available?', 'How do you build context in an unfamiliar area without blocking the author for days?'],
-  },
-  {
     id: 'coding-027',
     round: 'coding',
     category: 'Code review',
@@ -615,12 +531,12 @@ class NotifierFactory {
     followUps: ['Which of these have you caught in a real review recently?', 'What would you automate away first so review can focus on the rest?'],
   },
 
-  // Build prompts (12)
+  // Build prompts (13)
   {
     id: 'coding-028',
     round: 'coding',
     category: 'Build prompts',
-    question: 'Build an autocomplete input: as the user types, fetch suggestions and show them in a list. You have 45 minutes. In-flight requests must not race — a slow response for an earlier keystroke must never overwrite a later, faster one.',
+    question: 'Build an autocomplete input: as the user types, fetch suggestions and show them in a list. In-flight requests must not race — a slow response for an earlier keystroke must never overwrite a later, faster one. Talk me through your approach.',
     code: `function Autocomplete({ fetchSuggestions }: { fetchSuggestions: (q: string) => Promise<string[]> }) {
   // state: query, suggestions, loading
   // TODO: debounce the fetch
@@ -631,13 +547,14 @@ class NotifierFactory {
       'State shape first: query (the input value), suggestions (the list), and a loading flag — resist adding a fourth "error" field until asked, a caught error can just clear suggestions and log.',
       'Debounce the fetch (150-300ms) so you are not firing a request per keystroke, using a ref-held timeout id cleared on the next keystroke.',
       'Solve the race explicitly, out loud, before typing it: either an AbortController per request (cancel the previous one when a new keystroke fires) or a request-id/sequence-number check (only apply the response if it is still the latest request issued) — AbortController is the stronger answer since it also stops wasted network work.',
-      'Wire it up: on each keystroke, bump the sequence/create a new controller, debounce, fetch, and on resolution check the request is still current before calling setSuggestions.',
+      'Wire it up: on each keystroke, bump the sequence/create a new controller, debounce, fetch, and on resolution check the request is still current before calling setSuggestions. Say the rejection-handler detail out loud, because it is where the abort approach usually goes wrong: aborting rejects the fetch promise with an AbortError, which is the expected outcome of the next keystroke rather than a failure, so the catch must check err.name and return silently for that case — otherwise every character the user types renders "search failed".',
     ],
     keyPoints: [
       'Minimal state: query, suggestions, loading — no premature fields',
       'Debounces the fetch instead of firing on every keystroke',
       'Explicitly solves the race with AbortController or a sequence number',
       'Only applies a response if it is still the latest in-flight request',
+      'Checks for an AbortError in the catch and ignores it instead of showing an error',
     ],
     followUps: ['How would you add keyboard navigation (arrow keys, Enter) to the list?', 'What would you change if suggestions came from a local array instead of a network call?'],
   },
@@ -645,7 +562,7 @@ class NotifierFactory {
     id: 'coding-029',
     round: 'coding',
     category: 'Build prompts',
-    question: 'Build a virtualised list that can smoothly render 100,000 rows of fixed height. You have 45 minutes. Only the rows currently in (or near) the viewport should exist in the DOM.',
+    question: 'Build a virtualised list that can smoothly render 100,000 rows of fixed height. Only the rows currently in (or near) the viewport should exist in the DOM. Talk me through your approach.',
     code: `function VirtualList({ items, rowHeight, viewportHeight }: { items: string[]; rowHeight: number; viewportHeight: number }) {
   // state: scrollTop
   // TODO: compute the visible index range from scrollTop, rowHeight, viewportHeight
@@ -654,12 +571,13 @@ class NotifierFactory {
 }`,
     answer: [
       'Say the core idea before coding: track scrollTop, derive the first and last visible row index from it and the row height, and render only that slice — everything else is a spacer, not real DOM.',
-      'Use two spacer elements (or one padding-top/height trick) rather than absolutely positioning every row, since fixed-height rows make the arithmetic trivial: startIndex = floor(scrollTop / rowHeight), endIndex = startIndex + ceil(viewportHeight / rowHeight).',
-      'Add a small overscan (render a few extra rows above/below the viewport) so fast scrolling does not show a flash of blank space before the next paint.',
-      'Name what you are deliberately not building: dynamic/variable row heights, which need a measured-height cache and are a materially harder problem — scope that out explicitly rather than let it derail the 45 minutes.',
+      'Use two spacer elements (or one padding-top/height trick) rather than absolutely positioning every row, since fixed-height rows make the arithmetic trivial: startIndex = floor(scrollTop / rowHeight), endIndex = startIndex + ceil(viewportHeight / rowHeight) + 1.',
+      'Say why the "+ 1" is there, because dropping it is the standard off-by-one in this exercise: unless scrollTop happens to be an exact multiple of rowHeight, the row at startIndex is only partly above the fold, which pushes a sliver of one extra row into view at the bottom. Overscan hides the mistake in practice, which is exactly why it survives code review — state the arithmetic rather than relying on the padding to cover it.',
+      'Add that small overscan anyway (render a few extra rows above and below the viewport) so fast scrolling does not show a flash of blank space before the next paint.',
+      'Name what you are deliberately not building: dynamic/variable row heights, which need a measured-height cache and are a materially harder problem — scope that out explicitly rather than let it eat the session.',
     ],
     keyPoints: [
-      'Computes visible range from scrollTop and fixed row height',
+      'Computes the visible range from scrollTop and row height, including the +1 for the partly scrolled top row',
       'Renders a spacer for off-screen rows instead of the full item list',
       'Adds overscan to avoid blank flashes on fast scroll',
       'Explicitly scopes out variable row heights as a harder follow-on problem',
@@ -670,7 +588,7 @@ class NotifierFactory {
     id: 'coding-030',
     round: 'coding',
     category: 'Build prompts',
-    question: 'Build an accessible combobox: a text input with a filtered, keyboard-navigable listbox of options, following the ARIA Authoring Practices Guide pattern. You have 45 minutes.',
+    question: 'Build an accessible combobox: a text input with a filtered, keyboard-navigable listbox of options, following the ARIA Authoring Practices Guide pattern. Talk me through your approach.',
     code: `function Combobox({ options }: { options: string[] }) {
   // state: query, activeIndex, open
   // TODO: role="combobox" on the input, aria-expanded, aria-controls, aria-activedescendant
@@ -695,7 +613,7 @@ class NotifierFactory {
     id: 'coding-031',
     round: 'coding',
     category: 'Build prompts',
-    question: 'Build an accessible tabs component (tab list, tabs, panels) following the ARIA Authoring Practices Guide pattern, with roving tabindex keyboard navigation. You have 45 minutes.',
+    question: 'Build an accessible tabs component (tab list, tabs, panels) following the ARIA Authoring Practices Guide pattern, with roving tabindex keyboard navigation. Talk me through your approach.',
     code: `function Tabs({ tabs }: { tabs: { id: string; label: string; panel: string }[] }) {
   // state: activeId
   // TODO: role="tablist" / role="tab" / role="tabpanel", aria-selected, aria-controls, aria-labelledby
@@ -706,13 +624,13 @@ class NotifierFactory {
       'State the roles up front: a role="tablist" container, role="tab" buttons with aria-selected and aria-controls pointing at their panel, and role="tabpanel" elements with aria-labelledby pointing back at their tab.',
       'Implement roving tabindex correctly: only the active tab has tabIndex=0, every other tab has tabIndex=-1, so a single Tab key press moves focus out of the whole tablist rather than through every tab — this is the detail most implementations get wrong.',
       'Wire ArrowLeft/ArrowRight (or Up/Down for a vertical tablist) to move focus and activation between tabs, with Home/End jumping to the first/last tab; state whether activation is automatic-on-arrow or requires a follow-up Enter (both are valid APG patterns — automatic activation is more common and simpler to build first).',
-      'Keep only the active panel\'s content mounted or visually shown, and make sure the panel is in the tab order (tabIndex=0 on the panel itself) since it often contains no other focusable content.',
+      'Keep only the active panel\'s content mounted or visually shown, and make the panel focusable conditionally rather than by default. APG puts tabIndex=0 on the tabpanel only when the panel contains no focusable elements of its own, so a keyboard user can still reach the content and read it. If the panel already holds a link, an input, or a button, adding tabIndex=0 to the panel creates a redundant tab stop that a screen reader user has to pass through for nothing — that is a defect, not extra care, and saying which case you are in is the part being scored.',
     ],
     keyPoints: [
       'Correct roles: tablist, tab (aria-selected, aria-controls), tabpanel (aria-labelledby)',
       'Roving tabindex: exactly one tab is tabbable at a time',
       'Arrow keys move between tabs; states the chosen activation model (automatic vs manual)',
-      'Panel is reachable in the tab order even with no other focusable content',
+      'Puts tabIndex=0 on the panel only when the panel has no focusable content, and says why',
     ],
     followUps: ['How would you support closable tabs?', 'What changes for a vertical tablist?'],
   },
@@ -720,49 +638,62 @@ class NotifierFactory {
     id: 'coding-032',
     round: 'coding',
     category: 'Build prompts',
-    question: 'Implement debounce and throttle from scratch (no library), then explain when you would reach for each. You have 45 minutes. Both must support cancel().',
-    code: `function debounce<T extends (...args: any[]) => void>(fn: T, wait: number): T & { cancel: () => void } {
-  // TODO
-}
+    question: 'Build a transactions table: around 2,000 rows of { id, date, counterparty, amountMinor, currency, status }, with sortable columns, a text filter, and pagination at 50 rows a page. Amounts render formatted for their currency. Talk me through your approach.',
+    code: `type Transaction = {
+  id: string;
+  date: string;
+  counterparty: string;
+  amountMinor: number;
+  currency: string;
+  status: 'settled' | 'pending' | 'failed';
+};
 
-function throttle<T extends (...args: any[]) => void>(fn: T, wait: number): T & { cancel: () => void } {
-  // TODO
+function TransactionsTable({ rows }: { rows: Transaction[] }) {
+  // state: sortKey + direction, filter text, page index
+  // TODO: filter -> sort -> paginate as derived values, not three more pieces of state
+  // TODO: stable sort; compare amountMinor numerically, never the formatted string
+  // TODO: one Intl.NumberFormat per currency, reused across rows
+  return null;
 }`,
     answer: [
-      'Debounce: reset a single timer on every call, only invoking fn once the calls stop for `wait` ms — implemented with one setTimeout id in closure, cleared and reset each call, plus a cancel() that clears it.',
-      'Throttle: invoke fn immediately on the first call, then ignore calls for `wait` ms, typically also scheduling one trailing call at the end of the window so the very last event in a burst is not dropped — this trailing-call detail is the part candidates most often miss.',
-      'State the use-case split plainly: debounce for "wait until the user stops" (search-as-you-type, resizing before recalculating layout), throttle for "at most once every N ms while it keeps happening" (scroll position tracking, mousemove-driven drag feedback).',
-      'Test both with fake timers out loud: rapid calls to debounce should invoke fn once at the end; rapid calls to throttle should invoke it near-immediately, then again after the window, not on every call.',
+      'Say the data-flow rule before you type anything: the only state is the sort key and direction, the filter text, and the page index. Everything on screen is derived from those three, in a fixed order — filter the rows, sort the filtered result, slice the page out of the sorted one — each step a memoised derivation of the step before it. Storing filteredRows, sortedRows and pageRows as their own state is the mistake that sinks this exercise: they drift out of agreement, and you end up writing effects whose only job is to keep three copies of the same list in sync.',
+      'Sort on the raw values, never the rendered ones. amountMinor is an integer count of minor units, so the comparator is a subtraction; comparing formatted strings like "1.234,56" sorts character by character and produces an order that looks plausible enough to ship. Dates compare as ISO strings or timestamps, not as display labels. Array.prototype.sort has been required to be stable since ES2019, so you get stability for free — but add an explicit tiebreak on id anyway, so that two rows with the same amount have one defined order rather than whatever the previous sort happened to leave behind.',
+      'Format with Intl.NumberFormat and hoist the formatters out of the row. Constructing one is comparatively expensive, so keep a small Map from currency code to formatter and reuse it, rather than calling the constructor 50 times per render while someone is typing in the filter box. Convert from minor units only at that display boundary, and get the divisor from the currency rather than hard-coding 100 — EUR and GBP have two decimal places, JPY has none, and a hard-coded 100 is a bug waiting for the first yen transaction.',
+      'Use a real table rather than a grid of divs: thead, th with scope="col", tbody. Each sortable header is a button inside its th, and the th carries aria-sort set to "ascending", "descending" or "none", so a screen reader user hears the current order instead of having to infer it from an arrow glyph. The filter input gets a real label, and the pagination controls say which page of how many rather than just showing two arrows.',
+      'Close by naming what you are not building and why. Two thousand rows paginated at 50 means 50 rows in the DOM at a time, so virtualisation buys nothing here and adding it would be speculative work on top of a correct answer. Say the trigger instead: if they drop pagination and want all 2,000 rows scrolling in one list, that is the moment windowing earns its place.',
     ],
     keyPoints: [
-      'Debounce resets a single timer per call, fires once calls stop',
-      'Throttle fires immediately then rate-limits, with a stated trailing-call behavior',
-      'Both implement cancel() to clear pending/queued invocations',
-      'Correctly explains which one fits which real use case',
+      'Keeps sort, filter and page as the only state; filter, sort and paginate are memoised derivations',
+      'Compares amountMinor numerically and adds an explicit id tiebreak',
+      'Builds one Intl.NumberFormat per currency and reuses it instead of one per row',
+      'Uses table semantics with aria-sort on the sorted column header',
+      'Says virtualisation is not warranted at 50 rows a page, and names what would change that',
     ],
-    followUps: ['How would you add a leading:false option to throttle?', 'How would you unit test the trailing-call behavior deterministically?'],
+    followUps: ['What moves to the server if the dataset were two million rows instead of two thousand?', 'How would you render a total row when the rows span several currencies?'],
   },
   {
     id: 'coding-033',
     round: 'coding',
     category: 'Build prompts',
-    question: 'Build a promise pool: given an array of tasks (functions returning promises) and a concurrency limit N, run them with at most N in flight at once, resolving with all results in original order. You have 45 minutes.',
+    question: 'Build a promise pool: given an array of tasks (functions returning promises) and a concurrency limit N, run them with at most N in flight at once, resolving with all results in original order. Talk me through your approach.',
     code: `async function promisePool<T>(tasks: (() => Promise<T>)[], limit: number): Promise<T[]> {
   // TODO: run at most "limit" tasks concurrently
   // TODO: results[i] must correspond to tasks[i], regardless of completion order
+  // TODO: guard limit <= 0 — zero workers means the pool never resolves
   return [];
 }`,
     answer: [
       'State the shape of the solution first: an array of N "worker" loops running concurrently, each pulling the next unstarted task index off a shared cursor and writing its result into a results array at that task\'s original index — order comes from indexing, not from completion order.',
-      'Implement the worker as a small async function that loops while a shared mutable index is less than tasks.length, incrementing it and awaiting that task before looping again; start N of these workers with Promise.all.',
-      'Cover the failure case explicitly: does one task rejecting abort the whole pool (fail-fast) or should the rest continue (collect settled results)? State the choice and implement fail-fast with Promise.all propagating the rejection unless asked for the alternative.',
+      'Implement the worker as a small async function that loops while a shared mutable index is less than tasks.length, incrementing it and awaiting that task before looping again; start N of these workers with Promise.all. Write the guard on N as you type it: clamp the worker count to at least one and at most tasks.length, because a caller passing limit 0 — or a limit computed from an empty config — starts no workers at all, and Promise.all of an empty array resolves instantly with nothing done. That is the failure mode nobody notices in review, since it does not throw.',
+      'Be precise about what happens on a rejection, rather than calling it fail-fast. Promise.all does reject as soon as one worker throws, so the caller hears about the failure immediately — but the other N-1 workers are still running, still pulling the next index off the shared cursor, and will keep launching tasks until the list is exhausted. Nothing aborts. If "stop as soon as one fails" is the actual requirement, you need a shared cancelled flag that each worker checks before taking the next index, and you set it in the catch. Otherwise say plainly that you are letting every task run and collecting settled results.',
       'Sanity-check with a small example out loud: 5 tasks, limit 2 — task 3 should start only once one of the first two finishes, not after both.',
     ],
     keyPoints: [
       'Uses a shared cursor and N worker loops, not a queue-per-batch approach',
       'Results array is indexed by original task position, not completion order',
-      'States and implements a clear failure-mode choice (fail-fast vs collect-all)',
-      'Verifies concurrency behavior with a concrete example, not just types',
+      'Guards limit <= 0, naming that zero workers resolves immediately with nothing run',
+      'Says a rejection does not stop the other workers, and writes the cancelled flag if stopping is required',
+      'Walks the 5-tasks-limit-2 case out loud to check the concurrency, not just the types',
     ],
     followUps: ['How would you support cancelling remaining tasks partway through?', 'How would you report progress as tasks complete?'],
   },
@@ -770,33 +701,43 @@ function throttle<T extends (...args: any[]) => void>(fn: T, wait: number): T & 
     id: 'coding-034',
     round: 'coding',
     category: 'Build prompts',
-    question: 'Build a minimal type-safe event emitter: on, off, and emit, where the event map and payload types are checked at compile time. You have 45 minutes.',
-    code: `type EventMap = Record<string, unknown[]>;
+    question: 'Build an amount input — an amount field plus a currency select — submitted with a React 19 form Action. The action validates that the amount parses to integer minor units, and the form shows pending state and a field-level error. Talk me through your approach.',
+    code: `type FormState = { error?: string; amountMinor?: number };
 
-class Emitter<T extends EventMap> {
-  // TODO: on<K extends keyof T>(event: K, handler: (...args: T[K]) => void): void
-  // TODO: off<K extends keyof T>(event: K, handler: (...args: T[K]) => void): void
-  // TODO: emit<K extends keyof T>(event: K, ...args: T[K]): void
+async function submitAmount(prev: FormState, formData: FormData): Promise<FormState> {
+  // TODO: parse the amount string to integer minor units for the chosen currency
+  // TODO: reject empty input, floats, and anything that does not parse
+  // TODO: return { error } rather than throwing, so the form can render it
+  return {};
+}
+
+function AmountForm() {
+  // TODO: const [state, formAction, isPending] = useActionState(submitAmount, {})
+  // TODO: <form action={formAction}> with a labelled amount input and a currency select
+  // TODO: aria-invalid on the input, aria-describedby pointing at the error element id
+  return null;
 }`,
     answer: [
-      'Design the type first: a generic Emitter<T extends EventMap> where T maps event names to their argument tuples, so on/off/emit are all constrained by the same map and a caller cannot emit an event with the wrong argument types.',
-      'Store handlers in a Map (or object) keyed by event name, each holding a Set of handler functions, so off can remove one handler without disturbing others and duplicate on calls do not double-register the same function.',
-      'Implement emit to iterate a snapshot (a copied array) of the handler set, not the live set, since a handler that calls off on itself or another handler during emit must not skip or double-fire remaining handlers.',
-      'Call out the type-safety payoff concretely: Emitter<{ login: [userId: string]; logout: [] }> makes emitter.emit(\'login\', 123) a compile error, catching a real class of bug before runtime.',
+      'Lead with the signature, because it is what the question is actually about: const [state, formAction, isPending] = useActionState(action, initialState), where the action has the shape (previousState, formData) => nextState and formAction goes straight onto the form as action={formAction}. That one line replaces the hand-rolled trio of an isLoading boolean, an error state, and an onSubmit that calls preventDefault — and because it is a real form submission rather than a click handler, the pending flag is managed for you and cannot get stuck true when an early return skips the reset.',
+      'Put the validation on the action boundary, not in the input onChange. The field is free text and people type money in their own locale: "1.234,56" is one thousand two hundred thirty-four and fifty-six in German, and something else entirely read as English. So parse deliberately — pick the separators from the locale, strip the grouping separator, normalise the decimal one, then reject anything remaining that is not digits plus at most one separator, and reject more decimal places than the currency allows. Do the conversion as integer arithmetic on the digit string, not by multiplying a parsed number.',
+      'Say out loud the thing you would never do: parseFloat on money. 19.99 * 100 evaluates to 1998.9999999999998, so a naive round trip through a float loses or gains a minor unit depending on the value, and on a payments path that surfaces weeks later as a reconciliation difference nobody can explain. The amount is an integer number of minor units from the moment it leaves the input, and the currency decides the exponent — two for EUR, zero for JPY, three for a handful of others.',
+      'Return failures as state rather than throwing: the action returns { error: "Enter an amount like 12,50" } and the component renders it. Then wire the accessibility so the message is actually reachable — a real label tied to the input, aria-invalid set from whether state.error exists, and aria-describedby pointing at the id of the element holding the message, so a screen reader reads the error when focus lands on the field rather than leaving it as red text next to a control that claims to be fine.',
+      'If they push on it, separate pending from optimistic. isPending is the honest "the server has not answered yet" signal and is what disables the submit button. useOptimistic is a different tool: it renders the expected outcome immediately and rolls back if the action fails. For anything that moves money, pending is the right choice — showing an optimistic balance that then reverses is worse for the user than a second of spinner.',
     ],
     keyPoints: [
-      'Generic EventMap constrains on/off/emit to consistent, checked argument types',
-      'Handlers stored per-event in a Set, supporting clean removal via off',
-      'Emits over a snapshot of handlers so mutation during emit is safe',
-      'Can state a concrete example of a type error the design prevents',
+      'Names the useActionState signature and why it beats hand-rolled loading and error flags',
+      'Parses the amount locale-aware and converts to integer minor units without a float',
+      'Says parseFloat on money is out, and takes the exponent from the currency rather than assuming 100',
+      'Returns the error as action state and wires aria-invalid plus aria-describedby to the message',
+      'Distinguishes isPending from useOptimistic and says which one a money path gets',
     ],
-    followUps: ['How would you add a once() method?', 'How would you support wildcard/"any event" listeners without losing type safety?'],
+    followUps: ['How would you keep the typed value in the field after a failed submit?', 'Where does the same validation live so the client and the server cannot disagree about it?'],
   },
   {
     id: 'coding-035',
     round: 'coding',
     category: 'Build prompts',
-    question: 'Build a drag-to-reorder list: dragging an item to a new position updates the list order, keyboard-operable, no external DnD library. You have 45 minutes.',
+    question: 'Build a drag-to-reorder list: dragging an item to a new position updates the list order, keyboard-operable, no external DnD library. Talk me through your approach.',
     code: `function ReorderableList({ items, onReorder }: { items: string[]; onReorder: (next: string[]) => void }) {
   // TODO: draggable items, onDragStart/onDragOver/onDrop to compute the new order
   // TODO: keyboard equivalent (e.g. focus an item, Alt+ArrowUp/Down to move it)
@@ -820,7 +761,7 @@ class Emitter<T extends EventMap> {
     id: 'coding-036',
     round: 'coding',
     category: 'Build prompts',
-    question: 'Build a tiny external store (get, set, subscribe) and a React hook that reads it via useSyncExternalStore, with no external state library. You have 45 minutes.',
+    question: 'Build a tiny external store (get, set, subscribe) and a React hook that reads it via useSyncExternalStore, with no external state library. Talk me through your approach.',
     code: `function createStore<T>(initial: T) {
   // TODO: getSnapshot(), setState(next: T | ((prev: T) => T)), subscribe(listener: () => void)
 }
@@ -847,7 +788,7 @@ function useStore<T>(store: ReturnType<typeof createStore<T>>): T {
     id: 'coding-037',
     round: 'coding',
     category: 'Build prompts',
-    question: 'Build an LRU (least-recently-used) cache with get and put, both O(1), fixed capacity. You have 45 minutes.',
+    question: 'Build an LRU (least-recently-used) cache with get and put, both O(1), fixed capacity. Talk me through your approach.',
     code: `class LRUCache<K, V> {
   constructor(private capacity: number) {}
   // TODO: get(key: K): V | undefined — must count as a "use", refreshing recency
@@ -865,37 +806,39 @@ function useStore<T>(store: ReturnType<typeof createStore<T>>): T {
       'put() evicts the true least-recently-used entry (Map iteration order, not insertion time alone)',
       'States and justifies O(1) complexity for both operations',
     ],
-    followUps: ['How would you make this thread-safe if used from multiple async contexts?', 'How would you add a TTL (time-based expiry) on top of the LRU eviction?'],
+    followUps: ['How would you keep this safe under concurrent async callers, where an await can interleave between a get and a put?', 'How would you add a TTL (time-based expiry) on top of the LRU eviction?'],
   },
   {
     id: 'coding-038',
     round: 'coding',
     category: 'Build prompts',
-    question: 'Build a fetch wrapper that retries a failed request with exponential backoff and jitter, up to a max number of attempts. You have 45 minutes.',
+    question: 'Build a fetch wrapper that retries a failed request with exponential backoff and jitter, up to a max number of attempts. Talk me through your approach.',
     code: `async function fetchWithRetry(url: string, options: RequestInit = {}, maxAttempts = 3): Promise<Response> {
-  // TODO: retry on network error or 5xx, not on 4xx
+  // TODO: retry on network error, 5xx, 408 and 429; honour Retry-After; other 4xx are not retried
   // TODO: exponential backoff with jitter between attempts
   return fetch(url, options);
 }`,
     answer: [
-      'Decide what is retryable before coding: a thrown network error or a 5xx response are worth retrying (transient), a 4xx is not (the request itself is wrong and will fail identically every time) — retrying a 4xx just wastes time and can violate rate limits.',
+      'Decide what is retryable before coding, and be precise about it rather than saying "5xx yes, 4xx no". A thrown network error and a 5xx are transient and worth retrying. So are two specific 4xx codes: 408 request timeout, and 429 too many requests — rate limiting is the canonical backoff case, not the counterexample to it, and a client that gives up on a 429 is failing on exactly the signal that says "try again shortly". Everything else in the 4xx range is a malformed or unauthorised request that will fail identically on every attempt, so retrying it only burns time and quota.',
+      'Honour Retry-After when it is present. A 429 or a 503 may carry it, and the server telling you when to come back beats your own computed delay every time — take the larger of Retry-After and your backoff rather than replacing one with the other, and cap it so a hostile or misconfigured header cannot park the request for an hour.',
       'Implement exponential backoff: wait base * 2^attempt ms before the next try, with an upper cap so it does not grow unbounded on a high max-attempts value.',
       'Add jitter explicitly and explain why: pure exponential backoff across many clients retrying the same failing endpoint synchronizes them into a thundering herd — adding random jitter (e.g. backoff * (0.5 + Math.random() * 0.5)) spreads retries out and reduces load on a recovering server.',
       'Surface the final failure clearly: after maxAttempts, throw or return the last real error/response rather than swallowing it, so the caller can distinguish "eventually succeeded" from "gave up."',
     ],
     keyPoints: [
-      'Retries network errors and 5xx, explicitly does not retry 4xx',
+      'Retries network errors, 5xx, 408 and 429, and says the rest of the 4xx range is not retried',
+      'Honours Retry-After when the server sends it, with a cap',
       'Implements exponential backoff with a sensible cap',
-      'Adds jitter and can explain the thundering-herd problem it solves',
+      'Adds jitter and names the thundering-herd problem it prevents',
       'Surfaces the final failure after exhausting attempts instead of swallowing it',
     ],
-    followUps: ['How would you respect a Retry-After header if the server sends one?', 'How would you make retries cancellable via AbortSignal?'],
+    followUps: ['What do you do when Retry-After is an HTTP date rather than a number of seconds?', 'How would you make retries cancellable via AbortSignal?'],
   },
   {
     id: 'coding-039',
     round: 'coding',
     category: 'Build prompts',
-    question: 'Build a memoized async lookup: given an expensive async function, return a wrapped version that caches results by argument and de-duplicates concurrent calls for the same argument (only one real call in flight per key at a time). You have 45 minutes.',
+    question: 'Build a memoized async lookup: given an expensive async function, return a wrapped version that caches results by argument and de-duplicates concurrent calls for the same argument (only one real call in flight per key at a time). Talk me through your approach.',
     code: `function memoizeAsync<A extends string, R>(fn: (arg: A) => Promise<R>): (arg: A) => Promise<R> {
   // TODO: cache resolved results by argument
   // TODO: if a call for the same argument is already in flight, return that same promise instead of calling fn again
@@ -914,5 +857,33 @@ function useStore<T>(store: ReturnType<typeof createStore<T>>): T {
       'Connects the pattern to a concrete real-world case (shared lookups across components)',
     ],
     followUps: ['How would you add a TTL so cached values expire?', 'How would you support cache invalidation for a specific key after a mutation?'],
+  },
+  {
+    id: 'coding-040',
+    round: 'coding',
+    category: 'Build prompts',
+    question: 'Implement debounce and throttle from scratch, each with a cancel() method, and tell me when you would reach for one over the other. Talk me through your approach.',
+    code: `function debounce<A extends unknown[]>(fn: (...args: A) => void, wait: number) {
+  // TODO: call fn only after "wait" ms have passed with no further calls
+  // TODO: expose cancel() to drop a pending call
+}
+
+function throttle<A extends unknown[]>(fn: (...args: A) => void, wait: number) {
+  // TODO: call fn at most once per "wait" ms
+  // TODO: expose cancel() to drop a pending trailing call
+}`,
+    answer: [
+      'Say what each one means before writing either, because the two get used interchangeably and they are not interchangeable. Debounce waits for quiet: every call resets the timer, and fn runs only once no call has arrived for the whole wait window — so a burst of a hundred calls produces exactly one invocation, at the end. Throttle enforces a rate: fn runs immediately, then at most once per window however many calls arrive — so a burst of a hundred produces a call at the start and one per window after. Debounce can starve forever under continuous input; throttle never does. That difference is the whole of the choice.',
+      'Debounce is a closure over one timer id. Each call clears the pending timeout and schedules a new one, and the scheduled callback applies fn with the most recent arguments — the last arguments, not the first, which is the part people get wrong when they capture args outside the handler. Keep this over a variable so a method passed in still gets its receiver. cancel() clears the timeout and nulls the id so a later call schedules cleanly rather than clearing a stale handle.',
+      'Throttle needs a last-run timestamp and a trailing timer, because leading-only throttle silently drops the final call of a burst, which is the bug that shows up as a filter that never applies the last keystroke. On a call, if the elapsed time since the last run is at least wait, run immediately and record the time; otherwise store the arguments and schedule a trailing run for the remainder of the window, replacing any already-scheduled trailing call so the newest arguments win. cancel() clears the trailing timer and drops the stored arguments.',
+      'Then say where each belongs. Debounce for work that only matters once the user stops: a search-as-you-type request, a resize handler recomputing layout, autosaving a form field. Throttle for work that must stay responsive during a continuous stream: scroll position, pointer move, a progress readout, a rate-limited API. And name the cases where neither is right — requestAnimationFrame for anything painting per frame, since a timer does not align to the frame, and an AbortController rather than a debounce when the real requirement is that a stale in-flight request must not overwrite a newer one.',
+    ],
+    keyPoints: [
+      'States the behavioural difference: debounce fires once after quiet, throttle fires at a bounded rate during the burst',
+      'Debounce resets the timer on every call and applies the most recent arguments, not the first',
+      'Throttle handles the trailing call so the last event of a burst is not dropped',
+      'cancel() clears the pending timer and any stored trailing arguments on both',
+    ],
+    followUps: ['How would you add a leading/trailing option to debounce, and what does each combination do to a single isolated call?', 'How would you test these deterministically without waiting real milliseconds?'],
   },
 ];
