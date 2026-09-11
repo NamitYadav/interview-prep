@@ -78,19 +78,42 @@ export function useAppState() {
     stateRef.current = state;
   });
 
+  // The pending timer is also tracked in a ref (not just returned from the effect's
+  // own closure) so the flush below — fired from pagehide/visibilitychange/unmount,
+  // none of which re-run this effect — can tell "there's an unsaved debounced write"
+  // from "nothing changed since the last save" and skip a redundant write in the latter case.
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    const timer = setTimeout(() => {
+    timerRef.current = setTimeout(() => {
+      timerRef.current = null;
       setSaveFailed(!save(state));
     }, SAVE_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
+    return () => {
+      if (timerRef.current !== null) clearTimeout(timerRef.current);
+    };
   }, [state]);
 
   useEffect(() => {
-    // Flushes the pending debounced write immediately on tab close/hide, so closing
-    // the tab mid-debounce never drops the last change.
-    const flush = () => save(stateRef.current);
+    // Flushes a pending debounced write immediately — on tab close/hide (so closing
+    // the tab mid-debounce never drops the last change), on backgrounding (pagehide
+    // doesn't reliably fire when mobile OSes discard a backgrounded tab), and on
+    // unmount (this effect's own cleanup, since its deps are `[]`).
+    const flush = () => {
+      if (timerRef.current === null) return;
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+      save(stateRef.current);
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') flush();
+    };
     window.addEventListener('pagehide', flush);
-    return () => window.removeEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      flush();
+    };
   }, []);
 
   return { state, dispatch, saveFailed };

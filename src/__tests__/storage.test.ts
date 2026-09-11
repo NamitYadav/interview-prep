@@ -76,6 +76,9 @@ describe('parseBackup', () => {
     [JSON.stringify({ version: 3, progress: {}, notes: {} }), 'Unsupported backup version'],
     [JSON.stringify({ version: 1, progress: [], notes: {} }), 'progress must be an object'],
     [JSON.stringify({ version: 1, progress: { a: { rating: 4, seen: 1, lastSeen: 1 } }, notes: {} }), 'Invalid progress entry for a'],
+    // 1e999 overflows to Infinity on JSON.parse — must be rejected, not accepted as a
+    // "number" that later serializes to `null` and fails re-validation on next load.
+    ['{"version":2,"progress":{"a":{"rating":1,"seen":1,"lastSeen":1,"dueAt":1e999}},"notes":{},"stories":{}}', 'Invalid progress entry for a'],
     [JSON.stringify({ version: 1, progress: {}, notes: { a: 1 } }), 'Invalid note for a'],
     [JSON.stringify({ version: 2, progress: {}, notes: {}, stories: [] }), 'stories must be an object'],
     [JSON.stringify({ version: 2, progress: {}, notes: {}, stories: { a: { title: 1 } } }), 'Invalid story for a'],

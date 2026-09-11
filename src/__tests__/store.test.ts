@@ -109,6 +109,48 @@ describe('useAppState', () => {
     }
   });
 
+  test('backgrounding the tab (visibilitychange -> hidden) flushes a pending write', () => {
+    vi.useFakeTimers();
+    const visibilitySpy = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    try {
+      const { result } = renderHook(() => useAppState());
+      act(() => result.current.dispatch({ type: 'rate', id: 'a', rating: 1, now: 1 }));
+      expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+      act(() => document.dispatchEvent(new Event('visibilitychange')));
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).progress.a).toBeDefined();
+    } finally {
+      visibilitySpy.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  test('does not write again on flush when nothing is pending', () => {
+    vi.useFakeTimers();
+    try {
+      const { result } = renderHook(() => useAppState());
+      act(() => result.current.dispatch({ type: 'rate', id: 'a', rating: 1, now: 1 }));
+      act(() => vi.advanceTimersByTime(500));
+      const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+      act(() => window.dispatchEvent(new Event('pagehide')));
+      expect(setItemSpy).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('unmounting with a pending debounced write flushes it', () => {
+    vi.useFakeTimers();
+    try {
+      const { result, unmount } = renderHook(() => useAppState());
+      act(() => result.current.dispatch({ type: 'rate', id: 'a', rating: 1, now: 1 }));
+      expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+      unmount();
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).progress.a).toBeDefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test('flags saveFailed when the underlying storage write throws', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('quota exceeded');

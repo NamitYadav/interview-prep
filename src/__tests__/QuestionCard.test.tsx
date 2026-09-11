@@ -113,6 +113,24 @@ describe('QuestionCard strict mode', () => {
     }
   });
 
+  test('shows a live countdown before reveal, so the answer never pops with no warning', () => {
+    vi.useFakeTimers();
+    try {
+      render(<StrictHarness question={base} />);
+      act(() => vi.advanceTimersByTime(250)); // first tick
+      expect(screen.getByText(/time left: 3:00/i)).toBeInTheDocument();
+      act(() => vi.advanceTimersByTime(60_000));
+      expect(screen.getByText(/time left: 2:00/i)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('no countdown line when strict mode is off', () => {
+    render(<RevealHarness question={base} />);
+    expect(screen.queryByText(/time left/i)).not.toBeInTheDocument();
+  });
+
   test('does not auto-reveal when strict mode is off', () => {
     vi.useFakeTimers();
     try {
@@ -131,6 +149,20 @@ describe('QuestionCard strict mode', () => {
       act(() => vi.advanceTimersByTime(5_000));
       fireEvent.click(screen.getByRole('button', { name: /reveal/i }));
       expect(screen.getByText(/answered in 0:05/i)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('a manual reveal clears the countdown — it does not fire "out of time" later', () => {
+    vi.useFakeTimers();
+    try {
+      render(<StrictHarness question={base} />);
+      act(() => vi.advanceTimersByTime(5_000));
+      fireEvent.click(screen.getByRole('button', { name: /reveal/i }));
+      act(() => vi.advanceTimersByTime(200_000)); // well past the 3:00 target
+      expect(screen.getByText(/answered in 0:05/i)).toBeInTheDocument();
+      expect(screen.queryByText(/out of time/i)).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }

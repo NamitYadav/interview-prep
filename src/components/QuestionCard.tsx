@@ -74,6 +74,10 @@ export function QuestionCard({
   // Strict mode: instead of the stopwatch just counting up in the background, running
   // out of the round's target time force-reveals the answer — the interview clock
   // doesn't wait for you to decide you're done.
+  // Doesn't reset `autoRevealed`/mountedAt on a question change itself — like every
+  // other piece of local state in this component (checked, followUpsShown), it relies
+  // on Practice's `key={current.id}` remounting the whole card per question. If that
+  // key is ever removed, this state needs to move to explicit question.id-keyed resets.
   useEffect(() => {
     if (!strictMode || revealed || targetSeconds === undefined) return;
     const timer = setTimeout(() => {
@@ -83,6 +87,20 @@ export function QuestionCard({
     }, targetSeconds * 1000);
     return () => clearTimeout(timer);
   }, [strictMode, revealed, targetSeconds]);
+
+  // Visible countdown for the effect above — without it the answer would just pop
+  // with no warning, which is a worse experience than the plain stopwatch it replaces.
+  // Guarded the same way in the render below (not reset here) so toggling strict mode
+  // off mid-question hides it immediately without this effect needing to setState
+  // synchronously on its own early-return path.
+  const [remainingMs, setRemainingMs] = useState<number | null>(null);
+  useEffect(() => {
+    if (!strictMode || revealed || targetSeconds === undefined) return;
+    const deadline = (mountedAt.current ?? Date.now()) + targetSeconds * 1000;
+    const interval = setInterval(() => setRemainingMs(Math.max(0, deadline - Date.now())), 250);
+    return () => clearInterval(interval);
+  }, [strictMode, revealed, targetSeconds]);
+  const showCountdown = strictMode && !revealed && targetSeconds !== undefined && remainingMs !== null;
 
   // Declared before the heading effect so that on mount (Browse renders revealed) the
   // heading wins; on a Practice reveal only this one re-runs and focus lands on the answer
@@ -109,6 +127,7 @@ export function QuestionCard({
             key={question.id}
             defaultValue={question.code}
             spellCheck={false}
+            wrap="off"
             rows={question.code.split('\n').length + 2}
             aria-label="Scratch editor"
             className="mb-4 w-full overflow-x-auto rounded bg-zinc-100 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-800"
@@ -121,13 +140,18 @@ export function QuestionCard({
       )}
 
       {!revealed ? (
-        <button
-          type="button"
-          onClick={handleReveal}
-          className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-        >
-          Reveal <kbd className="ml-2 text-xs opacity-70 [@media(hover:none)]:hidden">Space</kbd>
-        </button>
+        <>
+          {showCountdown && (
+            <p className="mb-2 text-xs text-zinc-500 dark:text-zinc-400">Time left: {formatTime(remainingMs!)}</p>
+          )}
+          <button
+            type="button"
+            onClick={handleReveal}
+            className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+          >
+            Reveal <kbd className="ml-2 text-xs opacity-70 [@media(hover:none)]:hidden">Space</kbd>
+          </button>
+        </>
       ) : (
         <div ref={answerRef} tabIndex={-1} className="animate-fade-in space-y-4 text-sm outline-none">
           {elapsedMs !== null && (

@@ -26,6 +26,16 @@ describe('orderQueue', () => {
     expect(orderQueue(qs, progress).map((x) => x.id)).toEqual(['b', 'd', 'e', 'a', 'c']);
   });
 
+  test('legacy entries (rated before dueAt existed) fall back to lastSeen, still behind never-rated', () => {
+    const progress: Progress = {
+      a: { rating: 3, seen: 2, lastSeen: 500 }, // legacy: no dueAt
+      b: { rating: 1, seen: 1, lastSeen: 100 }, // legacy: no dueAt
+      c: { rating: 2, seen: 1, lastSeen: 10, dueAt: 50 }, // already re-rated under SM-2
+      // d, e never rated at all -> dueAt 0, ahead of every legacy/lastSeen fallback
+    };
+    expect(orderQueue(qs, progress).map((x) => x.id)).toEqual(['d', 'e', 'c', 'b', 'a']);
+  });
+
   test('does not mutate input', () => {
     const copy = [...qs];
     orderQueue(qs, {});
@@ -34,9 +44,9 @@ describe('orderQueue', () => {
 });
 
 describe('nextInterval', () => {
-  test('weak resets interval to 1 day and drops ease', () => {
+  test('a fail is due again immediately (interval 0), not a day out', () => {
     const { interval, easeFactor } = nextInterval(1, 6, 2.5);
-    expect(interval).toBe(1);
+    expect(interval).toBe(0);
     expect(easeFactor).toBeCloseTo(2.18, 5);
   });
 
@@ -50,8 +60,19 @@ describe('nextInterval', () => {
   });
 
   test('later passes multiply interval by ease factor', () => {
-    const { interval } = nextInterval(3, 6, 2.5);
-    expect(interval).toBe(Math.round(6 * nextInterval(3, 6, 2.5).easeFactor));
+    expect(nextInterval(3, 6, 2.5).interval).toBe(16); // round(6 * 2.6)
+  });
+
+  test('a lapse restarts the 1-day/6-day ramp instead of jumping back to 6 days', () => {
+    let s = { interval: 0, easeFactor: 2.5 };
+    s = nextInterval(3, s.interval, s.easeFactor); // solid -> 1 day
+    s = nextInterval(3, s.interval, s.easeFactor); // solid -> 6 days
+    s = nextInterval(1, s.interval, s.easeFactor); // weak -> due immediately (0), not 1 day
+    expect(s.interval).toBe(0);
+    s = nextInterval(3, s.interval, s.easeFactor); // solid again -> back to 1 day, not 6
+    expect(s.interval).toBe(1);
+    s = nextInterval(3, s.interval, s.easeFactor);
+    expect(s.interval).toBe(6);
   });
 
   test('ease factor never drops below the floor', () => {
