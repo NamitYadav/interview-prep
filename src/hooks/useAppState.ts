@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import type { Persisted, Rating } from '../types';
 import { emptyState, load, save } from '../lib/storage';
 import { DEFAULT_EASE_FACTOR, nextDueAt, nextInterval } from '../lib/queue';
@@ -68,16 +68,30 @@ export function reducer(state: Persisted, action: Action): Persisted {
   }
 }
 
+const SAVE_DEBOUNCE_MS = 500;
+
 export function useAppState() {
   const [state, dispatch] = useReducer(reducer, undefined, () => load());
   const [saveFailed, setSaveFailed] = useState(false);
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  });
 
   useEffect(() => {
-    // save() is a synchronous write to localStorage (the external system); saveFailed
-    // is derived from its result and can't be computed during render.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSaveFailed(!save(state));
+    const timer = setTimeout(() => {
+      setSaveFailed(!save(state));
+    }, SAVE_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
   }, [state]);
+
+  useEffect(() => {
+    // Flushes the pending debounced write immediately on tab close/hide, so closing
+    // the tab mid-debounce never drops the last change.
+    const flush = () => save(stateRef.current);
+    window.addEventListener('pagehide', flush);
+    return () => window.removeEventListener('pagehide', flush);
+  }, []);
 
   return { state, dispatch, saveFailed };
 }
