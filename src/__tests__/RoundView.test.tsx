@@ -9,7 +9,7 @@ import { RoundView } from '../components/RoundView';
 
 function Harness() {
   const [state, dispatch] = useReducer(reducer, EMPTY);
-  return <RoundView roundId="hr" state={state} dispatch={dispatch} />;
+  return <RoundView roundId="hr" state={state} dispatch={dispatch} strictMode={false} />;
 }
 
 const hrRound = rounds.find((r) => r.id === 'hr')!;
@@ -80,7 +80,7 @@ describe('RoundView', () => {
     function BadHarness() {
       const [state, dispatch] = useReducer(reducer, EMPTY);
       // @ts-expect-error deliberately invalid RoundId to exercise the guard
-      return <RoundView roundId="not-a-round" state={state} dispatch={dispatch} />;
+      return <RoundView roundId="not-a-round" state={state} dispatch={dispatch} strictMode={false} />;
     }
     render(<BadHarness />);
     expect(screen.getByText(/round not found/i)).toBeInTheDocument();

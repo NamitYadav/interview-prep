@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import type { Question } from '../types';
@@ -88,6 +88,52 @@ describe('QuestionCard stopwatch', () => {
   test('shows no stopwatch line for a card rendered already revealed (Browse)', () => {
     renderCard(base, true);
     expect(screen.queryByText(/answered in/i)).not.toBeInTheDocument();
+  });
+});
+
+function StrictHarness({ question }: { question: Question }) {
+  const [revealed, setRevealed] = useState(false);
+  return (
+    <QuestionCard
+      question={question} revealed={revealed} note="" strictMode
+      onReveal={() => setRevealed(true)} onNote={noop} onRate={noop}
+    />
+  );
+}
+
+describe('QuestionCard strict mode', () => {
+  test('auto-reveals when the round target elapses, tagged "Out of time"', () => {
+    vi.useFakeTimers();
+    try {
+      render(<StrictHarness question={base} />);
+      act(() => vi.advanceTimersByTime(180_000));
+      expect(screen.getByText(/out of time · target 3:00/i)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('does not auto-reveal when strict mode is off', () => {
+    vi.useFakeTimers();
+    try {
+      render(<RevealHarness question={base} />);
+      act(() => vi.advanceTimersByTime(180_000));
+      expect(screen.queryByText(/answered in|out of time/i)).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('manual reveal before the target is not tagged out of time', () => {
+    vi.useFakeTimers();
+    try {
+      render(<StrictHarness question={base} />);
+      act(() => vi.advanceTimersByTime(5_000));
+      fireEvent.click(screen.getByRole('button', { name: /reveal/i }));
+      expect(screen.getByText(/answered in 0:05/i)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

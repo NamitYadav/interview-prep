@@ -4,7 +4,9 @@ import type { Action } from '../hooks/useAppState';
 import { questions } from '../data';
 import { Practice } from './Practice';
 
-export function WeakDrill({ state, dispatch }: { state: Persisted; dispatch: Dispatch<Action> }) {
+export function WeakDrill({
+  state, dispatch, strictMode,
+}: { state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean }) {
   // Frozen on entry: re-filtering as you rate would pull the current question out
   // from under Practice mid-drill. Re-enter the drill to pick up a fresh set.
   const [drill] = useState(() => questions.filter((q) => state.progress[q.id]?.rating === 1));
@@ -27,7 +29,7 @@ export function WeakDrill({ state, dispatch }: { state: Persisted; dispatch: Dis
           <p className="mb-4 text-xs text-zinc-500 dark:text-zinc-400">
             {remaining} of {drill.length} still weak · re-enter the drill to rebuild the set
           </p>
-          <Practice questions={drill} state={state} dispatch={dispatch} />
+          <Practice questions={drill} state={state} dispatch={dispatch} strictMode={strictMode} />
         </>
       )}
     </main>

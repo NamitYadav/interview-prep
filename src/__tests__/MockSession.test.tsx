@@ -8,7 +8,7 @@ import { MockSession } from '../components/MockSession';
 
 function Harness() {
   const [state, dispatch] = useReducer(reducer, EMPTY);
-  return <MockSession state={state} dispatch={dispatch} />;
+  return <MockSession state={state} dispatch={dispatch} strictMode={false} />;
 }
 
 describe('MockSession', () => {

@@ -30,7 +30,9 @@ function buildSet(composition: Preset['composition'], progress: Persisted['progr
   return picked;
 }
 
-export function MockSession({ state, dispatch }: { state: Persisted; dispatch: Dispatch<Action> }) {
+export function MockSession({
+  state, dispatch, strictMode,
+}: { state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean }) {
   const [session, setSession] = useState<{ preset: Preset; drill: Question[]; baseline: Persisted['progress'] } | null>(null);
   const [finished, setFinished] = useState(false);
 
@@ -102,7 +104,7 @@ export function MockSession({ state, dispatch }: { state: Persisted; dispatch: D
       <a href="#" className="mb-4 inline-block text-sm text-zinc-500 dark:text-zinc-400 hover:underline">← All rounds</a>
       <h1 className="text-2xl font-semibold">{preset.title}</h1>
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{drill.length} questions. Rate as you go, finish whenever.</p>
-      <Practice questions={drill} state={state} dispatch={dispatch} onLapComplete={() => setFinished(true)} />
+      <Practice questions={drill} state={state} dispatch={dispatch} strictMode={strictMode} onLapComplete={() => setFinished(true)} />
       <div className="mt-3 flex justify-end">
         <button type="button" onClick={() => setFinished(true)} className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">
           Finish session

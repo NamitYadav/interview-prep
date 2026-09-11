@@ -35,9 +35,9 @@ const withPlaceholders = (text: string) =>
   );
 
 export function QuestionCard({
-  question, revealed, note, rating, onReveal, onNote, onRate,
+  question, revealed, note, rating, strictMode = false, onReveal, onNote, onRate,
 }: {
-  question: Question; revealed: boolean; note: string; rating?: Rating;
+  question: Question; revealed: boolean; note: string; rating?: Rating; strictMode?: boolean;
   onReveal: () => void; onNote: (text: string) => void; onRate: (r: Rating) => void;
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -55,11 +55,34 @@ export function QuestionCard({
     mountedAt.current = Date.now();
   }, []);
   const [elapsedMs, setElapsedMs] = useState<number | null>(null);
+  const [autoRevealed, setAutoRevealed] = useState(false);
   const targetSeconds = rounds.find((r) => r.id === question.round)?.targetSeconds;
   const handleReveal = () => {
     setElapsedMs(Date.now() - mountedAt.current!);
     onReveal();
   };
+
+  // Latest onReveal in a ref so the countdown effect below doesn't need it as a
+  // dependency — onReveal is a fresh closure every render, and depending on it would
+  // restart the countdown any time the parent re-renders for an unrelated reason
+  // (typing a note, ticking seconds elsewhere).
+  const onRevealRef = useRef(onReveal);
+  useEffect(() => {
+    onRevealRef.current = onReveal;
+  });
+
+  // Strict mode: instead of the stopwatch just counting up in the background, running
+  // out of the round's target time force-reveals the answer — the interview clock
+  // doesn't wait for you to decide you're done.
+  useEffect(() => {
+    if (!strictMode || revealed || targetSeconds === undefined) return;
+    const timer = setTimeout(() => {
+      setElapsedMs(Date.now() - mountedAt.current!);
+      setAutoRevealed(true);
+      onRevealRef.current();
+    }, targetSeconds * 1000);
+    return () => clearTimeout(timer);
+  }, [strictMode, revealed, targetSeconds]);
 
   // Declared before the heading effect so that on mount (Browse renders revealed) the
   // heading wins; on a Practice reveal only this one re-runs and focus lands on the answer
@@ -109,7 +132,8 @@ export function QuestionCard({
         <div ref={answerRef} tabIndex={-1} className="animate-fade-in space-y-4 text-sm outline-none">
           {elapsedMs !== null && (
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Answered in {formatTime(elapsedMs)}{targetSeconds !== undefined && ` · target ${formatTime(targetSeconds * 1000)}`}
+              {autoRevealed ? 'Out of time' : `Answered in ${formatTime(elapsedMs)}`}
+              {targetSeconds !== undefined && ` · target ${formatTime(targetSeconds * 1000)}`}
             </p>
           )}
           <section className="space-y-2">

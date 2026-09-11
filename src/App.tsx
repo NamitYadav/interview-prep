@@ -1,5 +1,6 @@
 import { useAppState } from './hooks/useAppState';
 import { useHashRoute } from './hooks/useHashRoute';
+import { useStrictMode } from './hooks/useStrictMode';
 import { Home } from './components/Home';
 import { RoundView } from './components/RoundView';
 import { WeakDrill } from './components/WeakDrill';
@@ -13,6 +14,7 @@ import { ThemeToggle } from './components/ThemeToggle';
 export default function App() {
   const { state, dispatch, saveFailed } = useAppState();
   const route = useHashRoute();
+  const [strictMode, setStrictMode] = useStrictMode();
 
   return (
     <>
@@ -21,18 +23,30 @@ export default function App() {
           Progress is not being saved (storage unavailable). Export before closing the tab.
         </div>
       )}
-      <header className="mx-auto flex max-w-3xl justify-end px-4 pt-4 sm:px-6">
+      <header className="mx-auto flex max-w-3xl items-center justify-end gap-2 px-4 pt-4 sm:px-6">
+        <button
+          type="button"
+          onClick={() => setStrictMode(!strictMode)}
+          aria-pressed={strictMode}
+          className={`rounded border px-2 py-1 text-xs ${
+            strictMode
+              ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
+              : 'border-zinc-300 text-zinc-500 hover:border-emerald-500 dark:border-zinc-700 dark:text-zinc-400'
+          }`}
+        >
+          Strict mode
+        </button>
         <ThemeToggle />
       </header>
       {route === null && <Home state={state} dispatch={dispatch} />}
-      {route === 'weak' && <WeakDrill state={state} dispatch={dispatch} />}
+      {route === 'weak' && <WeakDrill state={state} dispatch={dispatch} strictMode={strictMode} />}
       {route === 'notes' && <NotesView state={state} />}
       {route === 'stories' && <StoriesView state={state} dispatch={dispatch} />}
-      {route === 'mock' && <MockSession state={state} dispatch={dispatch} />}
+      {route === 'mock' && <MockSession state={state} dispatch={dispatch} strictMode={strictMode} />}
       {route === 'search' && <SearchView state={state} dispatch={dispatch} />}
       {route === 'print' && <PrintView state={state} />}
       {route !== null && route !== 'weak' && route !== 'notes' && route !== 'stories' && route !== 'mock' && route !== 'search' && route !== 'print' && (
-        <RoundView roundId={route} state={state} dispatch={dispatch} />
+        <RoundView roundId={route} state={state} dispatch={dispatch} strictMode={strictMode} />
       )}
     </>
   );

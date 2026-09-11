@@ -9,9 +9,9 @@ const isTyping = (target: EventTarget | null) =>
   target instanceof HTMLElement && (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT');
 
 export function Practice({
-  questions, state, dispatch, onLapComplete,
+  questions, state, dispatch, strictMode, onLapComplete,
 }: {
-  questions: Question[]; state: Persisted; dispatch: Dispatch<Action>; onLapComplete?: () => void;
+  questions: Question[]; state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean; onLapComplete?: () => void;
 }) {
   // `history` is every question id shown this lap, in order; `historyPos` is which one
   // is on screen. Advancing appends and moves the pointer to the end; Back just moves
@@ -122,6 +122,7 @@ export function Practice({
         revealed={revealed}
         note={state.notes[current.id] ?? ''}
         rating={state.progress[current.id]?.rating}
+        strictMode={strictMode}
         onReveal={() => setRevealed(true)}
         onNote={(text) => dispatch({ type: 'note', id: current.id, text })}
         onRate={rate}

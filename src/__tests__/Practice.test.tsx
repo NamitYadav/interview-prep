@@ -19,12 +19,12 @@ const qs3: Question[] = [
 
 function Harness() {
   const [state, dispatch] = useReducer(reducer, EMPTY);
-  return <Practice questions={qs} state={state} dispatch={dispatch} />;
+  return <Practice questions={qs} state={state} dispatch={dispatch} strictMode={false} />;
 }
 
 function Harness3() {
   const [state, dispatch] = useReducer(reducer, EMPTY);
-  return <Practice questions={qs3} state={state} dispatch={dispatch} />;
+  return <Practice questions={qs3} state={state} dispatch={dispatch} strictMode={false} />;
 }
 
 const rateVisible = async () => {
@@ -158,7 +158,7 @@ describe('Practice', () => {
   });
 
   test('empty state when no questions', () => {
-    render(<Practice questions={[]} state={EMPTY} dispatch={() => {}} />);
+    render(<Practice questions={[]} state={EMPTY} dispatch={() => {}} strictMode={false} />);
     expect(screen.getByText(/no questions match/i)).toBeInTheDocument();
   });
 });
