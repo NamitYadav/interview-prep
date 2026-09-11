@@ -762,4 +762,247 @@ function throttle<A extends unknown[]>(fn: (...args: A) => void, wait: number) {
     ],
     followUps: ['How would you add a leading/trailing option to debounce, and what does each combination do to a single isolated call?', 'How would you test these deterministically without waiting real milliseconds?'],
   },
+  // Data structures & traversal (8)
+  {
+    id: 'coding-041',
+    round: 'coding',
+    category: 'Data structures & traversal',
+    scratch: true,
+    question: 'Given two DOM nodes, find their lowest common ancestor. Talk me through your approach.',
+    code: `function lowestCommonAncestor(a: Node, b: Node): Node | null {
+  // TODO: walk parentNode up from a, collecting the ancestor chain
+  // TODO: walk up from b and return the first node already in that chain
+  // TODO: detached nodes, or nodes in different documents, have no common ancestor
+  return null;
+}`,
+    answer: [
+      'Name the brute force first, because interviewers score the progression rather than the destination: for every ancestor of a, walk the whole parent chain of b looking for a match. That is da times db comparisons, where da and db are the two node depths, and I would not ship it — not because a DOM is deep enough for the asymptotics to hurt, but because the nested loop is harder to convince yourself is correct than the linear version.',
+      'What I would write: walk parentNode up from a until it is null, putting each node into a Set, then walk up from b and return the first node the Set already contains. Time is O(da + db), space is O(da), and the operation that dominates is the parent-chain walk — the term is tree depth, not the number of nodes in the document, which is worth saying out loud because people assume any DOM algorithm must be O(n).',
+      'If they ask for constant space, offer the depth-equalise variant: measure both depths, advance the deeper pointer by the difference, then step both up in lockstep until the pointers are equal. Same O(da + db) time, O(1) extra space, and the trade is two passes instead of one.',
+      'The edge case that breaks a naive version is a detached node, or two nodes from different documents, which an iframe makes easy to hit. Both chains terminate, but at different roots, so the honest answer is null rather than whatever the loop happened to leave in a variable. Check the trivial pairs up front too: a and b being the same node, or one already containing the other, should return the ancestor rather than fall off the end of the walk.',
+      'Mention that Node.contains and compareDocumentPosition exist and ask whether they are in scope — interviewers usually bar them because they are the entire exercise in one call, but naming the platform API is free credit. While typing, narrate the invariant rather than the keystrokes: every node in the set is an ancestor of a, and because the second walk starts at the bottom, the first hit is the lowest one.',
+    ],
+    keyPoints: [
+      'Names the nested-walk brute force and says why the linear version is preferable',
+      'States O(da + db) time and O(da) space, dominated by the parent-chain walk on depth rather than node count',
+      'Offers the depth-equalise variant when constant extra space is asked for',
+      'Handles detached nodes and separate documents by returning null, and the a-equals-b and one-contains-the-other cases',
+      'Names Node.contains and compareDocumentPosition and asks whether they are allowed',
+      'Narrates the invariant — the first node hit walking up from b is the lowest ancestor',
+    ],
+    followUps: ['How would you extend it to the lowest common ancestor of N nodes?', 'What changes if the tree is a React component tree rather than the DOM?'],
+  },
+  {
+    id: 'coding-042',
+    round: 'coding',
+    category: 'Data structures & traversal',
+    scratch: true,
+    question: 'Implement getElementsByClassName yourself — given a root element and a class name, return every descendant carrying that class. No querySelectorAll. Talk me through your approach.',
+    code: `function getElementsByClassName(root: Element, className: string): Element[] {
+  // TODO: walk the subtree with an explicit stack rather than recursion
+  // TODO: match on classList, not a substring of className
+  // TODO: say whether the result is live or static, and why that matters
+  return [];
+}`,
+    answer: [
+      'The brute force here is a recursive walk testing element.className.includes(name). It is already O(n), so the reason not to ship it is correctness, not speed: a class attribute is a whitespace-separated token list, so looking for "btn" matches an element classed "btn-primary" and reports it as a hit. Say that, then use classList.contains, which does the tokenising for you and is the platform API for exactly this question.',
+      'The walk itself: push the root onto a stack, pop, test the popped element, push its children, repeat until the stack is empty. Time is O(n) in the number of elements in the subtree, because every node is visited exactly once and the dominating operation is that single visit plus a constant-time classList check. Space is O(w), bounded by the widest frontier the stack ever holds.',
+      'Recursion reads better and is what most people reach for, so say why you are choosing the explicit stack anyway: a deeply nested subtree — a long comment thread, generated document markup, a rich-text editor — overflows the call stack, and that failure is a RangeError at runtime rather than a wrong answer, which is the worse of the two. If you do write it recursively because it is faster to type, name the ceiling out loud instead of leaving it unsaid.',
+      'The edge case that breaks the naive walk is childNodes versus children. childNodes includes text and comment nodes, and the whitespace between two tags is a text node with no classList, so the first iteration throws. Use element.children. Two smaller ones: an empty or whitespace-only class argument should match nothing rather than everything, and on an SVG element className is an SVGAnimatedString rather than a string, so the substring approach does not merely mismatch, it fails outright — another reason classList wins.',
+      'Close on live versus static, because that is what separates someone who has used the platform from someone who has read about it. The real document.getElementsByClassName returns a live HTMLCollection that updates as the DOM changes, which is why iterating one while removing elements skips items; querySelectorAll returns a static NodeList. Yours is a static array, and saying which you built is the point. Narrate the stack invariant while typing: everything popped has been tested, everything pushed is still owed a test.',
+    ],
+    keyPoints: [
+      'Rejects className substring matching as a correctness bug, and uses classList.contains',
+      'States O(n) time over subtree elements, dominated by the single visit, and O(w) stack space',
+      'Chooses an explicit stack over recursion and names the deep-tree stack overflow it avoids',
+      'Names the childNodes edge case — text nodes have no classList — and uses element.children',
+      'Distinguishes the live HTMLCollection the real API returns from the static array being built',
+    ],
+    followUps: ['How would you make your result live rather than static?', 'How would you extend it to accept several class names at once?'],
+  },
+  {
+    id: 'coding-043',
+    round: 'coding',
+    category: 'Data structures & traversal',
+    scratch: true,
+    question: 'A calendar view receives availability blocks as start and end timestamps, unsorted, and overlapping ones must render as a single bar. Merge them. Talk me through your approach.',
+    code: `type Block = { start: number; end: number };
+
+function mergeBlocks(blocks: Block[]): Block[] {
+  // TODO: sort by start, then sweep once, extending the current block
+  // TODO: decide whether touching blocks (one ends exactly where the next begins) merge
+  // TODO: empty input, and a block whose end precedes its start
+  return [];
+}`,
+    answer: [
+      'The brute force is to compare every pair, merge any overlap, and repeat the whole thing until a pass changes nothing. That is O(n squared) per pass with no obvious bound on the number of passes, and on a month view with a few hundred blocks it is both slow and awkward to reason about. Name it, reject it, move on.',
+      'Sort by start, then sweep once. Hold a current block; for each next block, if it starts at or before the current end, extend the current end to the larger of the two ends, otherwise push the current block and start a new one. Time is O(n log n) and the sort is the operation that dominates — the sweep itself is a single O(n) pass, so if the API already returns blocks ordered by start, which calendar endpoints usually do, the whole thing collapses to O(n). Space is O(n) for the output, or O(1) extra if you merge in place; say which you picked.',
+      'State the invariant, because it is the proof and it is worth more than the code: once the list is ordered by start, a block can only overlap the run you are currently building, never one you already closed. Sorting by end instead is the common wrong turn, and it breaks on a long block that swallows several short ones. The same sweep is what merges visible row ranges in a virtualised list, so it is not a puzzle you only meet in interviews.',
+      'The edge case that breaks a naive version is the empty list: seeding current with the first element throws or returns a block of undefined, so handle it before the loop. Then the one that is a product decision rather than a coding one — does a block ending at 10:00 merge with one starting at 10:00? Treating intervals as half-open says yes, because there is no gap a user could book into, and a strict greater-than says no. Ask rather than guess, and note that the same choice decides what happens to a zero-length block.',
+      'While writing it, narrate what "current" refers to at each step and walk two concrete blocks through the comparison out loud. The off-by-one everyone hits is pushing the current block inside the loop and forgetting the final one after it.',
+    ],
+    keyPoints: [
+      'Names the repeated pairwise O(n squared) merge as the brute force and rejects it',
+      'Sorts by start then sweeps once: O(n log n) time dominated by the sort, O(n) output space, O(n) if input is pre-sorted',
+      'States the invariant that ordering by start makes a closed run unreachable',
+      'Handles the empty input, and asks whether touching blocks merge rather than guessing',
+      'Remembers to push the final current block after the loop ends',
+    ],
+    followUps: ['How would you return the gaps between blocks instead of the merged blocks?', 'What changes if blocks arrive one at a time and the merged view must stay current?'],
+  },
+  {
+    id: 'coding-044',
+    round: 'coding',
+    category: 'Data structures & traversal',
+    scratch: true,
+    question: 'A comment thread arrives as a nested tree and must render as a flat list with indentation depth; elsewhere it arrives as a flat list of parentId rows and must become a tree. Write both. Talk me through your approach.',
+    code: `type Comment = { id: string; parentId: string | null; body: string };
+type CommentNode = Comment & { children: CommentNode[] };
+
+function flatten(roots: CommentNode[]): { comment: Comment; depth: number }[] {
+  // TODO: iterative depth-first walk carrying depth, children pushed in reverse
+  return [];
+}
+
+function buildTree(flat: Comment[]): CommentNode[] {
+  // TODO: one pass to build an id-to-node lookup, one pass to link children
+  // TODO: a parentId with no matching row is an orphan — decide what happens to it
+  return [];
+}`,
+    answer: [
+      'Take the rebuild first, because the brute force is the instructive one: for each comment, scan the whole list for rows whose parentId matches. That is O(n squared), and on a thread of a few thousand comments it is a visible hitch during render for work that has a linear answer, so it is not something I would ship.',
+      'The linear version is two passes over the same array. First pass builds a Map from id to a node object with an empty children array; second pass walks the array again and, for each row, pushes its node onto its parent\'s children using the map, or onto the roots list when parentId is null. Time is O(n) and space is O(n), both dominated by the map — one entry per comment. Say out loud that the map is what turns the inner scan into a lookup, because that substitution is the whole idea and it generalises to most tree-from-rows problems.',
+      'Flattening is a depth-first walk with an explicit stack of node-and-depth pairs: pop, emit the comment with its depth, then push its children. Push them in reverse so they pop back in the original order, which is the detail that silently reverses every reply thread if you skip it. O(n) time, O(depth) stack space.',
+      'Two edge cases break the naive rebuild, and both come from real data rather than from the algorithm. An orphan — a parentId pointing at a comment that was deleted, or that simply is not on this page of a paginated thread — has no entry in the map, and the version that writes map.get(parentId).children.push throws on undefined. Decide and state the policy: drop it, or promote it to a root so the text is not silently lost. The second is a cycle, which bad data can produce; the flatten walk then never terminates, so guard with a visited set or a depth cap rather than trusting the shape.',
+      'Narrate the two passes as two separate jobs while typing — build every node, then link them — because trying to do both in one pass is where people get stuck on a child arriving before its parent. This is the most frequently actually-needed of these on frontend work: flat lists virtualise and are keyboard-navigable, nested trees render.',
+    ],
+    keyPoints: [
+      'Rejects the O(n squared) per-comment scan in favour of a map lookup',
+      'Rebuilds in two O(n) passes, O(n) space, dominated by the id-to-node map',
+      'Flattens with an explicit stack carrying depth, pushing children in reverse to preserve order',
+      'Handles orphaned parentIds with a stated policy instead of throwing on undefined',
+      'Guards against a cycle in the data rather than assuming the input is a real tree',
+    ],
+    followUps: ['How would you collapse and expand a subtree in the flattened list?', 'How would you insert a new reply without rebuilding the whole tree?'],
+  },
+  {
+    id: 'coding-045',
+    round: 'coding',
+    category: 'Data structures & traversal',
+    scratch: true,
+    question: 'Implement deepEqual(a, b). Talk me through your approach.',
+    code: `function deepEqual(a: unknown, b: unknown): boolean {
+  // TODO: Object.is for primitives — NaN and negative zero are why
+  // TODO: Date, Map, Set and typed arrays each compare differently from a plain object
+  // TODO: track visited pairs so a cycle terminates instead of overflowing the stack
+  return a === b;
+}`,
+    answer: [
+      'The brute force is comparing JSON.stringify of each side. It is one line, and the reason not to ship it is that every way it fails returns a confident wrong answer rather than an error: key order changes the string, so two identical objects compare unequal; undefined values and functions are dropped, so two objects that genuinely differ compare equal; a Map or a Set serialises to an empty object, so any two of them look the same; and a cycle throws.',
+      'The real shape is a recursive compare. Object.is first, which handles every primitive and also the two cases a hand-written triple-equals gets backwards — it reports NaN equal to itself, and keeps positive and negative zero apart. Then reject mismatched types, then branch on the built-ins before the plain-object path: Date by getTime, Set and Map by size and membership, typed arrays and ArrayBuffer by byte length and contents. For plain objects, compare key counts first and then recurse per key — without the count check, an object that is a strict subset of the other compares equal, since every key you look at matches.',
+      'Complexity is O(n) in the total number of nodes across both structures, since every key is visited once, and the dominating operation is the per-key recursive compare. Space is O(d) for the recursion depth plus the size of the seen set.',
+      'The edge case that breaks a naive recursion outright is a cycle: an object holding a reference to itself recurses until the stack overflows. Carry a set of pairs already being compared, keyed on the pair rather than on either side alone, and return true when you meet a pair that is already in progress — you are assuming equality for the back-edge, which is correct, because a mismatch anywhere else in the structure will still be found.',
+      'Scope out loud rather than silently: RegExp, boxed primitives, symbol keys, getters and cross-realm objects all have answers and none of them fit the time, so name two of them as deliberately unhandled. While typing, narrate the order of the branches and why the cheap checks come first, and say which equality you are implementing — structural equality is not the same question as React\'s shallow comparison, and confusing the two is how people end up writing this by hand in a component.',
+    ],
+    keyPoints: [
+      'Names JSON.stringify comparison as the brute force and gives concrete ways it is wrong',
+      'Uses Object.is for primitives and says it is for NaN and negative zero',
+      'States O(n) time over total nodes, dominated by the per-key compare, and O(d) plus seen-set space',
+      'Handles cycles with a set of pairs in progress rather than overflowing the stack',
+      'Compares key counts before values so a subset does not compare equal',
+      'Scopes out RegExp, symbol keys and boxed primitives explicitly rather than silently',
+    ],
+    followUps: ['Where would a shallow comparison have been the right tool instead?', 'How would you report which path differs, rather than just true or false?'],
+  },
+  {
+    id: 'coding-046',
+    round: 'coding',
+    category: 'Data structures & traversal',
+    scratch: true,
+    question: 'Build an EventEmitter with on, off, once and emit. Talk me through your approach.',
+    code: `class EventEmitter {
+  // TODO: on(event, fn) / off(event, fn) / once(event, fn) / emit(event, ...args)
+  // TODO: emit must iterate a copy — a listener calling off() shifts the live array
+  // TODO: once must remove itself, and off must still find it by the original fn
+}`,
+    answer: [
+      'The naive version is a Map from event name to an array of listeners, with emit looping over that array directly. It is the right data structure and the wrong loop, and I would not ship it because of one specific trap: a listener that calls off during emit splices the live array, every later index shifts down by one, and the next listener is skipped. Nothing throws, and a handler that silently does not run is a worse failure than a crash — it only reproduces when two components unsubscribe in the same emit.',
+      'The fix is a line: iterate a copy, so the set of listeners for this emit is decided before any of them runs. Then be honest about the complexity. on is O(1). emit is O(k) in the listeners registered for that event, plus an O(k) allocation per emit for the copy, which is the operation that dominates and the thing to revisit only if emit sits on a hot path. off is O(k) as well, because finding the listener is an indexOf. Space is O(total listeners).',
+      'once is where the interesting detail lives. The wrapper has to be able to remove itself, so declare it as a named function or capture it in a variable before registering, and call off from inside it before invoking the original. Then store the original function on the wrapper, so off with the caller\'s function can find and remove the wrapper — a once listener the caller cannot cancel with the function they handed in is an unfixable leak.',
+      'Two more edge cases: emitting an event with no listeners must not throw on an undefined array, and a listener that throws mid-emit should not stop the rest — decide whether you isolate each call or let it propagate, and say which, because both are defensible and being unaware of the choice is not.',
+      'Unbounded listener growth is a real frontend leak, not a theoretical one: a component that subscribes on mount and never unsubscribes keeps its closure alive, and with it the props and DOM nodes it captured, for the life of the page — every route change adds another copy. That is why Node warns past ten listeners. While typing, narrate that emit takes a snapshot, and why.',
+    ],
+    deeper: [
+      'If they push on off being a linear scan, a Set of listeners makes removal O(1) and still preserves insertion order, at the cost of no longer supporting the same function registered twice for one event. That is a real behavioural change rather than a free optimisation, so it is a question to ask rather than a swap to make quietly.',
+    ],
+    keyPoints: [
+      'Names the subscriber-list-mutated-during-emit trap and fixes it by iterating a copy',
+      'States on as O(1), emit and off as O(k) in that event\'s listeners, with the per-emit copy as the dominating allocation, and O(total listeners) space',
+      'once removes itself and stores the original so off by the caller\'s function still works',
+      'Handles emit with no registered listeners, and states a policy for a listener that throws',
+      'Explains unbounded listener growth as a concrete memory leak across route changes',
+    ],
+    followUps: ['How would you add wildcard or namespaced event names without making emit O(total listeners)?', 'What would you change to make this safe when a listener emits the same event?'],
+  },
+  {
+    id: 'coding-047',
+    round: 'coding',
+    category: 'Data structures & traversal',
+    scratch: true,
+    question: 'Implement Promise.all from scratch, then tell me how allSettled differs and when you would pick it. Talk me through your approach.',
+    code: `function all<T>(values: (T | Promise<T>)[]): Promise<T[]> {
+  // TODO: results indexed by input position, not by completion order
+  // TODO: the empty input must resolve immediately rather than hang
+  // TODO: reject on the first rejection — and say what happens to the others
+  return Promise.resolve([]);
+}`,
+    answer: [
+      'The brute force is awaiting each value in a for loop and pushing the results. It produces the right array in the right order, and it is wrong for the reason that matters: it serialises. Ten requests at two hundred milliseconds each take two seconds instead of two hundred milliseconds, because nothing after the first await has started yet. The point of Promise.all is wall-clock, not syntax, so say that before writing anything.',
+      'The real implementation is one pass over the input. Wrap each value in Promise.resolve so plain non-promise values work, attach a then that writes the result into a results array at its own index and decrements a pending counter, and resolve the outer promise when the counter reaches zero. Order comes from the index, never from completion order. Time is O(n) to attach the handlers and space is O(n) for the results array; the dominating cost is the single pass, and wall-clock is the slowest input rather than the sum.',
+      'The edge case that breaks the counter version is the empty input. If the only place you resolve is inside a then callback, no callback ever fires and the promise hangs forever, which is worse than throwing. Check the count after the loop rather than only inside it. The other classic is the loop index: with a var-declared counter every callback sees the final value and all the results land in one slot.',
+      'On rejection semantics, be precise. The first rejection rejects the outer promise, and later settlements are ignored because a promise settles exactly once. Then say the part people get wrong: the other operations are not cancelled. They keep running, their requests keep going, and their rejections become unhandled unless something attached a handler. Promise.all controls what you hear about, not what happens.',
+      'allSettled never rejects: it resolves with one status-and-value-or-reason object per input, so the counter increments on both the fulfilled and rejected paths and there is no early exit. Pick it when the results are independently useful — four dashboard panels where one failing should not blank the other three. Promise.all is right when the results are only useful together. While typing, narrate the counter and the index as the two invariants, since every bug in this exercise is in one of them.',
+    ],
+    keyPoints: [
+      'Names the sequential await loop as the brute force and says it serialises the wall-clock',
+      'Indexes results by input position and resolves on a pending counter reaching zero',
+      'States O(n) time and O(n) space, dominated by the single pass, with wall-clock set by the slowest input',
+      'Handles the empty input, which hangs forever if the count is only checked inside a callback',
+      'Says the first rejection settles the outer promise but does not cancel the others',
+      'Contrasts allSettled and names a case where it is the right choice',
+    ],
+    followUps: ['How would you implement Promise.race and Promise.any on the same skeleton?', 'How would you add a concurrency limit without changing the caller-facing contract?'],
+  },
+  {
+    id: 'coding-048',
+    round: 'coding',
+    category: 'Data structures & traversal',
+    scratch: true,
+    question: 'Build an infinite-scroll hook with IntersectionObserver: load the next page when the user approaches the end of the list. Talk me through your approach.',
+    code: `function useInfiniteScroll(loadMore: () => Promise<void>, hasMore: boolean) {
+  // TODO: observe a sentinel node via a ref callback so it re-observes on change
+  // TODO: disconnect in cleanup, and whenever the sentinel node changes
+  // TODO: guard against a second load while one is already in flight
+  return (node: HTMLElement | null) => {};
+}`,
+    answer: [
+      'The brute force is a scroll listener comparing scrollTop plus clientHeight against scrollHeight. Name the three reasons it is the wrong tool, because that is most of the answer: scroll events fire far more often than you need and run on the main thread; reading scrollHeight or getBoundingClientRect inside the handler forces a synchronous layout on every one of them, which is the jank users feel; and the arithmetic quietly breaks the moment the scrolling container is not the window. IntersectionObserver does the same job off the main thread with no forced reflow.',
+      'State the complexity in those terms: the observer does O(1) work per boundary crossing, where the scroll handler does work per scroll event and, if it measures rows to decide, O(n) per event. Space is one observer and one sentinel node however long the list grows.',
+      'The shape is one sentinel element after the last row, observed by an IntersectionObserver created in an effect and disconnected in its cleanup. The part that gets missed is that the sentinel node changes — it unmounts and remounts as the list re-renders, and does not exist at all on the first render while the list is empty — so a ref object read once inside an effect is often null or stale. A ref callback is the fix: it runs with the new node, so you disconnect the old observer and observe the new one.',
+      'The edge case that breaks the naive version is a fetch storm. If a loaded page is shorter than the viewport, the sentinel is still intersecting when the render settles, so the observer fires again immediately, and again, walking to the end of the dataset in about a second. Guard with an in-flight flag held in a ref, not in state: state updates are asynchronous, so two callbacks in the same tick both read false and both fetch. Check hasMore in the same guard and disconnect when it goes false, so a finished list stops observing entirely.',
+      'While typing, narrate the lifecycle as three questions — what creates the observer, what destroys it, and what happens when the node it watches is replaced. Say the rootMargin choice out loud: a few hundred pixels starts the fetch before the user reaches the bottom, which is what makes it feel infinite rather than stuttering.',
+    ],
+    deeper: [
+      'React 19 lets a ref callback return its own cleanup function, so the observe and the disconnect sit next to each other in one callback instead of being split across an effect and a ref. On React 18 the same thing is an effect plus a node held in state, which re-runs the effect when the sentinel changes — say which version you are assuming.',
+    ],
+    keyPoints: [
+      'Rejects the scroll-offset calculation and names the forced synchronous layout it causes',
+      'States O(1) work per crossing against per-event work for a scroll handler, and constant space regardless of list length',
+      'Observes a sentinel via a ref callback so a replaced node is re-observed, with disconnect in cleanup',
+      'Guards the fetch storm when the sentinel stays visible, using an in-flight ref rather than state',
+      'Checks hasMore and stops observing when the list is exhausted',
+      'Narrates the observer lifecycle and the rootMargin choice while writing',
+    ],
+    followUps: ['How would you make this work when the scrolling container is a div rather than the window?', 'How would you test the hook without a real IntersectionObserver?'],
+  },
 ];

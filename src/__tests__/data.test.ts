@@ -35,7 +35,7 @@ describe('question bank', () => {
   // A floor against accidental loss, not a growth target. Round 4 deliberately cut 17
   // questions that were fully subsumed by a named sibling; these are the post-cut counts.
   test('every round keeps at least its post-round-4 question count', () => {
-    const min: Record<RoundId, number> = { hr: 36, hm: 99, coding: 27, design: 30, case: 30, debrief: 32, hoe: 33 };
+    const min: Record<RoundId, number> = { hr: 36, hm: 99, coding: 35, design: 30, case: 30, debrief: 32, hoe: 33 };
     for (const id of ROUND_IDS) {
       expect(questions.filter((q) => q.round === id).length, id).toBeGreaterThanOrEqual(min[id]);
     }
