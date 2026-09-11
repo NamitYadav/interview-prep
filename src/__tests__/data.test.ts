@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { ROUND_IDS, questions, rounds } from '../data';
+import { ROUND_IDS, STORY_CATEGORIES, questions, rounds } from '../data';
 import type { RoundId } from '../types';
 
 const ID_RE = /^(hr|hm|coding|design|case|debrief|hoe)-\d{3}$/;
@@ -37,5 +37,10 @@ describe('question bank', () => {
     for (const id of ROUND_IDS) {
       expect(questions.filter((q) => q.round === id).length, id).toBeGreaterThanOrEqual(min[id]);
     }
+  });
+
+  test('every STORY_CATEGORIES entry matches at least one real question category', () => {
+    const categories = new Set(questions.map((q) => q.category));
+    for (const c of STORY_CATEGORIES) expect(categories.has(c), c).toBe(true);
   });
 });

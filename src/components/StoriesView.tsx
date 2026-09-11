@@ -56,8 +56,11 @@ export function StoriesView({ state, dispatch }: { state: Persisted; dispatch: D
 }
 
 function StoryEditor({ id, story, dispatch }: { id: string; story: Story; dispatch: Dispatch<Action> }) {
-  const title = useDebouncedField(story.title, (text) => dispatch({ type: 'saveStory', id, title: text, body: story.body }));
-  const body = useDebouncedField(story.body, (text) => dispatch({ type: 'saveStory', id, title: story.title, body: text }));
+  // Each field dispatches only its own value — the reducer merges it against
+  // whatever is currently stored, so committing one field never overwrites a
+  // concurrent, still-in-flight edit to the other with a stale snapshot of it.
+  const title = useDebouncedField(story.title, (text) => dispatch({ type: 'saveStory', id, title: text }));
+  const body = useDebouncedField(story.body, (text) => dispatch({ type: 'saveStory', id, body: text }));
 
   return (
     <li className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">

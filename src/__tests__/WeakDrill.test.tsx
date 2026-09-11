@@ -28,6 +28,9 @@ describe('WeakDrill', () => {
     render(<Harness initial={weakOn('hr-001', 'coding-001')} />);
     expect(screen.getByText(/2 of 2 still weak/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /reveal/i })).toBeInTheDocument();
+    // The drill mixes rounds by rating recency, not round order — it must not show
+    // the ordered-mode-only "Round k of n" banner, which would flicker meaninglessly.
+    expect(screen.queryByText(/round \d+ of \d+/i)).not.toBeInTheDocument();
   });
 
   test('the drill set stays put when the current question is rated up', async () => {

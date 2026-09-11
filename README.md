@@ -17,29 +17,48 @@ follow-ups. Reveal, rate yourself, and weak questions come back first.
 7. Head of engineering
 
 ## Ways to drill
-- **Round practice** — a spaced-repetition queue (SM-2) for one round: the questions
-  you're due to see soonest come first, and rating one reschedules it further out the
-  better you know it. Filter by category, or switch to the **Browse** tab to search
-  every question, answer and key point at once. A lap ends once every question has
-  been shown once, with a summary and a way to start another.
+- **Round practice** — a priority queue for one round: weak questions come first,
+  then unseen, then ok, then solid. Rating a question Weak doesn't just leave it —
+  it comes back around roughly 8 questions later, in the same lap, instead of
+  waiting for a whole different lap. Filter by category, or switch to the
+  **Browse** tab to search every question, answer and key point at once. A lap
+  ends once every question (and every requeued one) has been shown, with a
+  summary and a way to start another.
 - **Weak drill** — everything you rated Weak, across all seven rounds, in one queue.
   The set is frozen on entry; re-enter it to rebuild.
-- **Mock session** — a cross-round set in one sitting, weighted toward your weak spots.
-  Two presets: *Full loop* (a slice of every round) and *Technical rounds* (hiring
-  manager, live coding, system design). Ends in a recap, either by hitting Finish or
-  once you have gone through the whole set.
+- **Mock session** — a cross-round set in one sitting, in round order, like a real
+  loop day. Two presets: *Full loop* (a slice of every round) and *Technical rounds*
+  (hiring manager, live coding, system design). A banner marks each round
+  transition. Ends in a recap, either by hitting Finish or once you have gone
+  through the whole set.
+- **Frontend system design → 45-min prompt** — a third tab on the design round: one
+  prompt, a visible (non-forcing) 45-minute clock, and the requirements → API/data →
+  components → state → performance → a11y/i18n → observability → rollout phase
+  checklist to work through out loud, plus a scratch pad. Finish reveals the model
+  answer and lets you rate yourself.
 - **Search** — every question, every round, in one search box.
 - **Print cheat sheet** — everything rated Weak plus everything you have a note on,
   grouped by round, laid out for printing before you walk in.
 
 ## Working a question
+- Write **your answer** in three bullets first — before you reveal anything. It
+  stays visible above the model answer once revealed, so you're comparing what you
+  actually said, not just reading key points cold.
+- If your browser supports it, **hold to record** a spoken answer; play it back
+  once revealed. Nothing is saved or sent anywhere — it's gone the moment you move
+  to the next question.
 - **Reveal** the model answer, then tick off the key points you actually said out loud.
   The hit count suggests a rating. Once revealed, the card shows how long you took and
   the round's target time — a stopwatch, not a countdown, so nothing forces a hide,
   unless you turn on **Strict mode** (below).
 - **Back** steps to the previous question if you want to re-rate it; disabled at the
   start of a lap.
-- **Likely follow-ups** stay behind a button, so you answer before you read.
+- **Likely follow-ups** — probe yourself on one at a time, before you reveal, each
+  with its own running clock from the moment you asked for it. Once revealed, they're
+  listed in full for reference.
+- On categories that call for a real story (from your CV, motivation, leadership,
+  situational, and similar), your **story bank** shows up before you answer — pick
+  one with "Use this" and it expands inline and marks itself rehearsed.
 - `[bracket slots]` in an answer are yours to fill from your own experience — the
   answers are coaching scaffolds, not a script to memorise.
 - Every question takes a **note**.
@@ -53,7 +72,14 @@ follow-ups. Reveal, rate yourself, and weak questions come back first.
   the question itself.
 - **My stories** — a STAR-style story bank, independent of any one question. Sorted
   least-recently-rehearsed first, so the stale ones surface. Mark one rehearsed when
-  you have said it out loud.
+  you have said it out loud, or pull one up mid-question via "Use this".
+
+## Readiness
+Set a **Loop date** on the home screen and every round card shows how many
+questions are unseen, how many are weak, and how many days you have left; cards
+themselves reorder by urgency (weak and unseen count more) while the Round N label
+stays fixed to its usual position. A banner nudges you to export if you have
+progress and haven't backed it up in the last week.
 
 ## Keyboard (practice queues)
 `Space` reveal · `1` / `2` / `3` rate Weak / OK / Solid · `N` skip · `B` back.
@@ -83,7 +109,7 @@ npm run build      # tsc + vite build
 Vite · React 19 · TypeScript · Tailwind CSS 4 · Geist / Geist Mono (self-hosted via
 @fontsource) · Vitest · GitHub Pages
 
-One JS bundle, ~270KB gzipped — most of it is the question bank's own text, not
+One JS bundle, ~280KB gzipped — most of it is the question bank's own text, not
 code. Measured, not optimized: code-splitting would trim the initial load, but this
 is a single-user app run from a laptop, so it isn't worth the added complexity.
 Skipped for the same reason: a CSP `<meta>` tag (the inline pre-paint theme script

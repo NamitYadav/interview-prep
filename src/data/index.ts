@@ -28,3 +28,19 @@ const byRound = new Map<RoundId, Question[]>(ROUND_IDS.map((id) => [id, question
 export function questionsByRound(id: RoundId): Question[] {
   return byRound.get(id) ?? [];
 }
+
+// Categories whose questions are naturally answered with a real story rather than
+// a technical explanation — QuestionCard offers the story bank pre-reveal for these.
+export const STORY_CATEGORIES: ReadonlySet<string> = new Set([
+  'From your CV',
+  'Motivation & fit',
+  'Leadership & influence',
+  'Situational',
+  'Delivery & process',
+  'Culture & values',
+  'Org & impact',
+  'Questions to ask them',
+  'Vision & strategy',
+]);
+
+export const isStoryPrompt = (q: Question): boolean => STORY_CATEGORIES.has(q.category);

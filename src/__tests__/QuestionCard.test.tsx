@@ -207,17 +207,38 @@ describe('QuestionCard key points checklist', () => {
   });
 });
 
-describe('QuestionCard follow-ups', () => {
-  test('follow-ups stay hidden until asked for', async () => {
+describe('QuestionCard follow-ups (post-reveal)', () => {
+  test('follow-ups render as a plain list once revealed, with no gating button', () => {
     renderCard({ ...base, followUps: ['What if the input is empty?'] }, true);
-    expect(screen.queryByText('What if the input is empty?')).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /answer the follow-up/i }));
     expect(screen.getByText('What if the input is empty?')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /answer the follow-up/i })).not.toBeInTheDocument();
   });
 
-  test('no follow-up button when the question has none', () => {
+  test('no follow-ups section when the question has none', () => {
     renderCard(base, true);
-    expect(screen.queryByRole('button', { name: /answer the follow-up/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/likely follow-ups/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('QuestionCard follow-ups (pre-reveal, "Probe me")', () => {
+  const withFollowUps = { ...base, followUps: ['First follow-up?', 'Second follow-up?'] };
+
+  test('follow-ups stay hidden until probed, one at a time', async () => {
+    renderCard(withFollowUps, false);
+    expect(screen.queryByText('First follow-up?')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /probe me \(1\/2\)/i }));
+    expect(screen.getByText('First follow-up?')).toBeInTheDocument();
+    expect(screen.queryByText('Second follow-up?')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /probe me \(2\/2\)/i }));
+    expect(screen.getByText('Second follow-up?')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /probe me/i })).not.toBeInTheDocument();
+  });
+
+  test('no probe button pre-reveal when the question has no follow-ups', () => {
+    renderCard(base, false);
+    expect(screen.queryByRole('button', { name: /probe me/i })).not.toBeInTheDocument();
   });
 });
 

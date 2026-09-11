@@ -7,9 +7,10 @@ import { roundStats } from '../lib/queue';
 import { Browse } from './Browse';
 import { Practice } from './Practice';
 import { ProgressBar } from './ProgressBar';
+import { DesignSession } from './DesignSession';
 
-type Tab = 'practice' | 'browse';
-const TABS: Tab[] = ['practice', 'browse'];
+type Tab = 'practice' | 'browse' | 'design-prompt';
+const TAB_LABEL: Record<Tab, string> = { practice: 'Practice', browse: 'Browse', 'design-prompt': '45-min prompt' };
 
 export function RoundView({
   roundId, state, dispatch, strictMode,
@@ -19,6 +20,7 @@ export function RoundView({
   const categories = useMemo(() => [...new Set(all.map((q) => q.category))], [all]);
   const [selected, setSelected] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('practice');
+  const TABS: Tab[] = roundId === 'design' ? ['practice', 'browse', 'design-prompt'] : ['practice', 'browse'];
 
   // Switching tabs remounts Practice/Browse's content, and QuestionCard grabs focus
   // for its own heading on mount — this runs after that child effect (React commits
@@ -97,15 +99,15 @@ export function RoundView({
               document.getElementById(`tab-${next}`)?.focus();
             }}
           >
-            {t === 'practice' ? 'Practice' : 'Browse'}
+            {TAB_LABEL[t]}
           </button>
         ))}
       </div>
 
       <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>
-        {tab === 'practice'
-          ? <Practice key={selected ?? ''} questions={filtered} state={state} dispatch={dispatch} strictMode={strictMode} />
-          : <Browse questions={filtered} state={state} dispatch={dispatch} />}
+        {tab === 'practice' && <Practice key={selected ?? ''} questions={filtered} state={state} dispatch={dispatch} strictMode={strictMode} />}
+        {tab === 'browse' && <Browse questions={filtered} state={state} dispatch={dispatch} />}
+        {tab === 'design-prompt' && <DesignSession state={state} dispatch={dispatch} />}
       </div>
     </main>
   );

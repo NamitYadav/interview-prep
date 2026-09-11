@@ -1,12 +1,11 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import type { Persisted, Rating } from '../types';
 import { emptyState, load, save } from '../lib/storage';
-import { DEFAULT_EASE_FACTOR, nextDueAt, nextInterval } from '../lib/queue';
 
 export type Action =
   | { type: 'rate'; id: string; rating: Rating; now: number }
   | { type: 'note'; id: string; text: string }
-  | { type: 'saveStory'; id: string; title: string; body: string }
+  | { type: 'saveStory'; id: string; title?: string; body?: string }
   | { type: 'rehearseStory'; id: string; now: number }
   | { type: 'deleteStory'; id: string }
   | { type: 'import'; data: Persisted }
@@ -16,11 +15,6 @@ export function reducer(state: Persisted, action: Action): Persisted {
   switch (action.type) {
     case 'rate': {
       const prev = state.progress[action.id];
-      const { interval, easeFactor } = nextInterval(
-        action.rating,
-        prev?.interval ?? 0,
-        prev?.easeFactor ?? DEFAULT_EASE_FACTOR,
-      );
       return {
         ...state,
         progress: {
@@ -29,9 +23,6 @@ export function reducer(state: Persisted, action: Action): Persisted {
             rating: action.rating,
             seen: (prev?.seen ?? 0) + 1,
             lastSeen: action.now,
-            dueAt: nextDueAt(action.now, interval),
-            interval,
-            easeFactor,
           },
         },
       };
@@ -44,11 +35,23 @@ export function reducer(state: Persisted, action: Action): Persisted {
     }
     case 'saveStory': {
       // Unlike notes, a story never auto-deletes on going blank — it is a first-class
-      // item the user creates and removes explicitly via 'deleteStory'.
-      const existing = state.stories[action.id];
+      // item the user creates and removes explicitly via 'deleteStory'. title/body
+      // are each optional and merged against the CURRENT stories[id] at apply time —
+      // never reconstructed from a caller's own stale snapshot of the other field —
+      // so two independently-debounced fields committing close together can't have
+      // one silently revert the other back to whatever it was when that commit's
+      // closure was created.
+      const existing = state.stories[action.id] ?? { title: '', body: '' };
       return {
         ...state,
-        stories: { ...state.stories, [action.id]: { ...existing, title: action.title, body: action.body } },
+        stories: {
+          ...state.stories,
+          [action.id]: {
+            ...existing,
+            ...(action.title !== undefined && { title: action.title }),
+            ...(action.body !== undefined && { body: action.body }),
+          },
+        },
       };
     }
     case 'rehearseStory': {
