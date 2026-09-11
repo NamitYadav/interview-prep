@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
 import type { Question } from '../types';
-import { EMPTY } from '../lib/storage';
+import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { Browse } from '../components/Browse';
 
@@ -54,7 +54,7 @@ describe('Browse', () => {
     render(<Harness />);
     const row = screen.getByRole('button', { name: /debounce/i });
     await userEvent.click(row);
-    await userEvent.click(screen.getByRole('button', { name: /^solid/i }));
+    await userEvent.click(screen.getByRole('radio', { name: /^solid/i }));
     await userEvent.click(row);
     expect(row).toHaveTextContent('Solid');
   });

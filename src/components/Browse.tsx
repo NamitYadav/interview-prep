@@ -1,4 +1,4 @@
-import { useState, type Dispatch } from 'react';
+import { useMemo, useState, type Dispatch } from 'react';
 import type { Persisted, Question } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { QuestionCard } from './QuestionCard';
@@ -9,16 +9,17 @@ export function Browse({ questions, state, dispatch }: { questions: Question[]; 
   const [search, setSearch] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
 
+  // Recomputed only when the question set itself changes (a round or category
+  // switch), not per keystroke — the filter below is then a plain lookup.
+  const haystack = useMemo(
+    () => new Map(questions.map((q) => [q.id, `${q.question} ${q.category} ${q.answer.join(' ')} ${q.keyPoints.join(' ')}`.toLowerCase()])),
+    [questions],
+  );
   const needle = search.trim().toLowerCase();
-  const visible = needle
-    ? questions.filter(
-        (q) =>
-          q.question.toLowerCase().includes(needle) ||
-          q.category.toLowerCase().includes(needle) ||
-          q.answer.some((p) => p.toLowerCase().includes(needle)) ||
-          q.keyPoints.some((k) => k.toLowerCase().includes(needle)),
-      )
-    : questions;
+  const visible = useMemo(
+    () => (needle ? questions.filter((q) => haystack.get(q.id)?.includes(needle)) : questions),
+    [questions, haystack, needle],
+  );
 
   return (
     <div className="space-y-3">
@@ -55,6 +56,7 @@ export function Browse({ questions, state, dispatch }: { questions: Question[]; 
                   revealed
                   note={state.notes[q.id] ?? ''}
                   rating={rating}
+                  focusOnMount={false}
                   onReveal={() => {}}
                   onNote={(text) => dispatch({ type: 'note', id: q.id, text })}
                   onRate={(r) => dispatch({ type: 'rate', id: q.id, rating: r, now: Date.now() })}

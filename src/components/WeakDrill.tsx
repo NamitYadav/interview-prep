@@ -1,4 +1,5 @@
 import { useState, type Dispatch } from 'react';
+import { BackLink } from './BackLink';
 import type { Persisted } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { questions } from '../data';
@@ -14,8 +15,8 @@ export function WeakDrill({
 
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
-      <a href="#" className="mb-4 inline-block text-sm text-zinc-500 dark:text-zinc-400 hover:underline">← All rounds</a>
-      <h1 className="text-2xl font-semibold">Weak drill</h1>
+      <BackLink />
+      <h1 tabIndex={-1} className="text-2xl font-semibold">Weak drill</h1>
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
         Everything you rated weak, across every round.
       </p>

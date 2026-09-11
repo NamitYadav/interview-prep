@@ -1,12 +1,15 @@
 @import "tailwindcss";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
 
-/* Overriding --font-sans is enough: Tailwind's preflight sets the document font from
-   it, so every element inherits Geist without a utility class anywhere. --font-mono is
-   what the `font-mono` utility on code blocks resolves to. Weights are capped at what
-   the app actually uses: 400..700 sans, 400 mono. */
+/* Self-hosted via @fontsource, not the Google Fonts CDN link that used to sit in
+   index.html — one less third-party request, and it works offline. Overriding
+   --font-sans is enough: Tailwind's preflight sets the document font from it, so
+   every element inherits Geist without a utility class anywhere. --font-mono is
+   what the `font-mono` utility on code blocks resolves to. */
 @theme {
-  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 /* dark: fires for the two dark themes (dark, gruvbox — gruvbox rides on the same
@@ -67,6 +70,14 @@ button:disabled, [role='button'][aria-disabled='true'] {
 }
 a, button, [role='button'], input, textarea, select {
   transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease, opacity 150ms ease;
+}
+
+/* The two `outline-none` spots (QuestionCard's heading and revealed-answer
+   containers) are programmatic-focus targets, not tab stops, and keep their
+   outline suppressed on purpose; everything else gets a visible ring. */
+:focus-visible {
+  outline: 2px solid var(--color-emerald-500);
+  outline-offset: 2px;
 }
 
 @keyframes fade-in {

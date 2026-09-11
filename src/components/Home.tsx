@@ -22,7 +22,7 @@ export function Home({ state, dispatch }: { state: Persisted; dispatch: Dispatch
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
       <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Interview Prep</h1>
+          <h1 tabIndex={-1} className="text-2xl font-semibold">Interview Prep</h1>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">Staff frontend · Berlin / EU loop</p>
         </div>
         <ExportImport state={state} dispatch={dispatch} />

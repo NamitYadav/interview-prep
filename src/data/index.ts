@@ -23,6 +23,8 @@ export const rounds: Round[] = [
 
 export const questions: Question[] = [...hr, ...hm, ...coding, ...design, ...caseStudy, ...debrief, ...hoe];
 
+const byRound = new Map<RoundId, Question[]>(ROUND_IDS.map((id) => [id, questions.filter((q) => q.round === id)]));
+
 export function questionsByRound(id: RoundId): Question[] {
-  return questions.filter((q) => q.round === id);
+  return byRound.get(id) ?? [];
 }

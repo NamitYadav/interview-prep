@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
-import { EMPTY } from '../lib/storage';
+import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { MockSession } from '../components/MockSession';
 
@@ -38,7 +38,7 @@ describe('MockSession', () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('button', { name: /technical rounds/i }));
     await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
-    await userEvent.click(screen.getByRole('button', { name: /^solid/i }));
+    await userEvent.click(screen.getByRole('radio', { name: /^solid/i }));
     await userEvent.click(screen.getByRole('button', { name: /finish session/i }));
     expect(screen.getByText(/1 of 20 rated/i)).toBeInTheDocument();
     expect(screen.getByText(/1 solid · 0 ok · 0 weak/i)).toBeInTheDocument();

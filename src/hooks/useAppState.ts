@@ -102,7 +102,7 @@ export function useAppState() {
       if (timerRef.current === null) return;
       clearTimeout(timerRef.current);
       timerRef.current = null;
-      save(stateRef.current);
+      setSaveFailed(!save(stateRef.current));
     };
     const onVisibilityChange = () => {
       if (document.visibilityState === 'hidden') flush();

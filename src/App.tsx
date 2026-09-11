@@ -1,3 +1,6 @@
+import { useEffect, useRef } from 'react';
+import { ROUND_IDS } from './data';
+import type { Route, RoundId } from './types';
 import { useAppState } from './hooks/useAppState';
 import { useHashRoute } from './hooks/useHashRoute';
 import { useStrictMode } from './hooks/useStrictMode';
@@ -11,10 +14,24 @@ import { SearchView } from './components/SearchView';
 import { PrintView } from './components/PrintView';
 import { ThemeToggle } from './components/ThemeToggle';
 
+const isRoundId = (r: Route): r is RoundId => (ROUND_IDS as readonly string[]).includes(r);
+
 export default function App() {
   const { state, dispatch, saveFailed } = useAppState();
   const route = useHashRoute();
   const [strictMode, setStrictMode] = useStrictMode();
+
+  // Move focus to the new view's heading after a route change — but not on first
+  // load, where the page itself already has the user's attention and stealing
+  // focus would be more surprising than helpful.
+  const isFirstRoute = useRef(true);
+  useEffect(() => {
+    if (isFirstRoute.current) {
+      isFirstRoute.current = false;
+      return;
+    }
+    document.querySelector<HTMLElement>('main h1')?.focus();
+  }, [route]);
 
   return (
     <>
@@ -45,7 +62,7 @@ export default function App() {
       {route === 'mock' && <MockSession state={state} dispatch={dispatch} strictMode={strictMode} />}
       {route === 'search' && <SearchView state={state} dispatch={dispatch} />}
       {route === 'print' && <PrintView state={state} />}
-      {route !== null && route !== 'weak' && route !== 'notes' && route !== 'stories' && route !== 'mock' && route !== 'search' && route !== 'print' && (
+      {route !== null && isRoundId(route) && (
         <RoundView roundId={route} state={state} dispatch={dispatch} strictMode={strictMode} />
       )}
     </>

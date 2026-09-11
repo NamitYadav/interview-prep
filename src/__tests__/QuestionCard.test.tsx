@@ -12,10 +12,21 @@ const base: Question = {
 
 const noop = () => {};
 
-function renderCard(question: Question, revealed = false) {
-  return render(
-    <QuestionCard question={question} revealed={revealed} note="" onReveal={noop} onNote={noop} onRate={noop} />,
+// A stateful checked/onCheckedChange pair — QuestionCard no longer owns this state
+// itself (Practice hoists it so Back doesn't discard ticks), so tests that check
+// checkbox interaction need something to hold it.
+function CheckedHarness({ question, revealed }: { question: Question; revealed: boolean }) {
+  const [checked, setChecked] = useState<Set<number>>(new Set());
+  return (
+    <QuestionCard
+      question={question} revealed={revealed} note="" onReveal={noop} onNote={noop} onRate={noop}
+      checked={checked} onCheckedChange={setChecked}
+    />
   );
+}
+
+function renderCard(question: Question, revealed = false) {
+  return render(<CheckedHarness question={question} revealed={revealed} />);
 }
 
 describe('QuestionCard code block', () => {
@@ -41,7 +52,7 @@ describe('QuestionCard code block', () => {
 });
 
 describe('QuestionCard scratch editor (Build prompts)', () => {
-  const buildPrompt: Question = { ...base, category: 'Build prompts', code: 'function f() {\n  // TODO\n}' };
+  const buildPrompt: Question = { ...base, category: 'Build prompts', scratch: true, code: 'function f() {\n  // TODO\n}' };
 
   test('renders an editable textarea pre-filled with the starter code, not a read-only block', () => {
     const { container } = renderCard(buildPrompt);
@@ -167,6 +178,18 @@ describe('QuestionCard strict mode', () => {
       vi.useRealTimers();
     }
   });
+
+  test('unmounting mid-countdown clears both the auto-reveal timeout and the tick interval', () => {
+    vi.useFakeTimers();
+    try {
+      const { unmount } = render(<StrictHarness question={base} />);
+      act(() => vi.advanceTimersByTime(60_000));
+      unmount();
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
 
 describe('QuestionCard key points checklist', () => {
@@ -181,14 +204,6 @@ describe('QuestionCard key points checklist', () => {
 
     await userEvent.click(screen.getByRole('checkbox', { name: 'Point two' }));
     expect(screen.getByText(/2\/2 key points hit · suggested: Solid/i)).toBeInTheDocument();
-  });
-
-  test('checklist state resets on remount for a new question', () => {
-    const { unmount } = renderCard(twoPoints, true);
-    screen.getByRole('checkbox', { name: 'Point one' }).click();
-    unmount();
-    renderCard({ ...twoPoints, id: 'coding-002' }, true);
-    expect(screen.getByRole('checkbox', { name: 'Point one' })).not.toBeChecked();
   });
 });
 

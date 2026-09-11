@@ -1,4 +1,5 @@
 import type { Persisted } from '../types';
+import { BackLink } from './BackLink';
 import { questionsByRound, rounds } from '../data';
 
 export function PrintView({ state }: { state: Persisted }) {
@@ -14,7 +15,7 @@ export function PrintView({ state }: { state: Persisted }) {
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6 print:max-w-none print:p-0">
       <div className="mb-4 flex items-center justify-between print:hidden">
-        <a href="#" className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">← All rounds</a>
+        <BackLink className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline" />
         <button
           type="button"
           onClick={() => window.print()}
@@ -23,7 +24,7 @@ export function PrintView({ state }: { state: Persisted }) {
           Print
         </button>
       </div>
-      <h1 className="mb-4 text-2xl font-semibold">Cheat sheet</h1>
+      <h1 tabIndex={-1} className="mb-4 text-2xl font-semibold">Cheat sheet</h1>
       {sections.length === 0 ? (
         <p className="text-zinc-500 dark:text-zinc-400">Nothing rated weak or noted yet.</p>
       ) : (

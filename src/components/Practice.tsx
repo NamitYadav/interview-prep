@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState, type Dispatch } from 'react';
 import type { Persisted, Question, Rating } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { nextQuestion, roundStats } from '../lib/queue';
-import { reducer } from '../hooks/useAppState';
 import { QuestionCard } from './QuestionCard';
 
 const isTyping = (target: EventTarget | null) =>
@@ -22,17 +21,25 @@ export function Practice({
   });
   const [historyPos, setHistoryPos] = useState(0);
   const [revealed, setRevealed] = useState(false);
-  const [seenThisLap, setSeenThisLap] = useState<Set<string>>(() => new Set());
   const [lapDone, setLapDone] = useState(false);
+
+  // Hoisted out of QuestionCard so Back doesn't discard ticks: QuestionCard used to
+  // keep this as its own state, reset by Practice's `key={current.id}` remount, which
+  // meant re-visiting a question via Back always showed an empty checklist.
+  const [checkedByQuestion, setCheckedByQuestion] = useState<Record<string, Set<number>>>({});
 
   const currentId = history[historyPos];
   const current = useMemo(() => questions.find((q) => q.id === currentId), [questions, currentId]);
+
+  // Ids already used in the current path — derived from history up to the current
+  // position rather than a separately-tracked set, so a Back-then-advance that
+  // overwrites the old forward path automatically drops those ids from "seen" too.
+  const seenInPath = () => new Set(history.slice(0, historyPos + 1));
 
   // A lap ends when every question in this set has been shown once — nextQuestion
   // returns undefined rather than silently wrapping back to the top of the queue.
   const advance = (progress: Persisted['progress'], seen: Set<string>) => {
     const next = nextQuestion(questions, progress, seen);
-    setSeenThisLap(seen);
     if (!next) {
       setLapDone(true);
       onLapComplete?.();
@@ -48,14 +55,16 @@ export function Practice({
 
   const rate = (rating: Rating) => {
     if (!current) return;
-    const action = { type: 'rate' as const, id: current.id, rating, now: Date.now() };
-    dispatch(action);
-    advance(reducer(state, action).progress, new Set([...seenThisLap, current.id]));
+    dispatch({ type: 'rate', id: current.id, rating, now: Date.now() });
+    // The current id is excluded from `seen` either way, so the pre-rate progress
+    // is fine here — re-running the reducer just to get progress with this one
+    // entry updated was a provable no-op for what advance() actually uses it for.
+    advance(state.progress, seenInPath());
   };
 
   const skip = () => {
     if (!current) return;
-    advance(state.progress, new Set([...seenThisLap, current.id]));
+    advance(state.progress, seenInPath());
   };
 
   const back = () => {
@@ -68,7 +77,6 @@ export function Practice({
     const first = nextQuestion(questions, state.progress)?.id;
     setHistory(first ? [first] : []);
     setHistoryPos(0);
-    setSeenThisLap(new Set());
     setRevealed(false);
     setLapDone(false);
   };
@@ -84,7 +92,13 @@ export function Practice({
     const onKey = (e: KeyboardEvent) => {
       if (isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
       const isButton = e.target instanceof HTMLElement && e.target.tagName === 'BUTTON';
-      if (e.key === ' ') { if (isButton) return; e.preventDefault(); setRevealed(true); }
+      if (e.key === ' ') {
+        if (isButton) return;
+        // Only claim Space as the reveal shortcut before reveal — once revealed, a
+        // revealed answer can be long enough to scroll, and Space is the standard
+        // page-scroll key.
+        if (!latest.current.revealed) { e.preventDefault(); setRevealed(true); }
+      }
       else if (e.key === 'n' || e.key === 'N') latest.current.skip();
       else if (e.key === 'b' || e.key === 'B') latest.current.back();
       else if (latest.current.revealed && (e.key === '1' || e.key === '2' || e.key === '3')) latest.current.rate(Number(e.key) as Rating);
@@ -123,6 +137,8 @@ export function Practice({
         note={state.notes[current.id] ?? ''}
         rating={state.progress[current.id]?.rating}
         strictMode={strictMode}
+        checked={checkedByQuestion[current.id]}
+        onCheckedChange={(next) => setCheckedByQuestion((prev) => ({ ...prev, [current.id]: next }))}
         onReveal={() => setRevealed(true)}
         onNote={(text) => dispatch({ type: 'note', id: current.id, text })}
         onRate={rate}

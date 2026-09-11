@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
-import { EMPTY } from '../lib/storage';
+import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { questionsByRound, rounds } from '../data';
 import { RoundView } from '../components/RoundView';
@@ -27,7 +27,7 @@ describe('RoundView', () => {
 
   test('category filter narrows the Browse list to that category only', async () => {
     render(<Harness />);
-    await userEvent.click(screen.getByRole('button', { name: /browse/i }));
+    await userEvent.click(screen.getByRole('tab', { name: /browse/i }));
     const targetCategory = firstHrCategory;
 
     await userEvent.click(screen.getByRole('button', { name: targetCategory }));
@@ -40,7 +40,7 @@ describe('RoundView', () => {
 
   test('the All chip is pressed by default and restores the full list', async () => {
     render(<Harness />);
-    await userEvent.click(screen.getByRole('button', { name: /browse/i }));
+    await userEvent.click(screen.getByRole('tab', { name: /browse/i }));
     expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
 
     await userEvent.click(screen.getByRole('button', { name: firstHrCategory }));
@@ -55,7 +55,7 @@ describe('RoundView', () => {
     const [first, second] = hrCategories;
     if (!first || !second) throw new Error('HR round needs at least two categories');
     render(<Harness />);
-    await userEvent.click(screen.getByRole('button', { name: /browse/i }));
+    await userEvent.click(screen.getByRole('tab', { name: /browse/i }));
 
     await userEvent.click(screen.getByRole('button', { name: first }));
     await userEvent.click(screen.getByRole('button', { name: second }));
@@ -71,7 +71,7 @@ describe('RoundView', () => {
     render(<Harness />);
     expect(screen.getByRole('button', { name: /reveal/i })).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: /browse/i }));
+    await userEvent.click(screen.getByRole('tab', { name: /browse/i }));
     expect(screen.getByPlaceholderText(/search questions/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /reveal/i })).not.toBeInTheDocument();
   });

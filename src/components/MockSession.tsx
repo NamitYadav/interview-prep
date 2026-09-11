@@ -1,4 +1,5 @@
 import { useState, type Dispatch } from 'react';
+import { BackLink } from './BackLink';
 import type { Persisted, Question, RoundId } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { questionsByRound } from '../data';
@@ -48,8 +49,8 @@ export function MockSession({
   if (!session) {
     return (
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
-        <a href="#" className="mb-4 inline-block text-sm text-zinc-500 dark:text-zinc-400 hover:underline">← All rounds</a>
-        <h1 className="text-2xl font-semibold">Mock session</h1>
+        <BackLink />
+        <h1 tabIndex={-1} className="text-2xl font-semibold">Mock session</h1>
         <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
           A curated, cross-round set in one sitting. Go at your own pace — each question shows how long you took once you reveal it, but nothing forces a hide.
         </p>
@@ -74,18 +75,23 @@ export function MockSession({
   const { preset, drill, baseline } = session;
 
   if (finished) {
-    const rated = drill.filter((q) => state.progress[q.id] !== baseline[q.id]);
+    // flatMap over the entry itself (not the question) so a mid-session Reset —
+    // which clears state.progress entirely — drops these rather than crashing on
+    // a non-null assertion against an entry that no longer exists.
+    const rated = drill.flatMap((q) => {
+      const e = state.progress[q.id];
+      return e && e !== baseline[q.id] ? [e] : [];
+    });
     const counts = { weak: 0, ok: 0, solid: 0 };
-    for (const q of rated) {
-      const rating = state.progress[q.id]!.rating;
-      if (rating === 1) counts.weak++;
-      else if (rating === 2) counts.ok++;
+    for (const entry of rated) {
+      if (entry.rating === 1) counts.weak++;
+      else if (entry.rating === 2) counts.ok++;
       else counts.solid++;
     }
     return (
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
-        <a href="#" className="mb-4 inline-block text-sm text-zinc-500 dark:text-zinc-400 hover:underline">← All rounds</a>
-        <h1 className="text-2xl font-semibold">Session recap</h1>
+        <BackLink />
+        <h1 tabIndex={-1} className="text-2xl font-semibold">Session recap</h1>
         <p className="mb-1 text-sm text-zinc-600 dark:text-zinc-400">{preset.title} · {rated.length} of {drill.length} rated</p>
         <p className="mb-4 text-sm">{counts.solid} solid · {counts.ok} ok · {counts.weak} weak</p>
         <button
@@ -101,8 +107,8 @@ export function MockSession({
 
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
-      <a href="#" className="mb-4 inline-block text-sm text-zinc-500 dark:text-zinc-400 hover:underline">← All rounds</a>
-      <h1 className="text-2xl font-semibold">{preset.title}</h1>
+      <BackLink />
+      <h1 tabIndex={-1} className="text-2xl font-semibold">{preset.title}</h1>
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{drill.length} questions. Rate as you go, finish whenever.</p>
       <Practice questions={drill} state={state} dispatch={dispatch} strictMode={strictMode} onLapComplete={() => setFinished(true)} />
       <div className="mt-3 flex justify-end">

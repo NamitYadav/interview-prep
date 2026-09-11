@@ -2,11 +2,9 @@ import type { Persisted, ProgressEntry, Story } from '../types';
 
 export const STORAGE_KEY = 'interview-prep:v1';
 export const CORRUPT_KEY = 'interview-prep:v1:corrupt';
-export const EMPTY: Persisted = { version: 2, progress: {}, notes: {}, stories: {} };
 
-// ponytail: EMPTY is a shared singleton (kept for Task 5 + existing tests' toEqual
-// checks); load() must never hand callers that exact reference, or an in-place
-// mutation would pollute every future empty load. Return a fresh deep copy instead.
+// A fresh object every call — load() must never hand callers a shared reference,
+// or an in-place mutation would pollute every future empty load.
 export const emptyState = (): Persisted => ({ version: 2, progress: {}, notes: {}, stories: {} });
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
@@ -30,7 +28,7 @@ const isStory = (v: unknown): v is Story =>
   isRecord(v) &&
   typeof v.title === 'string' &&
   typeof v.body === 'string' &&
-  (v.lastRehearsed === undefined || typeof v.lastRehearsed === 'number');
+  isOptionalFiniteNumber(v.lastRehearsed);
 
 /** Validates an unknown value as Persisted. Throws Error with a user-facing message. Migrates v1 backups forward. */
 export function validate(raw: unknown): Persisted {

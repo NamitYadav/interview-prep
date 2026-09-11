@@ -1,6 +1,8 @@
 import type { Dispatch } from 'react';
-import type { Persisted } from '../types';
+import { BackLink } from './BackLink';
+import type { Persisted, Story } from '../types';
 import type { Action } from '../hooks/useAppState';
+import { useDebouncedField } from '../hooks/useDebouncedField';
 
 const daysAgo = (ts: number): string => {
   const days = Math.floor((Date.now() - ts) / (1000 * 60 * 60 * 24));
@@ -21,10 +23,10 @@ export function StoriesView({ state, dispatch }: { state: Persisted; dispatch: D
 
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
-      <a href="#" className="mb-4 inline-block text-sm text-zinc-500 dark:text-zinc-400 hover:underline">← All rounds</a>
+      <BackLink />
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">My stories</h1>
+          <h1 tabIndex={-1} className="text-2xl font-semibold">My stories</h1>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             Reusable STAR stories. Write once, reach for them under any question that fits.
           </p>
@@ -45,47 +47,58 @@ export function StoriesView({ state, dispatch }: { state: Persisted; dispatch: D
       ) : (
         <ul className="space-y-3">
           {entries.map(([id, story]) => (
-            <li key={id} className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-              <input
-                value={story.title}
-                onChange={(e) => dispatch({ type: 'saveStory', id, title: e.target.value, body: story.body })}
-                placeholder="Story title (e.g. the migration you led)"
-                aria-label="Story title"
-                className="mb-2 w-full rounded border border-zinc-300 bg-transparent px-2 py-1 font-medium dark:border-zinc-700"
-              />
-              <textarea
-                value={story.body}
-                onChange={(e) => dispatch({ type: 'saveStory', id, title: story.title, body: e.target.value })}
-                rows={5}
-                placeholder="Situation, Task, Action, Result — your real story, specifics included."
-                aria-label="Story body"
-                className="mb-2 w-full rounded border border-zinc-300 bg-transparent p-2 text-sm dark:border-zinc-700"
-              />
-              <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
-                <span>{story.lastRehearsed ? `Last rehearsed ${daysAgo(story.lastRehearsed)}` : 'Never rehearsed'}</span>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => dispatch({ type: 'rehearseStory', id, now: Date.now() })}
-                    className="rounded border border-zinc-300 px-2 py-1 hover:border-emerald-500 dark:border-zinc-700"
-                  >
-                    Mark rehearsed
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (window.confirm('Delete this story?')) dispatch({ type: 'deleteStory', id });
-                    }}
-                    className="rounded border border-zinc-300 px-2 py-1 text-red-600 hover:border-red-500 dark:border-zinc-700 dark:text-red-400"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </li>
+            <StoryEditor key={id} id={id} story={story} dispatch={dispatch} />
           ))}
         </ul>
       )}
     </main>
+  );
+}
+
+function StoryEditor({ id, story, dispatch }: { id: string; story: Story; dispatch: Dispatch<Action> }) {
+  const title = useDebouncedField(story.title, (text) => dispatch({ type: 'saveStory', id, title: text, body: story.body }));
+  const body = useDebouncedField(story.body, (text) => dispatch({ type: 'saveStory', id, title: story.title, body: text }));
+
+  return (
+    <li className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+      <input
+        value={title.draft}
+        onChange={(e) => title.onChange(e.target.value)}
+        onBlur={title.onBlur}
+        placeholder="Story title (e.g. the migration you led)"
+        aria-label="Story title"
+        className="mb-2 w-full rounded border border-zinc-300 bg-transparent px-2 py-1 font-medium dark:border-zinc-700"
+      />
+      <textarea
+        value={body.draft}
+        onChange={(e) => body.onChange(e.target.value)}
+        onBlur={body.onBlur}
+        rows={5}
+        placeholder="Situation, Task, Action, Result — your real story, specifics included."
+        aria-label="Story body"
+        className="mb-2 w-full rounded border border-zinc-300 bg-transparent p-2 text-sm dark:border-zinc-700"
+      />
+      <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+        <span>{story.lastRehearsed ? `Last rehearsed ${daysAgo(story.lastRehearsed)}` : 'Never rehearsed'}</span>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => dispatch({ type: 'rehearseStory', id, now: Date.now() })}
+            className="rounded border border-zinc-300 px-2 py-1 hover:border-emerald-500 dark:border-zinc-700"
+          >
+            Mark rehearsed
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (window.confirm('Delete this story?')) dispatch({ type: 'deleteStory', id });
+            }}
+            className="rounded border border-zinc-300 px-2 py-1 text-red-600 hover:border-red-500 dark:border-zinc-700 dark:text-red-400"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </li>
   );
 }
