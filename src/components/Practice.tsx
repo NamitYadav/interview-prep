@@ -4,6 +4,7 @@ import type { Action } from '../hooks/useAppState';
 import { nextQuestion, roundStats } from '../lib/queue';
 import { rounds } from '../data';
 import { formatTime } from '../lib/format';
+import { clearLap, lapKey, readLap, writeLap } from '../lib/lap';
 import { QuestionCard } from './QuestionCard';
 
 const isTyping = (target: EventTarget | null) =>
@@ -30,24 +31,40 @@ export function Practice({
   // `history` is every question id shown this lap, in order; `historyPos` is which one
   // is on screen. Advancing appends and moves the pointer to the end; Back just moves
   // the pointer back over ids already recorded, no separate undo stack needed.
+  // A reload — or a phone discarding a backgrounded tab — used to drop you back to the
+  // top of a 287-question queue. `saved` restores the lap when the stored position
+  // belongs to THIS question set; a key mismatch starts fresh.
+  const key = useMemo(() => lapKey(questions), [questions]);
+  const [saved] = useState(() => readLap(key));
+
   const [history, setHistory] = useState<string[]>(() => {
+    if (saved) return saved.history;
     const first = pickNext(state.progress, new Set())?.id;
     return first ? [first] : [];
   });
-  const [historyPos, setHistoryPos] = useState(0);
+  const [historyPos, setHistoryPos] = useState(() => saved?.historyPos ?? 0);
   const [revealed, setRevealed] = useState(false);
   const [lapDone, setLapDone] = useState(false);
 
   // A weak rating doesn't end its question's turn for the lap — it schedules a
   // requeue instead, so the same question comes back around roughly REQUEUE_GAP
   // questions later rather than being marked "seen" and gone for the rest of the lap.
-  const [requeued, setRequeued] = useState<RequeueEntry[]>([]);
-  const [step, setStep] = useState(0);
+  const [requeued, setRequeued] = useState<RequeueEntry[]>(() => saved?.requeued ?? []);
+  const [step, setStep] = useState(() => saved?.step ?? 0);
 
   // Hoisted out of QuestionCard so Back doesn't discard ticks: QuestionCard used to
   // keep this as its own state, reset by Practice's `key={current.id}` remount, which
   // meant re-visiting a question via Back always showed an empty checklist.
   const [checkedByQuestion, setCheckedByQuestion] = useState<Record<string, Set<number>>>({});
+
+  useEffect(() => {
+    if (lapDone) {
+      clearLap();
+      return;
+    }
+    if (history.length === 0) return;
+    writeLap({ key, history, historyPos, requeued, step });
+  }, [key, history, historyPos, requeued, step, lapDone]);
 
   const currentId = history[historyPos];
   const current = useMemo(() => questions.find((q) => q.id === currentId), [questions, currentId]);

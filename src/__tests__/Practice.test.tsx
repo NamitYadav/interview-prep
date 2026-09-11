@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
@@ -6,6 +6,9 @@ import type { Question } from '../types';
 import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { Practice } from '../components/Practice';
+
+// Practice now persists lap position, so each test needs a clean slate.
+beforeEach(() => localStorage.clear());
 
 const qs: Question[] = [
   { id: 'hm-001', round: 'hm', category: 'A', question: 'First question?', answer: ['Answer one.'], keyPoints: ['Point one'], followUps: ['Follow one'] },
@@ -297,5 +300,61 @@ describe('Practice weak-question requeuing', () => {
     // Now that the one pending requeue has been drained, the lap can actually end.
     await rateWeak();
     expect(screen.getByText(/lap done/i)).toBeInTheDocument();
+  });
+});
+
+describe('lap position survives a reload', () => {
+  // A reload, a tab switch, or a phone discarding a backgrounded tab used to drop the
+  // user back to the top of a 287-question queue.
+  test('remounting restores the question you were on', async () => {
+    const { unmount } = render(<Harness3 />);
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /skip/i }));
+    expect(screen.getByText('Second question?')).toBeInTheDocument();
+
+    unmount();
+    render(<Harness3 />);
+    expect(screen.getByText('Second question?')).toBeInTheDocument();
+    // and Back still works across the restore, so history came back too
+    await userEvent.click(screen.getByRole('button', { name: /back/i }));
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+  });
+
+  test('a different question set starts its own lap rather than restoring', async () => {
+    const { unmount } = render(<Harness3 />);
+    await userEvent.click(screen.getByRole('button', { name: /skip/i }));
+    expect(screen.getByText('Second question?')).toBeInTheDocument();
+    unmount();
+
+    // A two-question set has a different lap key, so it must not restore position 1.
+    render(<Harness />);
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+  });
+
+  test('a finished lap is not restored', async () => {
+    const { unmount } = render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /skip/i }));
+    await userEvent.click(screen.getByRole('button', { name: /skip/i }));
+    expect(screen.getByText(/lap done/i)).toBeInTheDocument();
+    unmount();
+
+    render(<Harness />);
+    expect(screen.queryByText(/lap done/i)).not.toBeInTheDocument();
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+  });
+
+  test('corrupt stored lap data falls back to a fresh lap', () => {
+    localStorage.setItem('interview-prep:lap', 'not json');
+    render(<Harness />);
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+  });
+
+  test('an out-of-range stored position is rejected', () => {
+    localStorage.setItem(
+      'interview-prep:lap',
+      JSON.stringify({ key: `2:hm-001:hm-002`, history: ['hm-001'], historyPos: 7, requeued: [], step: 0 }),
+    );
+    render(<Harness />);
+    expect(screen.getByText('First question?')).toBeInTheDocument();
   });
 });
