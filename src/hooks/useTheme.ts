@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export const THEMES = ['dark', 'gruvbox'] as const;
+export const THEMES = ['dark', 'gruvbox', 'light'] as const;
 export type Theme = (typeof THEMES)[number];
 
 // Separate from the progress store on purpose: the theme is a per-device preference,

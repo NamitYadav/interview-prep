@@ -1,6 +1,6 @@
 import { THEMES, useTheme, type Theme } from '../hooks/useTheme';
 
-const LABELS: Record<Theme, string> = { dark: 'Dark', gruvbox: 'Gruvbox' };
+const LABELS: Record<Theme, string> = { dark: 'Dark', gruvbox: 'Gruvbox', light: 'Light' };
 
 export function ThemeToggle() {
   const [theme, setTheme] = useTheme();
