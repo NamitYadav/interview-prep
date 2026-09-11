@@ -8,7 +8,7 @@ export const hr: Question[] = [
     category: 'Motivation & fit',
     question: 'Why are you looking to move, and why this company?',
     answer: [
-      'Lead with pull, not push: name two concrete things about the company (product domain, engineering culture signal, a public engineering post) and connect them to what you want to do next at staff scope.',
+      'Lead with pull, not push: name two concrete things about the company (product domain, engineering culture signal, a public engineering post) and connect them to the scope you want next, naming the part of your track record that already maps onto staff-level work.',
       'Keep the push side short and neutral: "[your current role] has been a great run; I have shipped [scope] and I am now looking for a larger platform surface or a Berlin-based team." Never criticize the current employer.',
       'Close by naming what you would own in the first year so the recruiter can map you to the open role.',
     ],
@@ -26,7 +26,7 @@ export const hr: Question[] = [
     category: 'Motivation & fit',
     question: 'What do you want out of a staff-level role that you are not getting today?',
     answer: [
-      'Frame it in terms of scope and leverage, not title: more cross-team influence, ownership of a technical direction rather than a single feature, or a mandate to raise the bar on [architecture / testing / performance] across teams.',
+      'Frame it in terms of scope and leverage, not title: more cross-team influence, ownership of a technical direction rather than a single feature, or a mandate to raise the bar on [architecture / testing / performance] across teams. Frame the gap as scope the current role does not contain yet, never as a manager holding you back.',
       'Give one concrete example of the kind of decision you want to be trusted to make, e.g. "[choosing the direction for a shared platform capability]" — keep it generic, describe the shape of the decision, not a real internal project name.',
       'Tie it back to the target company: point at a specific signal (job description language, an eng blog post) that suggests this is where that scope exists.',
     ],
@@ -62,7 +62,7 @@ export const hr: Question[] = [
     category: 'Motivation & fit',
     question: 'What is your biggest strength, and what is a real weakness?',
     answer: [
-      'For the strength, pick one that is directly relevant to staff scope (e.g. driving cross-team technical alignment, mentoring, systems thinking) and back it with a one-line generic example: "[in a recent initiative] I aligned [N] teams on [a shared approach]."',
+      'For the strength, pick one that is directly relevant to staff scope (e.g. driving cross-team technical alignment, mentoring, systems thinking) and back it with a one-line generic example: "[in a recent initiative] I aligned [N] teams on [a shared approach]." Keep any number in it real or leave it out — an invented metric is the one thing a reference check can catch.',
       'For the weakness, choose something real but bounded and already in progress: a skill you are actively developing (e.g. delegating detail work, public speaking, a specific technology gap) with one concrete step you are taking about it.',
       'Avoid the two classic traps: a disguised humble-brag ("I work too hard") and a weakness that is actually disqualifying for the role.',
     ],
@@ -100,7 +100,7 @@ export const hr: Question[] = [
     answer: [
       'Answer honestly but professionally: name one or two real dealbreakers relevant to a staff hire — e.g. compensation materially below [your researched band] (see the salary expectations question), unclear scope for the role, or a mismatch on remote/relocation terms discovered late in the process.',
       'Avoid vague non-answers ("if it does not feel right") — recruiters read specificity as a sign you have thought this through and are not just collecting offers.',
-      'End on a positive note: reiterate that absent those specific issues, you are genuinely motivated to join.',
+      'End on a positive note: if you have other processes running, say plainly where this one ranks and why, then reiterate that absent those specific issues you are genuinely motivated to join.',
     ],
     keyPoints: [
       'Names one or two concrete dealbreakers, not a feeling',
@@ -193,8 +193,8 @@ export const hr: Question[] = [
     question: 'What is your German language level, and do you think it matters for this role?',
     answer: [
       'State your actual level honestly using the CEFR scale (A1-C2) if you know it, or a plain description ("conversational for daily life, not yet professional working proficiency").',
-      'Address whether it matters for the role directly: most Berlin tech engineering orgs run English-first, so clarify that your English is the working language while German helps with daily life (Anmeldung, banking, landlords) rather than day-to-day engineering work.',
-      'If you are actively learning, mention it briefly as a signal of commitment to integrating, without overstating your current level.',
+      'Address whether it matters for the role directly: most Berlin tech engineering orgs run English-first, so clarify that your English is the working language while German helps with daily life (Anmeldung, banking, landlords) rather than day-to-day engineering work — and check that assumption for this team rather than asserting it.',
+      'If you are actively learning, mention it in a concrete form — a class, a tutor, [N] hours a week — as a signal of commitment to integrating, without overstating your current level.',
     ],
     keyPoints: [
       'Gives a CEFR level or an equally specific plain-language equivalent',
@@ -212,15 +212,19 @@ export const hr: Question[] = [
     category: 'Compensation',
     question: 'What are your salary expectations?',
     answer: [
-      'Prefer that they name a number first: whoever names one anchors the conversation, and a company with a defined band usually shares it if asked directly. "Can you share the budgeted range for this role?" is a normal, expected question in EU hiring — the Pay Transparency Directive (2023/970) requires the range before or at the first interview, and its 7 June 2026 transposition deadline has passed, though member states routinely lag on bringing national law into force. A flat refusal to share a band is a data point about the process, not just a tactic.',
-      'Come with a researched range, never a single number, and anchor toward the top of it, since ranges get negotiated down rather than up. Berlin data as of September 2026 splits sharply by employer type: Glassdoor puts Staff Software Engineer base around €106k-€140k, levels.fyi puts Senior Software Engineer total compensation around €85k-€122k, while StepStone and kununu — which sample the whole German employer market rather than funded tech — land nearer €46k-€66k. Treat the latter as the floor of the general market and the former as the tech-employer band; the spread between them is real, not noise.',
-      'Say it roughly like this: "Based on market data for staff-level frontend roles in Berlin, I am looking at [€X-€Y] base, and I would want to look at the total package including equity. What is the budgeted band for this level?" Anchor on market rate and the scope of this role, never on your current or previous salary, which is a weaker and less defensible number.',
-      'Only if asked: total comp, not base, is the number that decides it at this level. Berlin offices of US big tech and the best-funded scale-ups commonly clear €150k at staff level and the top of the market runs past €200k once RSUs are counted, while a Series B/C startup may match the base with equity that is worth nothing for years — so quote a base range and get the equity detail before calling any offer competitive.',
+      'Make them go first. "What is the budgeted range for this role, and at what level is it scoped?" is a normal, expected question in EU hiring, and whoever names a number first anchors the conversation.',
+      'If you have to answer, answer by method rather than from memory: identify the level the role is scoped at, find the band for that level at that employer type, separate base from total compensation — Glassdoor reports base, levels.fyi reports total — then annualise any equity over its vesting period before adding it.',
+      'Refresh the figures the week of the loop: [check levels.fyi and Glassdoor for Berlin staff-level frontend; note the date, and whether each figure is base or total]. Discard sources that average the whole German employer market rather than funded tech — that floor is not your band, and speaking it hands the recruiter an anchor.',
+      'Then give a range, never a single number: "Based on current market data for staff-level frontend in Berlin, I am looking at [€X-€Y] base plus the equity component — what is the band for this level?" Anchor on market rate and role scope, never on your current salary.',
+    ],
+    deeper: [
+      'The EU Pay Transparency Directive (2023/970) requires employers to give applicants the pay range before or at the first interview. Its 7 June 2026 transposition deadline has passed, but member states routinely lag on bringing national law into force, so treat it as a strong norm you can invoke rather than a right you can enforce on the call. A flat refusal to share a band is a data point about the process, not just a tactic.',
+      'Mixing a base source with a total-compensation source is how candidates arrive at nonsense ranges, so label every figure you collect with which one it is. Total compensation, not base, is what decides it at this level, and the spread between employer types is real rather than noise: the Berlin offices of US big tech and the best-funded scale-ups sit far above a Series B startup that matches the base with equity worth nothing for years. Quote a base range, then get the equity detail — instrument, vesting, refresh — before calling any offer competitive. The mechanics of valuing it are the RSU-versus-VSOP question.',
     ],
     keyPoints: [
-      'Asks for the budgeted band before giving a number',
-      'Gives a researched EUR range with a source, not a single figure or a feeling',
-      'Separates base from equity and bonus, and asks for the equity detail',
+      'Asks for the budgeted band and the level it is scoped at before giving a number',
+      'Derives the range by method — level, then band, then base versus total — from a source dated to the week of the loop',
+      'Annualises equity over its vest rather than quoting a headline total',
       'Anchors on market rate and role scope, never on current or past salary',
     ],
     followUps: ['What is your absolute floor?', 'What would you do if we refused to share our band?'],
@@ -232,7 +236,7 @@ export const hr: Question[] = [
     question: 'What is your current compensation?',
     answer: [
       'In Germany you are not obligated to disclose current compensation, and the EU Pay Transparency Directive (2023/970) bars employers from asking about pay history once transposed into national law — the transposition deadline (7 June 2026) has passed, though whether Germany\'s implementing law is actually in force yet is worth a quick check, since member states often lag past the deadline. Either way, decline politely: "I would prefer to focus on the expectations for this role rather than share current pay."',
-      'Redirect immediately and constructively to the researched range from the previous question, so the conversation keeps moving rather than stalling on a refusal.',
+      'Redirect immediately and constructively to the researched range from the salary-expectations question, so the conversation keeps moving rather than stalling on a refusal.',
       'If you choose to share, keep it factual and brief, but the stronger staff-level move is usually the polite decline plus redirect, since current pay at a different market/company is not a reliable anchor anyway.',
     ],
     keyPoints: [
@@ -251,7 +255,7 @@ export const hr: Question[] = [
     answer: [
       'Show that you evaluate equity like a real asset, not a bonus: consider company stage, valuation trajectory, vesting schedule, and liquidity horizon before assigning it real weight against guaranteed cash.',
       'State your personal preference with reasoning tied to your situation (e.g. relocating and taking on new cost-of-living risk argues for prioritizing a solid cash base, with equity as genuine upside rather than a substitute for base pay).',
-      'Avoid two extremes: dismissing equity entirely as "worthless paper," or treating it as equivalent to cash without discounting for risk and stage.',
+      'Avoid two extremes: dismissing equity entirely as "worthless paper," or treating it as equivalent to cash without discounting for risk and stage. Land on a number: say what you actually value the grant at after the discount, and compare offers on that.',
     ],
     keyPoints: [
       'Names stage, vesting schedule, and liquidity horizon as the factors they discount on',
@@ -267,14 +271,18 @@ export const hr: Question[] = [
     category: 'Compensation',
     question: 'The offer includes VSOP instead of real equity, how do you evaluate that?',
     answer: [
-      'Know the distinction cold: a Virtual Stock Option Plan is a contractual promise to pay cash tied to a future valuation event (exit or funding round). It does not make you a shareholder and carries no voting rights. On tax, VSOP is actually the simpler side: the payout is treated as employment income and taxed at your full income-tax rate, but only when the cash actually arrives — so there is no dry-income problem, because you are never taxed before you have money in hand.',
-      'The dry-income risk sits on the other side, with real shares or options, and the two are not taxed at the same moment: a free or discounted share transfer is taxable at transfer, while an option is taxed at exercise, not at grant. Either way the taxable event can land before there is any liquidity to pay the bill with. §19a EStG addresses the share-transfer case specifically — it defers taxation on shares transferred to employees of qualifying young companies — and the Zukunftsfinanzierungsgesetz (ZuFinG) widened who can use it. So the real trade-off is: VSOP means full income-tax treatment but no dry income; real equity can give you better capital-gains treatment on the upside but carries dry-income risk unless a §19a deferral applies.',
-      'Ask the concrete numbers before assigning it any value: strike/reference price, vesting schedule and cliff, what happens to unvested VSOP on termination, and whether there is a good-leaver/bad-leaver distinction that could zero it out. Ask specifically which events trigger a payout — many plans pay only on an exit, not on a secondary or a funding round.',
-      'Weigh it as speculative upside, not a cash-equivalent: discount it heavily against a lower cash offer, and treat a company\'s willingness to explain the plan clearly (or not) as a signal in itself. If the company is far enough along to offer real shares or options instead, ask about it directly, since the upside tax treatment is better — just confirm whether §19a deferral would apply to you before assuming it.',
+      'Know the distinction cold: a Virtual Stock Option Plan is a contractual promise to pay cash tied to a future valuation event — no shares, no voting rights. On tax it is the simpler side: the payout is employment income taxed at your full rate, but only when the cash arrives, so there is no dry-income problem.',
+      'The dry-income risk sits with real shares and options, which are not taxed at the same moment: a free or discounted share transfer is taxable at transfer, an option at exercise rather than at grant. Either can land before there is liquidity to pay the bill.',
+      'Ask the concrete numbers before assigning it any value: strike or reference price, vesting schedule and cliff, what happens to unvested VSOP on termination, whether a good-leaver/bad-leaver distinction could zero it out, and which events trigger a payout — many plans pay only on an exit, not on a secondary or a funding round.',
+      'Weigh it as speculative upside, not a cash-equivalent: discount it heavily against a lower cash offer, and treat how clearly the company explains the plan as a signal in itself.',
+    ],
+    deeper: [
+      'The trade-off in one line: VSOP gives full income-tax treatment with no dry income, real equity a better capital-gains upside carrying dry-income risk. §19a EStG addresses the share-transfer case specifically: it defers taxation on shares transferred to employees of qualifying young companies, and the Zukunftsfinanzierungsgesetz (ZuFinG) widened who can use it. The deferral is not permanent — it ends at the earliest of a sale of the shares, the end of the employment relationship, or fifteen years after the transfer, a ceiling ZuFinG raised from twelve. So real equity only beats VSOP on tax treatment if a deferral actually applies to you; confirm that rather than assuming it.',
+      'If the company is far enough along to offer real shares or options rather than a virtual plan, ask about it directly, since the upside tax treatment is better. A company that will not explain why it chose a virtual plan is usually telling you something about how much the instrument is expected to pay.',
     ],
     keyPoints: [
       'Says VSOP is a cash payout contract: no shares, no voting rights',
-      'States that VSOP is taxed as income at payout only, with no dry-income risk, and gets the real-equity timing right: shares taxable at transfer, options at exercise, with §19a EStG deferring the share-transfer case',
+      'States that VSOP is taxed as income at payout only, with no dry-income risk, and gets the real-equity timing right: shares taxable at transfer, options at exercise',
       'Asks for strike price, vesting, cliff, leaver clauses, and which events trigger a payout',
       'Puts a heavy discount on it rather than treating it as cash-equivalent',
     ],
@@ -343,11 +351,14 @@ export const hr: Question[] = [
     category: 'Compensation',
     question: 'The offer comes in at Senior rather than Staff. How do you negotiate the level?',
     answer: [
-      'Understand why this matters more than base: at companies with a formal ladder (Zalando, Google, SAP and similar), the level sets the band, the refresh grant, the promotion clock, and the scope you are allowed to touch. A €10k base concession inside the wrong level costs you far more over three years than it gains you now, because every future raise and equity refresh is computed off a lower band. Negotiate level first, base second.',
-      'Ask two factual questions before arguing: "What level is this offer, and what is the band for that level versus the one above?" and "What specifically separates Senior from Staff in your framework?" Most large employers have a written ladder; ask whether they can share the level definitions. You cannot argue for a re-level without knowing what the bar is.',
-      'Then make the ask procedural rather than emotional: ask for a re-level or for the leveling committee to take a second look, and offer evidence in the shape their ladder uses. Concretely: "Could the leveling committee re-look at this with the cross-team work in mind? I am happy to write up two or three examples against your Staff criteria, or to do an additional round with a Staff-level engineer if that helps calibrate." Offering an extra conversation is a strong move — it shows you want the right level, not just the higher number.',
-      'Only if asked: bring the evidence that actually signals staff rather than senior. Senior is "I own a large, complex piece and deliver it well." Staff is scope beyond one team: technical direction others follow, a decision you made that other teams now build on, ambiguity you resolved before it was assigned to you, engineers levelled up, and written artifacts (design docs, RFCs, standards) with a trail of people adopting them. Give two or three of those in generic terms with the blast radius named: "[a shared approach I drove that N teams adopted]" beats a list of features shipped.',
-      'Only if asked: know the limits. Level decisions at big-ladder companies are usually made by a committee from interview evidence, not by the recruiter, so a recruiter saying no may simply mean they cannot change it themselves — ask who can. And if the answer is a firm Senior, get the promotion path in writing instead: what the criteria are, who assesses them, and on what cycle. An explicit "Staff review at 12 months against these criteria" is a real outcome; "you will get there fast" is not.',
+      'Level matters more than base. At a company with a formal ladder (Zalando, Google, SAP) the level sets the band, the refresh grant, the promotion clock and your scope, so a €10k concession inside the wrong level costs more over three years than it gains now. Negotiate level first, base second.',
+      'Ask two factual questions before arguing: "What level is this offer, and what is the band for that level versus the one above?" and "What separates Senior from Staff in your framework?" Most large employers have a written ladder; ask them to share the definitions.',
+      'Then make the ask procedural rather than emotional: ask for a re-level or a leveling-committee second look, offering evidence in the shape their ladder uses — two or three examples with the cross-team blast radius named, not a feature list. An extra round with a Staff engineer to calibrate shows you want the right level, not the higher number.',
+      'If the answer is a firm Senior, get the promotion path in writing: the criteria, who assesses them, on what cycle. "Staff review at 12 months against these criteria" is a real outcome; "you will get there fast" is not.',
+    ],
+    deeper: [
+      'The evidence that separates the two is scope, not quality of execution. Senior is owning a large, complex piece and delivering it well. Staff is scope beyond one team: technical direction others follow, a decision you made that other teams now build on, ambiguity you resolved before it was assigned to you, engineers levelled up, and written artifacts — design docs, RFCs, standards — with a trail of people adopting them. Phrase each one generically, as "[a shared approach I drove that N teams adopted]".',
+      'Level decisions at big-ladder companies are usually made by a committee from the interview evidence, not by the recruiter, so a recruiter saying no may simply mean they cannot change it themselves. Ask who can, and offer to supply the committee with a written summary against their Staff criteria.',
     ],
     keyPoints: [
       'Asks for the level definitions and both bands before arguing anything',
@@ -363,11 +374,14 @@ export const hr: Question[] = [
     category: 'Compensation',
     question: 'You have a competing offer with a deadline. How do you use it, and how do you ask for more time?',
     answer: [
-      'Use it, but only truthfully. A real competing offer is the strongest leverage you have. Say what is true and no more: "I have another offer in hand. I would rather come here, and I am trying to make that work." You do not have to disclose the company or the number, and you usually should not disclose the number early — once you name it, that becomes the ceiling they match rather than a floor they beat.',
-      'Never bluff: no invented offer, no inflated number, no invented deadline. Berlin tech hiring is a small market and a called bluff ends the negotiation. The asymmetry is brutal — a real offer wins you maybe 10-15%, a caught bluff costs you the role. If all you have is an active process, say exactly that: "I am at final stage elsewhere" is honest and still creates urgency.',
-      'Asking for time is normal and almost always granted. Ask early, ask once, and give a reason and a date: "Thank you — I want to give this a proper decision rather than a rushed one. Could I come back to you by [date]?" Naming a specific date is what makes it easy to say yes to. If a relocation is involved you have an unusually good reason: the decision involves a country move, notice period, and family logistics, and any reasonable employer accepts that.',
-      'Only if asked: handle an exploding offer directly. A 24-to-48-hour deadline on a senior hire is a pressure tactic far more often than a real constraint. Ask what is driving it — sometimes it is genuinely a headcount or budget cycle, which is answerable. Then ask plainly for what you need: "I cannot make a good decision on a role of this size in two days. Can we agree on [date]?" Most exploding deadlines move when pushed once, politely. One that genuinely will not move on a staff-level relocation hire is itself information about how the company treats people under pressure.',
-      'Only if asked: run both sides in parallel rather than sequentially — tell the company you prefer that you have a deadline and ask whether they can accelerate — "My timeline is [date]; is it possible to compress the remaining steps?" Companies compress processes for candidates they want far more often than candidates expect. That is the honest way to use an offer: as a timeline fact, not a threat.',
+      'Use it, but only truthfully — a real competing offer is the strongest leverage you have. Say what is true and no more: "I have another offer in hand. I would rather come here, and I am trying to make that work." You need not name the company, and should not name the number early: it becomes the ceiling they match rather than a floor they beat.',
+      'Never bluff: no invented offer, inflated number, or deadline. Berlin tech hiring is a small market and a called bluff ends the negotiation. A real offer wins you maybe 10-15%; a caught bluff costs you the role. If all you have is an active process, say exactly that — "I am at final stage elsewhere" is honest and still creates urgency.',
+      'Asking for time is normal and almost always granted. Ask early, ask once, with a reason and a date: "I want to give this a proper decision rather than a rushed one — could I come back to you by [date]?" A specific date makes it easy to say yes to. Then ask the company you prefer to compress its remaining steps rather than issuing an ultimatum.',
+    ],
+    deeper: [
+      'A relocation gives you an unusually good reason for the extra time, and it is worth saying: the decision involves a country move, a notice period and family logistics. Any reasonable employer accepts that.',
+      'Handle an exploding offer directly. A 24-to-48-hour deadline on a senior hire is a pressure tactic far more often than a real constraint. Ask what is driving it — sometimes it is genuinely a headcount or budget cycle, which is answerable. Then ask plainly for what you need: "I cannot make a good decision on a role of this size in two days. Can we agree on [date]?" Most exploding deadlines move when pushed once, politely. One that genuinely will not move on a staff-level relocation hire is itself information about how the company treats people under pressure.',
+      'Run both processes in parallel rather than sequentially. Companies compress their remaining steps for candidates they want far more often than candidates expect, and that is the honest way to use an offer: as a timeline fact, not a threat.',
     ],
     keyPoints: [
       'States the competing offer exists without naming a number or company early',
@@ -383,11 +397,15 @@ export const hr: Question[] = [
     category: 'Compensation',
     question: 'How do you compare an RSU-heavy offer with a VSOP-heavy one, and what do you say when a recruiter demands a number three minutes into the first call?',
     answer: [
-      'Compare them on expected annual cash, not headline totals. For RSUs: grant value divided by the vesting period, then check whether the grant is priced in shares or in euros, what the refresh policy is after year one — a big initial grant with no refresh is a pay cut in year two — and the vesting shape, since an even 25% a year is worth materially more than a cliff plus back-loaded vesting. Public-company RSUs are close to cash: liquid, taxed as employment income at vest.',
-      'For VSOP, do not annualize it at all. It pays only if a triggering event happens, so treat it as a lottery ticket with a face value, not as €X a year. Discount it hard — 70-90% is common for an early-stage plan — and ask which events actually trigger payout, and what the vesting, cliff and leaver clauses do. A VSOP-heavy Series B offer is a bet on an exit; an RSU-heavy public-company offer is deferred pay. The honest comparison is base plus expected annual RSU value against base plus a heavily discounted VSOP figure.',
-      'On the minute-three number demand: it is a normal recruiter script, not an ambush. Redirect once: "Before I give a number — what is the budgeted band for this role, and at what level is it scoped?" If they push: "based on market data for staff-level roles in Berlin, I am looking at [€X-€Y] base, plus whatever the equity component looks like. Does that fit your band?" Never say your current salary, and never say a single number — when you give a range, make its bottom a figure you would genuinely accept, because that is the one you will be offered.',
-      'Only if asked: compare the downside, not just the expected value — if the equity in each offer went to zero, which base would you still be content with after a relocation? That question usually settles it faster than the spreadsheet does.',
-      'Only if asked: if they insist there is no band at all, say "then let me give you a range rather than a number, since the right figure depends on the level and the equity mix." And if they ask for your current package, use the decline-and-redirect from the current-compensation question rather than answering it.',
+      'Compare them on expected annual cash, not headline totals. For RSUs: grant value divided by the vesting period, then check the refresh policy after year one — a big grant with no refresh is a pay cut in year two — and the vesting shape.',
+      'Do not annualize VSOP. It pays only if a triggering event happens, so treat it as a lottery ticket with a face value: discount it hard — 70-90% is common for an early-stage plan — and ask which events trigger a payout.',
+      'Then compare the downside rather than the expected value: if the equity in each offer went to zero, which base would you still be content with after a relocation? That usually settles it faster than the spreadsheet.',
+      'The minute-three number demand is a recruiter script, not an ambush. Redirect once — "what is the budgeted band, and at what level is this scoped?" If they push, give a range: "[€X-€Y] base plus whatever the equity looks like — does that fit your band?" Never a single number, and make the bottom of the range one you would genuinely accept: that is the one you will be offered.',
+    ],
+    deeper: [
+      'The honest comparison is base plus expected annual RSU value against base plus a heavily discounted VSOP figure. On vesting shape, an even 25% a year is worth materially more than a cliff plus back-loaded vesting, and it is worth asking whether an RSU grant is priced in shares or in euros. For VSOP, ask what the vesting, cliff and leaver clauses actually do.',
+      'The instruments differ in kind, not just in risk. Public-company RSUs are close to cash: liquid, and taxed as employment income at vest, so an RSU-heavy public-company offer is really deferred pay. A VSOP-heavy Series B offer is a bet on an exit.',
+      'If they insist there is no band at all, say "then let me give you a range rather than a number, since the right figure depends on the level and the equity mix." And if they ask for your current package, use the decline-and-redirect from the current-compensation question rather than answering it.',
     ],
     keyPoints: [
       'Annualizes RSUs over the vest and asks about refresh policy and vesting shape',
@@ -407,7 +425,10 @@ export const hr: Question[] = [
     answer: [
       'Confirm the basics you should already know generically: the statutory vacation minimum is 20 days on a five-day week (§3 BUrlG says 24 Werktage on a six-day week), but the market norm for tech roles is [28-30 days]; Probezeit (probation) is at most 6 months, with a two-week notice period on both sides (§622(3) BGB); after probation the statutory baseline is four weeks to the 15th or the end of a month (§622(1) BGB), and contracts for senior/staff hires commonly extend that to around 3 months.',
       'Ask the specific numbers for this offer rather than assuming: exact vacation allowance, exact Probezeit length, and the contractual notice period after probation, since these vary by contract and matter a lot for your next job\'s negotiating leverage.',
-      'If negotiating, vacation days and start date are the easiest levers, but notice length is a real lever too, and the law is asymmetric in your favour here. §622(6) BGB forbids only one direction: your notice period may not be agreed longer than the employer\'s. A shorter notice for you than for them is perfectly legal — and in fact it is the statutory default at longer tenure, because §622(2) BGB lengthens only the employer\'s side as your years of service go up. So asking for, say, a 3-month notice from them and a 1-month notice from you is a legitimate ask, not a trick question. What you cannot agree to is the reverse: a longer notice binding you than binds them.',
+      'If negotiating, vacation days and start date are the easiest levers, and notice length is a real one too: §622(6) BGB forbids only one direction, since your notice may not be agreed longer than the employer\'s. So asking for three months from them and one from you is a legitimate ask; the reverse is not agreeable at all.',
+    ],
+    deeper: [
+      'The asymmetry is the statutory default at longer tenure rather than a loophole: §622(2) BGB lengthens only the employer\'s side as your years of service go up, while your own notice stays at the four-week baseline unless the contract says otherwise. Worth asking for explicitly at signing — a long mutual notice is the thing that later costs you a role you want, because the next employer has to wait it out.',
     ],
     keyPoints: [
       'States the vacation norm (28-30 days) against the statutory minimum (20 on a five-day week)',
@@ -425,8 +446,11 @@ export const hr: Question[] = [
     answer: [
       'Ask why: a genuine project/backfill reason, or a de facto extended trial period — German law (§14 TzBfG) allows fixed-term contracts without a reason for up to two years total, extendable up to three times within that window, so a first-contract befristung without a stated reason is common and not automatically a red flag.',
       'Get the concrete term length and what conversion to unbefristet actually depends on: is it close to automatic after the term if performance is fine, or genuinely uncertain and tied to funding/headcount.',
-      'Know the ceiling: sachgrundlos (without-cause) fixed terms cap at two years total and cannot be used again with the same employer afterward (Kettenbefristung is barred), so ask whether this is that clock or a sachgrund (with-cause) term, which has different rules and no fixed cap.',
+      'Know the ceiling: sachgrundlos (without-cause) fixed terms cap at two years total and as a rule cannot be used again with the same employer afterward, though that bar is not absolute. Ask whether this is that clock or a sachgrund (with-cause) term, which has different rules and no fixed cap.',
       'Weigh it like a real risk for relocation decisions specifically: a fixed term shortens how long you can rely on this role to anchor a visa/permit runway, so factor that into your negotiating position on other terms.',
+    ],
+    deeper: [
+      'The Vorbeschäftigungsverbot — no sachgrundlos fixed term with an employer you have worked for before — reads more absolutely than it is. The Bundesverfassungsgericht and the Bundesarbeitsgericht allow exceptions where the earlier employment was very long ago, very short, or of an entirely different kind. A collective agreement can also vary the maximum duration and the number of extensions, and newly founded companies get a longer window under §14(2a) TzBfG. So if you have a past relationship with this employer, ask what it was rather than assuming the route is closed.',
     ],
     keyPoints: [
       'Distinguishes sachgrundlos (two-year cap, no reason needed) from sachgrund (with-cause) fixed terms',
@@ -461,10 +485,13 @@ export const hr: Question[] = [
     category: 'German employment',
     question: 'At this salary you are above the JAEG threshold, what does that mean for your health insurance?',
     answer: [
-      'Know what the threshold does: above the Jahresarbeitsentgeltgrenze (JAEG, the compulsory-insurance income ceiling, roughly [check the current year\'s figure — it rises annually]), you are no longer required to stay in the statutory system (GKV) and can opt into private health insurance (PKV) instead.',
+      'Know what the threshold does: above the Jahresarbeitsentgeltgrenze (JAEG, the compulsory-insurance income ceiling, roughly [check the current year\'s figure — it rises annually]), you are no longer required to stay in the statutory system (GKV) and can opt into private health insurance (PKV) instead. It is not a same-day switch for someone already insured here, so check when it actually takes effect before planning around it.',
       'Weigh the real trade-off, not just the sticker price: PKV premiums are often lower when young and healthy but rise with age and pre-existing conditions, are individually underwritten (not income-based), and switching back to GKV later is restricted, especially past age 55 — so it is a long-horizon decision, not just a today decision.',
       'Name the family angle: GKV has free co-insurance for a non-earning spouse and children (Familienversicherung); PKV requires a separate paid policy for each family member, which changes the math significantly for anyone planning a family.',
       'If unsure, the practical staff-level answer is to stay on GKV (or a strong open GKV-equivalent) unless you have done the specific math for your situation, since the switch is easy to make later but expensive to reverse.',
+    ],
+    deeper: [
+      'The timing rule catches people out. If you are already in GKV, crossing the JAEG does not free you on the spot: Versicherungsfreiheit begins at the end of the calendar year in which your regular annual income exceeds the threshold, and only if it also exceeds the following year\'s JAEG — which rises annually. Someone arriving from abroad and starting employment above the threshold is generally outside compulsory insurance from the start of that employment instead. Confirm which of the two cases you are in before assuming PKV is available on day one.',
     ],
     keyPoints: [
       'States that the JAEG threshold is what makes PKV optional, not GKV membership itself',
@@ -499,11 +526,15 @@ export const hr: Question[] = [
     category: 'German employment',
     question: 'How does Kündigungsschutz work, and how should it change how you weigh a Probezeit or a fixed-term offer?',
     answer: [
-      'Two conditions switch the protection on. The Kündigungsschutzgesetz applies once employment at that employer has lasted longer than six months (§1 KSchG) and the establishment regularly employs more than ten people (§23 KSchG). Miss either and an ordinary dismissal needs no social justification at all, only the correct notice period and written form — which is why a small Berlin startup and a 3,000-person scale-up are genuinely different risk profiles for the same job title.',
-      'The fixed-term interaction is the part people get wrong. A befristet contract does not end by notice, it ends because the term runs out, and that expiry is not a dismissal, so KSchG never engages however long you have been there. And §15(3) TzBfG allows early ordinary notice only if the contract or a collective agreement expressly says so — so either neither side can leave before the end date, or notice is possible but the term still simply expires with no protection.',
-      'That decides how to weigh an offer. Probezeit matters less than people assume: it mainly shortens notice to two weeks each way (§622(3) BGB), while the six-month KSchG clock runs regardless of what the contract calls those months, so a shorter Probezeit buys you nothing. A fixed term is the real issue, because for a relocation it removes protection exactly when your permit and housing depend on the job. So ask: how many people does this entity employ (the threshold is per establishment, not per group), is the contract befristet or unbefristet, and if befristet, is there an ordinary-termination clause and what happens at the end of the term.',
-      'Only if asked: once KSchG applies, a dismissal must be sozial gerechtfertigt, which means one of three buckets. Personenbedingt: something about you that you cannot help, in practice mostly long-term illness, a high bar. Verhaltensbedingt: conduct, normally requiring a prior Abmahnung for the same behaviour, so a first offence rarely supports dismissal. Betriebsbedingt: the role genuinely disappears for operational reasons, and this is the one that hits engineers in a layoff. The operational route also forces a Sozialauswahl — among comparable employees the employer must select on tenure, age, maintenance obligations and severe disability, not on who it likes least.',
-      'Only if asked: two practical consequences. The employer carries the burden of proof, and a challenge goes to the Arbeitsgericht on a three-week clock from receiving the written notice — which is why so many of these end in a negotiated severance rather than reinstatement.',
+      'Two conditions switch the protection on. The Kündigungsschutzgesetz applies once employment has lasted longer than six months (§1 KSchG) and the establishment regularly employs more than ten people (§23 KSchG). Miss either and an ordinary dismissal needs no social justification, only correct notice and written form, so a small Berlin startup and a 3,000-person scale-up are different risk profiles for the same job title.',
+      'Once it applies, a dismissal must be sozial gerechtfertigt on one of three grounds: personenbedingt, verhaltensbedingt, or betriebsbedingt — the layoff case, which forces a Sozialauswahl among comparable employees.',
+      'The fixed-term interaction is what people get wrong. A befristet contract does not end by notice; the term runs out, and that expiry is not a dismissal, so KSchG never engages at all. §15(3) TzBfG allows early ordinary notice only if the contract or a collective agreement expressly says so.',
+      'A fixed term is therefore the real issue when weighing an offer: for a relocation it removes protection exactly when your permit and housing depend on the job. So ask how many people this entity employs, whether the contract is befristet, and if so whether it carries an ordinary-termination clause.',
+    ],
+    deeper: [
+      'The three grounds in detail. Personenbedingt: something about you that you cannot help, in practice mostly long-term illness, and a high bar. Verhaltensbedingt: conduct, normally requiring a prior Abmahnung for the same behaviour, so a first offence rarely supports dismissal. Betriebsbedingt: the role genuinely disappears for operational reasons. The operational route forces a Sozialauswahl — among comparable employees the employer must select on tenure, age, maintenance obligations and severe disability, not on who it likes least.',
+      'Two practical consequences. The employer carries the burden of proof, and a challenge goes to the Arbeitsgericht on a three-week clock from receiving the written notice — which is why so many of these end in a negotiated severance rather than reinstatement.',
+      'The headcount threshold is counted per establishment rather than per group, so a small German entity of a large international company can sit below it. And Probezeit matters less than people assume: it mainly shortens notice to two weeks each way (§622(3) BGB), while the six-month KSchG clock is statutory and runs regardless of what the contract calls those months — so a shorter Probezeit buys you nothing here.',
     ],
     keyPoints: [
       'States both KSchG conditions: more than six months tenure and more than ten employees in the establishment',
@@ -514,25 +545,7 @@ export const hr: Question[] = [
     followUps: ['How would a works council change this picture?', 'What would you want in the contract if you were relocating for a fixed-term role?'],
   },
 
-  // Process & culture (4)
-  {
-    id: 'hr-017',
-    round: 'hr',
-    category: 'Process & culture',
-    question: 'What do you know about our interview process?',
-    answer: [
-      'Show you have looked this up: name the stages you understand are involved (e.g. recruiter screen, hiring manager round, case study/take-home, debrief, and a final round with leadership) and roughly how long the process tends to take.',
-      'If you are unsure of a detail, ask rather than guess: "Can you confirm whether the case study is take-home or live?" — this is a normal, well-received question at any level.',
-      'Mention one thing you are doing to prepare (e.g. reviewing the product, thinking through the case study format) to show genuine engagement with the process rather than passive waiting.',
-    ],
-    keyPoints: [
-      'Names the known stages of the process in order',
-      'Asks at least one specific follow-up question about a stage',
-      'Names one preparation step already underway',
-      'Asks for the expected timeline and the next step by date',
-    ],
-    followUps: ['Do you have questions about any specific stage?', 'How does our process compare to others you are in?'],
-  },
+  // Process & culture (3)
   {
     id: 'hr-018',
     round: 'hr',
@@ -540,7 +553,7 @@ export const hr: Question[] = [
     question: 'What is your experience working on English-first, international teams?',
     answer: [
       'Give a concrete, generic example of working across time zones, cultures, or native languages: "[at a recent role] my team spanned [N locations/time zones] and all documentation, standups, and code review were in English."',
-      'Name one practical habit that helps this work well, e.g. writing decisions down instead of relying on hallway conversations, being explicit about assumptions in async messages, or being mindful of cultural directness norms in feedback.',
+      'Name one practical habit that helps this work well, e.g. writing decisions down instead of relying on hallway conversations, being explicit about assumptions in async messages, or being mindful of cultural directness norms in feedback. Name the one norm you personally had to adapt to — directness in code review is the usual candidate — rather than gesturing at culture in general.',
       'If most of your experience has been in one country/language, be honest about that and pivot to how you have already adapted in smaller ways (e.g. English-medium documentation, distributed stakeholders).',
     ],
     keyPoints: [
@@ -632,7 +645,7 @@ export const hr: Question[] = [
     question: 'If your current title is a lead or management title, why apply for a Staff IC role?',
     answer: [
       'Clarify what your lead title has actually meant in scope versus what it implies — many "Lead" titles at fast-growing companies carry staff-equivalent scope without the matching title, so state plainly what you own today (e.g. "[technical direction for X, mentoring Y engineers, cross-team design reviews]") in generic terms.',
-      'Explain the IC choice as deliberate, not a fallback: you want to maximize hands-on technical depth and system-level influence rather than move toward people management, and a staff IC track is the clearest path to that.',
+      'Explain the IC choice as deliberate, not a fallback: you want to maximize hands-on technical depth and system-level influence rather than move toward people management, and a staff IC track is the clearest path to that. Answer the unasked half too: say whether you would want to manage people later, rather than leaving it open.',
       'If the title is genuinely a step down in scope on paper, be upfront about it and reframe the conversation around actual responsibilities and impact rather than the label, since titles are not standardized across companies or markets.',
     ],
     keyPoints: [

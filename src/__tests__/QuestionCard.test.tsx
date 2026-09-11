@@ -258,3 +258,30 @@ describe('QuestionCard placeholder styling', () => {
     expect(screen.getByText('No placeholders here at all.')).toBeInTheDocument();
   });
 });
+
+describe('QuestionCard deeper material', () => {
+  const withDeeper: Question = {
+    ...base,
+    answer: ['The short answer you actually say.'],
+    deeper: ['The follow-on you only give if they dig.', 'A second layer.'],
+  };
+
+  test('stays hidden until the answer is revealed', () => {
+    renderCard(withDeeper);
+    expect(screen.queryByText(/if they dig deeper/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('The follow-on you only give if they dig.')).not.toBeInTheDocument();
+  });
+
+  test('renders every paragraph under its own heading once revealed', () => {
+    renderCard(withDeeper, true);
+    expect(screen.getByRole('heading', { name: /if they dig deeper/i })).toBeInTheDocument();
+    expect(screen.getByText('The follow-on you only give if they dig.')).toBeInTheDocument();
+    expect(screen.getByText('A second layer.')).toBeInTheDocument();
+  });
+
+  test('renders no heading at all for a question without deeper material', () => {
+    renderCard(base, true);
+    expect(screen.getByText('Answer one.')).toBeInTheDocument();
+    expect(screen.queryByText(/if they dig deeper/i)).not.toBeInTheDocument();
+  });
+});

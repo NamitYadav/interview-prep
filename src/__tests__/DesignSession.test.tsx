@@ -13,6 +13,22 @@ function Harness() {
 }
 
 describe('DesignSession', () => {
+  // design-007/design-011 carry `deeper`; the session view rendered only `answer`,
+  // so that material was invisible in the one mode built for the design round.
+  // The prompt is picked at random, so assert against whichever one rendered —
+  // either way this is a real assertion, never a vacuous pass.
+  test('shows deeper material exactly when the shown prompt has it', async () => {
+    const design = questionsByRound('design');
+    expect(design.some((q) => q.deeper?.length), 'no design question carries deeper material').toBe(true);
+    render(<Harness />);
+    const shown = design.find((q) => screen.queryByText(q.question) !== null);
+    expect(shown, 'no design prompt rendered').toBeDefined();
+    await userEvent.click(screen.getByRole('button', { name: /finish/i }));
+    const heading = screen.queryByRole('heading', { name: /if they dig deeper/i });
+    if (shown!.deeper?.length) expect(heading).toBeInTheDocument();
+    else expect(heading).not.toBeInTheDocument();
+  });
+
   test('renders a design prompt with the phase checklist and a countdown', () => {
     vi.useFakeTimers();
     try {

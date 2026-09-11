@@ -1,7 +1,7 @@
 import type { Question } from '../types';
 
 export const coding: Question[] = [
-  // Pairing & building (9)
+  // Pairing & building (4)
   {
     id: 'coding-001',
     round: 'coding',
@@ -12,53 +12,16 @@ export const coding: Question[] = [
       'Say what you are deliberately not building, so the interviewer knows it is a choice rather than an oversight: [no virtualisation unless the list is large], [no debounce tuning beyond a sensible default], [no styling beyond structure].',
       'Sketch the state before the JSX, out loud: what the query is, what the results are, whether "loading" is a boolean or derived, and what the selected index is. Getting the state shape wrong is the single most expensive mistake in a timed build, because every later line depends on it.',
       'Only then type, and type the skeleton first: the component signature, the state, and a static render. A visible non-working shell in minute five is far stronger than a half-typed clever version in minute fifteen.',
+      'Once you are typing, narrate decisions rather than keystrokes, because judgement is only visible when you say the alternative you rejected — "the selected index goes in state rather than derived, because the list can reorder" is useful and "now I am typing a div" is noise. When you genuinely need to think, announce it and then go quiet: a declared pause reads as composure where an unexplained one reads as being stuck.',
     ],
     keyPoints: [
       'Restates the ask and asks only scope-changing questions',
       'Names explicit non-goals up front rather than silently skipping them',
       'Designs the state shape out loud before writing JSX',
       'Gets a rendering skeleton on screen early instead of perfecting one piece',
+      'Narrates decisions and rejected alternatives rather than keystrokes, and announces a thinking pause instead of going silent',
     ],
     followUps: ['Which of those clarifying questions would you skip if the interviewer seemed impatient?', 'What would change if they said the data source is a slow network call?'],
-  },
-  {
-    id: 'coding-002',
-    round: 'coding',
-    category: 'Pairing & building',
-    question: 'How do you narrate while coding without either going silent or rambling over your own thinking?',
-    answer: [
-      'Narrate decisions, not keystrokes. "I am putting the selected index in state rather than deriving it, because the list can reorder" is useful; "now I am typing a div" is noise. The interviewer is scoring judgement, and judgement is only visible when you say the alternative you rejected.',
-      'Use the silence deliberately when you genuinely need to think: say "give me twenty seconds to work through this edge case" and then go quiet. An announced pause reads as composure; an unannounced two-minute silence reads as being stuck.',
-      'Narrate at boundaries rather than continuously: before starting a piece, say what you are about to do; after finishing it, say what you know works and what is still missing. That rhythm gives the interviewer natural places to steer you without interrupting. When you are debugging rather than building, the same rhythm becomes hypothesis and test in one breath — "I think the effect is re-running every render, and I will check by logging at the top of it" — followed by what the result ruled out, so a wrong guess reads as narrowing rather than wandering. Keep the ruled-out list spoken and cumulative — "so it is not the fetch and not the reducer" — and hold a second theory in reserve before you test the first, so a disproved guess turns straight into the next test instead of a restart.',
-      'If you notice you are talking to avoid admitting confusion, stop and name the confusion instead. "I am not sure whether this should live in state or a ref, here is the trade-off" is a strong staff-level move; filling air is not.',
-    ],
-    keyPoints: [
-      'Narrates decisions and rejected alternatives, not keystrokes',
-      'Announces thinking pauses rather than going silent unexpectedly',
-      'Speaks at task boundaries so the interviewer can steer',
-      'When debugging, says what each test ruled out and keeps a second theory in reserve',
-      'Names confusion directly instead of talking around it',
-    ],
-    followUps: ['How do you adapt if the interviewer is completely silent back?', 'What do you do when narrating is visibly slowing your typing down?'],
-  },
-  {
-    id: 'coding-003',
-    round: 'coding',
-    category: 'Pairing & building',
-    question: 'You are thirty minutes into a forty-five minute build and the core flow still does not work. What do you do?',
-    answer: [
-      'Say it out loud immediately: "I am behind where I wanted to be, so I am going to cut X to get the main flow working." Announcing the trade-off converts a bad situation into evidence of judgement. Discovering it silently at minute forty-four does not.',
-      'Cut toward a working narrow path rather than a broken wide one. Hard-code the thing you were going to make configurable, drop the second feature entirely, and get one end-to-end flow that runs. A working subset is a pass; a non-running superset usually is not.',
-      'Resist the urge to debug something incidental. If a piece of setup is fighting you, stub it out with a comment saying what the real version would do, and keep moving toward the core behaviour they asked for.',
-      'In the last few minutes, stop coding and talk: what works, what you cut, what you would do next with another hour. That summary is often what the interviewer writes down.',
-    ],
-    keyPoints: [
-      'Surfaces being behind schedule out loud rather than hiding it',
-      'Cuts breadth to reach one working end-to-end path',
-      'Stubs incidental blockers instead of debugging them under time pressure',
-      'Reserves the final minutes for a spoken summary of state and next steps',
-    ],
-    followUps: ['What would you never cut, even at minute forty?', 'How do you tell the difference between a blocker worth debugging and one worth stubbing?'],
   },
   {
     id: 'coding-004',
@@ -86,7 +49,7 @@ export const coding: Question[] = [
       'Read it and list what is missing before touching anything, so the interviewer hears your priority order rather than watching you pick at whatever is nearest the cursor. Here the real issues are: an unencoded query string, no handling of a rejected fetch or a non-ok response, no loading state at all, a request per keystroke with no debounce, a missing key on the list, and an unlabelled input.',
       'Fix in risk order, not in file order. The unencoded query goes first, because a query containing an ampersand or a hash silently sends a different request than the user typed, and that is a correctness bug rather than a polish item. Then the failure handling, then the debounce, then the accessibility and the key. Saying "I am fixing the correctness problems before the polish" is itself the answer they are listening for.',
       'Name what the missing error path costs, concretely: fetch does not reject on a 500, so res.json() either throws on an HTML error page or hands back an error payload that gets rendered as results. With no catch and no res.ok check, the user sees the previous results sitting there forever with no indication that anything failed.',
-      'Say out loud what you would extract only if it earns it. A starting component like this does not need a custom hook to be correct, so pulling one out is a judgement call about reuse, not a fix. The same restraint now applies to memoisation: with the React Compiler enabled, most useMemo and useCallback calls in a component like this are redundant, and manual memoisation is worth writing only where you can name the reason the compiler cannot help — a value crossing into non-compiled code, or a dependency you are stabilising for an effect rather than for a render.',
+      'Say out loud what you would extract only if it earns it. A starting component like this does not need a custom hook to be correct, so pulling one out is a judgement call about reuse, not a fix. The same restraint applies to memoisation, which the React Compiler makes redundant in most components of this shape unless you can name the reason the compiler cannot help.',
     ],
     keyPoints: [
       'Enumerates problems before editing, in an explicit priority order',
@@ -96,63 +59,6 @@ export const coding: Question[] = [
       'Treats extraction and manual memoisation as optional, and names the React Compiler',
     ],
     followUps: ['Which of those fixes would you do inline versus leave as a comment?', 'What would you render while the request is in flight, and why not just a spinner?'],
-  },
-  {
-    id: 'coding-005',
-    round: 'coding',
-    category: 'Pairing & building',
-    question: 'How much accessibility do you do inline during a timed build, and how much do you flag as "I would add this next"?',
-    answer: [
-      'Do inline the things that are cheap and structural, because they are harder to retrofit than to type: real semantic elements instead of clickable divs, a label tied to every input, and a sensible heading order. These cost seconds and their absence reads as a habit rather than a time constraint.',
-      'Flag rather than build the things that need real care: a full combobox keyboard and ARIA pattern, focus management across a modal, or live-region announcements. Say "the correct pattern here is a combobox with active-descendant, which I would rather implement properly than half-do in the time we have" so the interviewer knows you know the pattern exists.',
-      'Never claim accessibility you have not implemented. Sprinkling ARIA attributes onto a component whose keyboard behaviour does not exist is worse than plain markup, and an interviewer who knows the area will spot it immediately.',
-      'If they ask you to pick one thing, pick keyboard operability of the main flow. An interface you cannot drive without a mouse is broken for a real user in a way that a missing announcement usually is not.',
-    ],
-    keyPoints: [
-      'Does the cheap structural basics inline: semantics, labels, heading order',
-      'Flags full keyboard and ARIA patterns rather than half-implementing them',
-      'Refuses to add ARIA attributes that imply unbuilt behaviour',
-      'Prioritises keyboard operability of the core flow when forced to choose',
-    ],
-    followUps: ['What is the most common accessibility mistake you see in interview code?', 'How would you verify the keyboard flow with two minutes left?'],
-  },
-  {
-    id: 'coding-006',
-    round: 'coding',
-    category: 'Pairing & building',
-    question: 'The interviewer suggests an approach you think is worse than yours. What do you do?',
-    answer: [
-      'Take it seriously first, out loud, because sometimes the hint encodes a constraint you have not been told. Repeat back what you understood the suggestion to be, which either confirms it or surfaces that you were solving different problems.',
-      'Then state your reasoning as a trade-off rather than a verdict: "I was going to keep this derived rather than in state, because it cannot then disagree with the source of truth. Your way is fewer moving parts up front. Which matters more here?" That gives them room to supply the missing constraint.',
-      'If they hold their position, do it their way and say why you are: "happy to go with that, it is a reasonable call and this is your codebase in this exercise". A staff engineer who can be overruled without friction is more valuable than one who wins a whiteboard argument.',
-      'If the suggestion is actually incorrect rather than merely different, say so plainly and concretely, with the failing case: "that would break when the list reorders, because the index no longer points at the same row". Naming the specific failure is disagreement done well; sighing and complying is not.',
-    ],
-    keyPoints: [
-      'Restates the suggestion first to check for a missing constraint',
-      'Frames disagreement as a trade-off question, not a verdict',
-      'Yields gracefully and visibly when overruled',
-      'Escalates with a concrete failing case when the suggestion is genuinely wrong',
-    ],
-    followUps: ['Has an interviewer hint ever changed your approach for the better?', 'How do you tell a hint apart from a test of whether you will cave?'],
-  },
-  {
-    id: 'coding-007',
-    round: 'coding',
-    category: 'Pairing & building',
-    question: 'When do you write a test during a live coding round, and when is it a waste of the clock?',
-    answer: [
-      'Write a test when it is faster than the alternative. If the logic has a shape you would otherwise verify by clicking through the UI repeatedly, one test on that function is the cheaper loop, and you get credit for the habit as a side effect.',
-      'Skip the test when the code is a thin render with no branching. A test asserting that a component renders a heading proves nothing, costs minutes, and an interviewer reading it sees test theatre rather than test discipline.',
-      'Ask rather than assume: "do you want me to build this test-first, or build it and then test the interesting part?" Some panels are explicitly scoring TDD and some consider it a waste of a short slot, and the question itself signals that you have an opinion either way.',
-      'If there is no time, say what you would test and why, naming the specific case: "I would test that a superseded response cannot overwrite a newer one, since that is the bug most likely to survive review". Naming the right test earns most of the credit of writing it.',
-    ],
-    keyPoints: [
-      'Writes a test when it is the faster verification loop',
-      'Refuses tests that assert nothing about branching logic',
-      'Asks whether the panel is scoring test-first explicitly',
-      'Names the specific test that matters when there is no time to write it',
-    ],
-    followUps: ['What is the one test you would write for the component you just built?', 'How do you handle a panel that wants strict TDD in a thirty-minute slot?'],
   },
   {
     id: 'coding-008',
@@ -179,14 +85,14 @@ export const coding: Question[] = [
     category: 'Pairing & building',
     question: 'How do you use the last three minutes of a live coding session?',
     answer: [
-      'Stop coding. A half-finished edit at the buzzer is worth less than a clear spoken account of where things stand, and interviewers write their notes from the last thing they heard.',
+      'Stop coding. A half-finished edit at the buzzer is worth less than a clear spoken account of where things stand, and interviewers write their notes from the last thing they heard. If you can see well before the end that you will not land everything, say the cut out loud the moment you notice rather than at minute forty-four: a narrow path that runs, with one feature dropped and one piece of setup stubbed, is a pass, and a wide one that does not run usually is not.',
       'Give the same three-part summary every time: what works and how you know, what is missing or stubbed, and what you would do next in priority order. Being able to state your own gaps accurately is a strong signal that you would be honest about status on a real team.',
       'If you finished early instead, do not sit on it. Re-run the original failing case rather than declaring victory, then say whether the same mistake exists in sibling call sites — fixing one instance of a class of bug while five others remain is the most common way a real fix fails to help. Then ask the question that outlives the session: how did this get past review and CI, and what check would have caught it?',
       'Name one thing you would change about your own approach in hindsight. Volunteering a real self-criticism, rather than a fake modest one, is the closest thing to a free point in these rounds.',
       'Then ask one question about how they work: how they pair in practice, or what the review culture is like. It converts the last minute from evaluation into conversation, and it is genuinely useful information for you.',
     ],
     keyPoints: [
-      'Stops editing in time to summarise deliberately',
+      'Stops editing in time to summarise deliberately, and announces a scope cut when they fall behind rather than at the buzzer',
       'Reports what works, what is missing, and what comes next',
       'If finished early, re-runs the original failing case and checks sibling call sites',
       'Asks how the bug escaped review and CI, not only how to fix it',
@@ -196,7 +102,7 @@ export const coding: Question[] = [
     followUps: ['What would you say if almost nothing worked?', 'How do you keep the summary from sounding like excuses?'],
   },
 
-  // Debugging (7)
+  // Debugging (6)
   {
     id: 'coding-010',
     round: 'coding',
@@ -207,6 +113,10 @@ export const coding: Question[] = [
       'Then pin down the observation precisely, out loud: what you did, what you expected, what happened instead, and whether it happens every time or only in some state. "Broken" is a symptom report, and half of debugging is converting it into a statement specific enough to falsify.',
       'Ask what changed, if anything: was this ever working, and is there a recent commit in the area. In an interview the answer is usually "assume it never worked", but asking shows the instinct that saves hours on a real incident.',
       'Only now read code, and read it narrowly: follow the actual data path from the input to the rendered list rather than skimming the whole file. Say where you are looking and why, so the interviewer can redirect you cheaply if you are heading somewhere unproductive.',
+    ],
+    deeper: [
+      'While you narrow, keep the ruled-out list spoken and cumulative — "so it is not the fetch and not the reducer" — and hold a second theory in reserve before you test the first, so a disproved guess turns straight into the next test instead of a restart. That is also the guard against anchoring: you commit to the next experiment, not to the current hypothesis.',
+      'If it does not reproduce at all, the gap between your environment and the reporter\'s becomes the actual subject, so enumerate it out loud: data, permissions, browser, device, network speed, timezone, locale, feature flags, and whether they were mid-flow rather than starting fresh. Most irreproducible reports are a state difference, not a mistaken one. Go back to the reporter for specifics — what exactly they clicked, what they saw, when it last worked — and ask for the artefact that removes the ambiguity, whether that is a recording or an id you can look up. If the symptom looks timing-dependent, force the conditions instead of waiting: throttle the network, slow the CPU, drive the interaction faster than a human would. If it stays invisible, say what logging or error reporting you would ship at the boundary you suspect to catch the next occurrence with enough context, and say plainly that shipping a speculative fix you cannot verify is the thing you are refusing to do.',
     ],
     keyPoints: [
       'Reproduces the failure before reading any code',
@@ -329,25 +239,6 @@ export const coding: Question[] = [
     followUps: ['How would you test this without real network timing?', 'When would you reach for a data-fetching library instead of hand-rolling the guard?'],
   },
   {
-    id: 'coding-016',
-    round: 'coding',
-    category: 'Debugging',
-    question: 'You cannot reproduce the reported bug. What now?',
-    answer: [
-      'Treat the gap between your environment and theirs as the actual subject of investigation, and enumerate it out loud: data, permissions, browser, device, network speed, timezone, locale, feature flags, and whether they were mid-flow rather than starting fresh. Most irreproducible reports are a state difference, not a lie.',
-      'Go back to the reporter for specifics rather than guessing more: what exactly they clicked, what they saw, and when it last worked. Ask for the artefact that removes ambiguity, whether that is a screenshot, a recording, or an id you can look up.',
-      'If the symptom is timing-dependent, try to force the conditions instead of waiting: throttle the network, slow the CPU, or drive the interaction faster than a human would. A bug you can only see under artificial pressure is still reproduced.',
-      'Say what you would add if it stays invisible: logging or an error report at the boundary you suspect, shipped deliberately to catch the next occurrence with enough context. Being willing to close the loop with instrumentation rather than a guessed fix is the staff-level answer, and it is worth saying that shipping a speculative fix you cannot verify is the thing you are refusing to do.',
-    ],
-    keyPoints: [
-      'Enumerates environment and state differences as the primary suspects',
-      'Returns to the reporter for specifics and a concrete artefact',
-      'Forces timing conditions artificially rather than waiting for a recurrence',
-      'Adds targeted instrumentation instead of shipping an unverified fix',
-    ],
-    followUps: ['What would you log, and how would you avoid logging sensitive data?', 'How do you communicate "not reproduced yet" without sounding dismissive?'],
-  },
-  {
     id: 'coding-018',
     round: 'coding',
     category: 'Debugging',
@@ -377,28 +268,7 @@ export const coding: Question[] = [
     followUps: ['When is useMemo genuinely the right fix for this shape?', 'How would a lint rule have caught this earlier?'],
   },
 
-  // Code review (6)
-  {
-    id: 'coding-019',
-    round: 'coding',
-    category: 'Code review',
-    question: 'The interviewer says "review this PR out loud". How do you structure the first pass?',
-    answer: [
-      'Start with intent, not lines. Say what you understand the change to be trying to do and check that against the description, because a review that never establishes the goal cannot judge whether the code achieves it. If you cannot tell what the PR is for, that is your first comment.',
-      'Then read for correctness in the main path, out loud: does the happy case work, what happens on empty, error, and concurrent use. Only after that do you look at naming, structure, and style. Announcing that order matters, because it stops you from spending the session on formatting while a real bug sits three lines down.',
-      'Read the tests as part of the diff rather than as an appendix. A test that asserts nothing, or that would pass against the unfixed code, is a defect in the PR and worth flagging as clearly as the implementation would be.',
-      'Finish with an explicit verdict rather than trailing off: approve, approve with nits, or request changes, and name the one or two things that drive that decision. Interviewers are listening for whether you can hold a position, not just generate observations.',
-      'Say what you did not review, if anything. Plenty of a diff travels regardless of domain — whether it does what the description says, whether the tests would fail without it, whether failures are handled visibly, whether names match behaviour — but if a business rule or an unfamiliar subsystem is outside what you can judge, write that in the verdict and name who should also look. An approval that implies more scrutiny than you applied is worse than declining the review.',
-    ],
-    keyPoints: [
-      'Establishes the intent of the change before reading lines',
-      'Reads for correctness first, style last, and announces that order',
-      'Treats the tests as part of the reviewable diff',
-      'Ends with an explicit verdict and the reasons driving it',
-      'States what was outside their scope and routes it to someone who can judge it',
-    ],
-    followUps: ['What would you do if the PR description was empty?', 'How long would you spend before asking the author to walk you through it?'],
-  },
+  // Code review (4)
   {
     id: 'coding-020',
     round: 'coding',
@@ -435,11 +305,12 @@ export const coding: Question[] = [
     category: 'Code review',
     question: 'How do you phrase a blocking comment so it lands as a technical judgement rather than a personal one?',
     answer: [
-      'Anchor on the failing case rather than the author. "This throws when the code is not in the map, so a typo in a discount code becomes a crash on checkout" is impossible to take personally and impossible to argue with. "This is fragile" is both an opinion and an invitation to defend.',
-      'Say plainly that it is blocking and why, because softening the signal is its own failure mode. A comment written so gently that the author reads it as optional wastes a round trip; "this needs to change before merge, because it can crash a paid flow" is kinder than three hedged sentences that get skipped.',
-      'Separate the requirement from the solution. State the problem as non-negotiable and the fix as a suggestion: it leaves the author room to solve it better than you would have, and it avoids review turning into dictation.',
-      'Assume competence in the wording. "Was there a reason to skip the guard here, or is this an oversight?" costs one clause and protects against the case where they know something you do not, which happens more often than review culture likes to admit.',
-      'The same principle scales up to the review as a whole: make the required change unmistakable and everything else visibly optional. That means blocking only on correctness, clarity, or consistency with the existing codebase — approving working, tested code you would have built differently, and labelling any alternative explicitly as non-blocking — and it means commenting once on the first instance of a repeated mistake, saying it applies throughout, and folding the remainder into the summary rather than inline. Fifteen inline comments read as a verdict on the author and leave them guessing which two actually matter; naming those two is the job.',
+      'Anchor on the failing case rather than the author. "This throws when the code is not in the map, so a typo in a discount code becomes a crash on checkout" is impossible to take personally and hard to argue with. "This is fragile" is an opinion and an invitation to defend.',
+      'Say plainly that it is blocking and why; softening the signal is its own failure mode. A comment so gentle the author reads it as optional wastes a round trip; "this needs to change before merge, because it can crash a paid flow" is kinder than three hedged sentences that get skipped.',
+      'Separate the requirement from the solution. State the problem as non-negotiable and the fix as a suggestion: it leaves the author room to solve it better than you would have, and keeps review from becoming dictation. Assume competence while doing it: "was there a reason to skip the guard here?" costs one clause and covers the case where they know something you do not.',
+      'The same principle scales up: make the required change unmistakable and everything else visibly optional. Block only on correctness, clarity, or consistency with the existing codebase — approve working, tested code you would have built differently, and label any alternative non-blocking. Comment once on the first instance of a repeated mistake, say it applies throughout, and fold the rest into the summary. Fifteen inline comments read as a verdict on the author and leave them guessing which two matter; naming those two is the job.',
+      'Close with an explicit verdict and the reasons driving it: approve, approve-with-nits, or request changes, in one line at the top of the summary with the findings that decided it. Left implicit, the author guesses whether they may merge; a request-changes with no named blocker reads as a mood, not a judgement.',
+      'Two other things belong in that summary. Read the tests as part of the diff: a test that asserts nothing, or that would pass against the unfixed code, is a defect in the PR, worth flagging as plainly as the implementation. And say what you did not review: a business rule or unfamiliar subsystem you cannot judge goes into the verdict with a name of who should also look, because an approval implying more scrutiny than you applied is worse than declining the review.',
     ],
     keyPoints: [
       'Anchors the comment on a concrete failing case, not on the code style',
@@ -447,6 +318,11 @@ export const coding: Question[] = [
       'Separates the required outcome from a suggested implementation, and asks whether a reason exists',
       'Approves correct, tested code instead of blocking on preference, and labels the alternative non-blocking',
       'Names the two or three findings that must change rather than listing fifteen',
+      'Ends with an explicit verdict — approve, approve-with-nits, or request changes — and the findings that drove it',
+      'Treats the tests as part of the reviewable diff, and states in the verdict what was outside their scope to judge',
+    ],
+    deeper: [
+      'The competence assumption is worth holding even when you are confident: "is this an oversight, or is there something about this path I am missing?" happens to be true more often than review culture likes to admit, and the one time the author has a reason you did not know about, you have kept the review a conversation instead of an accusation you now have to walk back.',
     ],
     followUps: ['How do you handle it when the author pushes back and you still disagree?', 'What do you do differently when reviewing across a language barrier or timezone?'],
   },
@@ -510,25 +386,6 @@ class NotifierFactory {
       'Proposes propagating or returning an explicit failure the caller must handle',
     ],
     followUps: ['When is an empty-object fallback genuinely the right call?', 'How would you make the failure visible without breaking the whole page?'],
-  },
-  {
-    id: 'coding-027',
-    round: 'coding',
-    category: 'Code review',
-    question: 'What do you look for in review that a linter or a type checker cannot catch?',
-    answer: [
-      'Whether the change does what it claims. Tooling verifies internal consistency; only a reader can compare the diff against the intent in the description and notice that the fix addresses a symptom while the described bug remains. That comparison is the part of review that cannot be automated, and it is where the highest-value findings come from.',
-      'Whether the tests would fail without the change. A suite can be green, fully typed, and lint-clean while asserting nothing that pins the new behaviour, and this is invisible to every tool in the pipeline. Reading a test and asking "what would break this" is a habit worth naming explicitly.',
-      'Whether the abstraction earns its cost, and whether the code is consistent with how this codebase already solves the same problem. Both are judgement about context that no rule can encode: a factory for one implementation is valid code, and a pattern that is idiomatic in one repository is foreign in the next.',
-      'Whether the failure modes are acceptable to a person. Silent fallbacks, a spinner with no timeout, an error message that tells the user nothing actionable, and data loss on a failed save are all type-safe. So is anything with a missing label or an unreachable keyboard path. These are the review findings that only exist because a human imagined using the thing.',
-    ],
-    keyPoints: [
-      'Checks the diff against the stated intent, which no tool can do',
-      'Verifies the tests would actually fail without the change',
-      'Judges whether abstraction and pattern choices fit this codebase',
-      'Evaluates human-facing failure modes: silent fallbacks, dead ends, accessibility',
-    ],
-    followUps: ['Which of these have you caught in a real review recently?', 'What would you automate away first so review can focus on the rest?'],
   },
 
   // Build prompts (13)
@@ -603,6 +460,7 @@ class NotifierFactory {
       'The listbox itself uses role="listbox" with role="option" children; focus stays on the input the whole time (a well-known combobox convention) while ArrowDown/ArrowUp move a highlighted-index state and aria-activedescendant, not actual DOM focus.',
       'Wire the keys explicitly: ArrowDown/Up move the active index (clamped, or wrapping — state your choice), Enter selects the active option and closes the list, Escape closes without selecting, and typing further filters and reopens.',
       'Close the loop on mouse/touch parity: clicking an option must select it the same way Enter does, and closing on outside-click or blur should not fire a "select nothing" side effect that clears a valid typed query.',
+      'If the clock runs out, stop short honestly rather than finishing the attributes without the behaviour. An aria-activedescendant pointing at an id you never render, or a listbox whose arrow keys do nothing, is worse than plain markup, because assistive tech announces a contract the component does not honour — say "the rest of the pattern is X, which I would rather implement properly than half-do" and leave the markup unclaimed.',
     ],
     keyPoints: [
       'Uses the correct ARIA roles/attributes: combobox, listbox, option, aria-activedescendant',
@@ -663,9 +521,12 @@ function TransactionsTable({ rows }: { rows: Transaction[] }) {
     answer: [
       'Say the data-flow rule before you type anything: the only state is the sort key and direction, the filter text, and the page index. Everything on screen is derived from those three, in a fixed order — filter the rows, sort the filtered result, slice the page out of the sorted one — each step a memoised derivation of the step before it. Storing filteredRows, sortedRows and pageRows as their own state is the mistake that sinks this exercise: they drift out of agreement, and you end up writing effects whose only job is to keep three copies of the same list in sync.',
       'Sort on the raw values, never the rendered ones. amountMinor is an integer count of minor units, so the comparator is a subtraction; comparing formatted strings like "1.234,56" sorts character by character and produces an order that looks plausible enough to ship. Dates compare as ISO strings or timestamps, not as display labels. Array.prototype.sort has been required to be stable since ES2019, so you get stability for free — but add an explicit tiebreak on id anyway, so that two rows with the same amount have one defined order rather than whatever the previous sort happened to leave behind.',
-      'Format with Intl.NumberFormat and hoist the formatters out of the row. Constructing one is comparatively expensive, so keep a small Map from currency code to formatter and reuse it, rather than calling the constructor 50 times per render while someone is typing in the filter box. Convert from minor units only at that display boundary, and get the divisor from the currency rather than hard-coding 100 — EUR and GBP have two decimal places, JPY has none, and a hard-coded 100 is a bug waiting for the first yen transaction.',
+      'Format with Intl.NumberFormat and hoist the formatters out of the row. Constructing one is comparatively expensive, so keep a small Map from currency code to formatter and reuse it, rather than calling the constructor 50 times per render while someone is typing in the filter box. Convert out of minor units only at that display boundary, never earlier.',
       'Use a real table rather than a grid of divs: thead, th with scope="col", tbody. Each sortable header is a button inside its th, and the th carries aria-sort set to "ascending", "descending" or "none", so a screen reader user hears the current order instead of having to infer it from an arrow glyph. The filter input gets a real label, and the pagination controls say which page of how many rather than just showing two arrows.',
-      'Close by naming what you are not building and why. Two thousand rows paginated at 50 means 50 rows in the DOM at a time, so virtualisation buys nothing here and adding it would be speculative work on top of a correct answer. Say the trigger instead: if they drop pagination and want all 2,000 rows scrolling in one list, that is the moment windowing earns its place.',
+      'Close by naming what you are not building: at 50 rows a page only 50 rows are ever in the DOM, so virtualisation buys nothing here and earns its place only if they drop pagination and want all 2,000 scrolling in one list.',
+    ],
+    deeper: [
+      'Take the number of decimal places from the currency rather than hard-coding a divisor of 100. EUR and GBP have two, JPY has none, and a few — KWD, BHD, TND — have three, so a hard-coded 100 is a bug waiting for the first yen transaction. Intl.NumberFormat already knows this, so formatting minor units means dividing by the exponent it reports for that currency rather than by a constant you picked.',
     ],
     keyPoints: [
       'Keeps sort, filter and page as the only state; filter, sort and paginate are memoised derivations',
@@ -725,11 +586,13 @@ function AmountForm() {
   return null;
 }`,
     answer: [
-      'Lead with the signature, because it is what the question is actually about: const [state, formAction, isPending] = useActionState(action, initialState), where the action has the shape (previousState, formData) => nextState and formAction goes straight onto the form as action={formAction}. That one line replaces the hand-rolled trio of an isLoading boolean, an error state, and an onSubmit that calls preventDefault — and because it is a real form submission rather than a click handler, the pending flag is managed for you and cannot get stuck true when an early return skips the reset.',
+      'Lead with the signature, because it is what the question is actually about: const [state, formAction, isPending] = useActionState(action, initialState), where the action has the shape (previousState, formData) => nextState and formAction goes straight onto the form as action={formAction}. That one line replaces the hand-rolled trio of an isLoading boolean, an error state, and a preventDefault onSubmit — and because it is a real form submission rather than a click handler, the pending flag is managed for you and cannot get stuck true when an early return skips the reset.',
       'Put the validation on the action boundary, not in the input onChange. The field is free text and people type money in their own locale: "1.234,56" is one thousand two hundred thirty-four and fifty-six in German, and something else entirely read as English. So parse deliberately — pick the separators from the locale, strip the grouping separator, normalise the decimal one, then reject anything remaining that is not digits plus at most one separator, and reject more decimal places than the currency allows. Do the conversion as integer arithmetic on the digit string, not by multiplying a parsed number.',
       'Say out loud the thing you would never do: parseFloat on money. 19.99 * 100 evaluates to 1998.9999999999998, so a naive round trip through a float loses or gains a minor unit depending on the value, and on a payments path that surfaces weeks later as a reconciliation difference nobody can explain. The amount is an integer number of minor units from the moment it leaves the input, and the currency decides the exponent — two for EUR, zero for JPY, three for a handful of others.',
-      'Return failures as state rather than throwing: the action returns { error: "Enter an amount like 12,50" } and the component renders it. Then wire the accessibility so the message is actually reachable — a real label tied to the input, aria-invalid set from whether state.error exists, and aria-describedby pointing at the id of the element holding the message, so a screen reader reads the error when focus lands on the field rather than leaving it as red text next to a control that claims to be fine.',
-      'If they push on it, separate pending from optimistic. isPending is the honest "the server has not answered yet" signal and is what disables the submit button. useOptimistic is a different tool: it renders the expected outcome immediately and rolls back if the action fails. For anything that moves money, pending is the right choice — showing an optimistic balance that then reverses is worse for the user than a second of spinner.',
+      'Return failures as state rather than throwing: the action returns { error: "Enter an amount like 12,50" } and the component renders it. Then wire the accessibility so the message is actually reachable — a real label tied to the input, aria-invalid set from whether state.error exists, and aria-describedby pointing at the id of the element holding the message, so a screen reader reads the error when focus lands on the field rather than leaving it as red text next to a control that claims to be fine. Gate the submit button on isPending, not useOptimistic: on a money path an optimistic balance that reverses is worse than a second of spinner.',
+    ],
+    deeper: [
+      'Separate the two properly if they push. isPending is the honest "the server has not answered yet" signal, and it is the one that gates the submit control. useOptimistic is a different tool: it renders the expected outcome immediately and rolls back when the action fails, which is right for a like button or a reorder and wrong for anything that moves money, because the rollback is indistinguishable from a second transaction to a user watching the number.',
     ],
     keyPoints: [
       'Names the useActionState signature and why it beats hand-rolled loading and error flags',

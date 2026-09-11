@@ -25,6 +25,22 @@ describe('Browse', () => {
     expect(screen.getByRole('button', { name: /debounce/i })).toHaveAttribute('aria-expanded', 'false');
   });
 
+  test('search matches deeper material, not just the answer', async () => {
+    const withDeeper: Question[] = [
+      ...qs,
+      { id: 'hm-003', round: 'hm', category: 'Frontend', question: 'Where do you store an auth token?', answer: ['Answer three.'], deeper: ['Refresh tokens must rotate on every use.'], keyPoints: ['Point three'] },
+    ];
+    function DeeperHarness() {
+      const [state, dispatch] = useReducer(reducer, EMPTY);
+      return <Browse questions={withDeeper} state={state} dispatch={dispatch} />;
+    }
+    render(<DeeperHarness />);
+    const search = screen.getByPlaceholderText(/search questions/i);
+    await userEvent.type(search, 'rotate');
+    expect(screen.getByText('Where do you store an auth token?')).toBeInTheDocument();
+    expect(screen.queryByText('How do you design a rate limiter?')).not.toBeInTheDocument();
+  });
+
   test('search narrows by question text and by category', async () => {
     render(<Harness />);
     const search = screen.getByPlaceholderText(/search questions/i);

@@ -161,7 +161,7 @@ export const debrief: Question[] = [
     answer: [
       'Name the specific mechanism, not just "it would be slow": e.g. an unmemoized render that re-computes a derived list on every keystroke, a full-array filter or sort running on every render, or a DOM list rendered without virtualization once row count crosses a few hundred.',
       'Point to where in the actual code this lives — which component, which render path — so the answer is concrete rather than theoretical, and describe the visible symptom (input lag, a frozen frame, slow initial paint).',
-      'Give the specific fix in order of effort: first check whether the project runs the React Compiler (if so, component-level memoization is already handled and hand-memoizing is not the first move), otherwise memoize the derived computation; then window/virtualize the list; then move filtering or pagination server-side if data keeps growing beyond what the client should hold at all.',
+      'Give the specific fix in order of effort: first check whether the project runs the React Compiler, since that decides whether hand-memoizing is the first move at all; otherwise memoize the derived computation, then window the list, then move filtering or pagination server-side once the data has outgrown what the client should hold.',
     ],
     keyPoints: [
       'Names the specific mechanism that breaks, not a vague "performance issue"',
@@ -196,7 +196,7 @@ export const debrief: Question[] = [
     question: 'How would this work with 50 engineers contributing?',
     answer: [
       'Separate the question into a few concrete axes: code ownership (would this still be one flat set of files, or need feature boundaries), conflict surface (shared files everyone touches, like a single giant component or a single global store), and review process (would a single PR touching this area be reviewable at all).',
-      'Point to the specific part of the current structure that would become a hotspot first — usually a single large file, a single shared state module, or a single shared type file everyone edits — and name the concrete restructuring that would relieve it (splitting by feature, introducing clearer module boundaries, code ownership rules) — with independently deployed micro-frontends via Module Federation as the far end of that spectrum, named with its cost (shared-dependency contracts, harder debugging) rather than as a default.',
+      'Point to the specific part of the current structure that would become a hotspot first — usually a single large file, a single shared state module, or a single shared type file everyone edits — and name the concrete restructuring that would relieve it (splitting by feature, introducing clearer module boundaries, code ownership rules), naming independently deployed micro-frontends only as the far end of that spectrum and not as the answer here.',
       'Be clear this is a hypothetical extrapolation, not a claim that the take-home was built for this scale — the goal is to show you can reason about the axis of change without over-engineering the actual submission for a scenario that does not apply to it.',
     ],
     keyPoints: [
@@ -293,9 +293,8 @@ export const debrief: Question[] = [
       'For an EU product, say whether it is in scope of the European Accessibility Act (in force since June 2025; BFSG in Germany): if it is, WCAG 2.2 AA via EN 301 549 is the legal floor rather than a quality preference, which changes which gaps are acceptable to ship.',
     ],
     keyPoints: [
-      'Gives an honest, specific split between what is covered and what is not',
+      'Gives an honest, specific split between what is covered and what is not, rather than claiming full compliance',
       'Distinguishes verified coverage from assumed-but-untested coverage',
-      'Names concrete gaps rather than claiming full compliance',
       'States the next concrete step: automated audit plus a manual keyboard/screen-reader pass',
       'Knows whether the European Accessibility Act makes WCAG 2.2 AA mandatory for this product',
     ],
@@ -343,16 +342,16 @@ export const debrief: Question[] = [
     category: 'Quality & security',
     question: 'How would you monitor this in production?',
     answer: [
-      'Separate the layers: client-side error tracking to catch uncaught exceptions and rejected promises with enough context to reproduce them, performance monitoring for the metrics that actually affect the user (LCP for initial load, INP for interaction responsiveness, CLS for layout stability), and product analytics on the key actions to know if the feature is actually being used as intended.',
+      'Separate the layers, and name the tooling for each rather than saying "monitoring": client-side error tracking (Sentry or equivalent) to catch uncaught exceptions and rejected promises with enough context to reproduce them, real-user performance monitoring for the metrics that actually affect the user (LCP for initial load, INP for interaction responsiveness, CLS for layout stability) — field data from a RUM provider or the browser\'s own web-vitals reporting, not a lab score — and product analytics on the key actions to know if the feature is being used as intended. Naming the layer and a real tool for it is the difference between having shipped monitoring and having read about it.',
       'Name one or two specific events or errors from this submission that would be worth instrumenting first — e.g. "[a failed fetch on the main data load, or a filter action]" — rather than a generic "add logging everywhere."',
       'Address alerting explicitly: what threshold would actually page someone versus what belongs in a dashboard only, since undifferentiated alerting is itself a production risk (alert fatigue).',
-      'For EU users, separate two regimes on client-side monitoring: the consent gate before the tool reads or writes anything on the device is ePrivacy law (§25 TDDDG in Germany) and applies whether or not the data is personal; GDPR then governs what it captures — error and analytics tools pick up IP addresses and session identifiers even unintentionally, so scrub to what debugging needs and confirm a data processing agreement covers the vendor.',
+      'For EU users, cite the two regimes rather than reasoning them out here — the consent-management question covers that split in full: the §25 TDDDG consent gate governs the tool touching the device at all, GDPR governs what it then captures. The practical consequence for monitoring is that error and analytics tools pick up IP addresses and session identifiers even unintentionally, so scrub to what debugging needs and confirm a data processing agreement covers the vendor.',
     ],
     keyPoints: [
       'Separates error tracking, performance monitoring, and product analytics as distinct layers',
       'Names one or two specific events from the submission worth instrumenting first',
+      'Names a real tool or mechanism per layer, not just the category',
       'Distinguishes alert-worthy thresholds from dashboard-only metrics',
-      'Names the specific tool layer for each of the three concerns',
       'Separates the TDDDG consent gate from GDPR data minimization for monitoring tools',
     ],
     followUps: ['What would you actually want to be paged for here at 3am?', 'How would you know if this feature was being used at all?'],
@@ -440,7 +439,7 @@ export const debrief: Question[] = [
     answer: [
       'Answer specifically and honestly: name the kinds of tasks, if any, where an AI assistant was used — scaffolding boilerplate, drafting a first-pass test, or exploring an unfamiliar pattern quickly — and name what was written and decided by hand, particularly the core logic and architectural choices.',
       'Point at where you already said this: a short "tooling" note in the README, written before submitting rather than produced under questioning, since undisclosed use found later reads worse than any amount of disclosed use. If the brief forbade AI assistance, you complied and said so in the README — a stated rule in a brief is a constraint, not a judgment call; if the brief was silent, you stated the assumption you made explicitly, the same as any other unstated requirement.',
-      'State the verification standard applied without exception: every line, regardless of origin, was read, understood, and is something you can explain and defend on the spot — treat this question as inviting exactly that proof, and be ready to walk through any specific piece of code live if asked.',
+      'State the verification standard applied without exception: every line, regardless of origin, was read, understood, and is something you can explain and defend on the spot — treat this question as inviting exactly that proof, and offer unprompted to walk through any piece of the submission they want to pick, rather than waiting to be asked.',
       'Name the extra scrutiny you would apply to AI-assisted output specifically, if any was used — closer review on logic-heavy or security-sensitive sections, and never accepting "the assistant wrote it" as an explanation for why something works.',
     ],
     keyPoints: [
@@ -458,7 +457,7 @@ export const debrief: Question[] = [
     category: 'Reflection',
     question: 'If a junior had to extend this tomorrow, where would they get stuck?',
     answer: [
-      'Answer with specific places, not "it is pretty readable": name the one or two spots where the structure does not match convention, an implicit assumption is baked in (a data shape, a fixed word order in a string), or a name is easy to misread — proactively naming these shows you have read your own code as a stranger would.',
+      'Answer with specific places, not "it is pretty readable": name the one or two spots where the structure does not match convention, an implicit assumption is baked in (a data shape, a fixed word order in a string), or a name is easy to misread — proactively naming these shows you have read your own code as a stranger would. For each one, name the single comment or README line that would have prevented the misread, since the cheap fix is the part a reviewer can check you actually know.',
       'Give the path you would point them down — README, then the entry point, then the single primary flow end to end, then the tests — and say which step of that walk is the one where the current code is least self-explanatory, since a linear walk through one flow builds a working mental model faster than a file-by-file tour.',
       'Frame legibility to others as part of the quality bar being evaluated: a submission a junior can extend without asking you is evidence of staff-level thinking about the codebase, and honestly naming where it falls short is more credible than claiming it is fully self-documenting.',
     ],
@@ -471,7 +470,7 @@ export const debrief: Question[] = [
     followUps: ['Which file would confuse a junior most on first read?', 'What one comment or README line would have prevented that?'],
   },
 
-  // From your CV (5)
+  // From your CV (4)
   {
     id: 'debrief-026',
     round: 'debrief',
@@ -498,7 +497,7 @@ export const debrief: Question[] = [
     answer: [
       'Order gates by how cheap and fast they are relative to the risk they catch: linting and type-checking first (near-instant, catches a wide class of mistakes), then the test suite, then a build step to confirm the artifact actually compiles for production, then anything slower like an end-to-end pass or a dependency vulnerability scan.',
       'Justify the order explicitly: fast, cheap gates should fail a pull request before anyone waits on a slow one, so contributors get feedback in seconds for the common mistakes and only wait longer for the checks that need it.',
-      'Name one gate specific to this submission\'s actual risk, not a generic list — e.g. "[a gate that fails if a new component ships without a corresponding test, given how much this submission leans on [the part carrying the most logic]]" — to show the ordering is reasoned about this codebase, not copy-pasted from a template.',
+      'Name one gate specific to this submission\'s actual risk, not a generic list — e.g. "[a gate that fails if a new component ships without a corresponding test, given how much this submission leans on the part carrying the most logic]" — to show the ordering is reasoned about this codebase, not copy-pasted from a template. If the panel has already named a defect in the submission, say which of these gates would have caught it, since tying the list to a real miss beats justifying it against a hypothetical one.',
     ],
     keyPoints: [
       'Orders gates fast-and-cheap first: lint/type-check, then tests, then build, then slower checks',
@@ -507,24 +506,6 @@ export const debrief: Question[] = [
       'Names which gate would have caught a real issue in this submission',
     ],
     followUps: ['Which gate would have caught the biggest issue in this submission?', 'How would you keep the whole pipeline fast as more gates get added?'],
-  },
-  {
-    id: 'debrief-028',
-    round: 'debrief',
-    category: 'From your CV',
-    question: 'If you have rolled features out behind flags before, how would you roll this feature out to real users?',
-    answer: [
-      'Describe a standard staged rollout generically: behind a flag defaulted off, enabled first for internal users or a small opt-in cohort, then a small percentage of real traffic with monitoring in place, then a wider ramp once the metrics that matter look healthy, with a fast kill-switch at every stage.',
-      'Name the specific metric or signal from this feature that you would actually watch during the ramp — e.g. "[an error rate on the main action, or a drop in a completion metric]" — rather than a generic "monitor for issues."',
-      'State the rollback trigger explicitly: what specific threshold would pull the flag back to off, since a rollout plan without a concrete rollback condition is not really a plan.',
-    ],
-    keyPoints: [
-      'Describes a staged rollout: internal, small cohort, percentage ramp, full release',
-      'Keeps a kill-switch available at every stage',
-      'Names a specific metric tied to this feature to watch during the ramp',
-      'States an explicit rollback trigger/threshold, not just "monitor for issues"',
-    ],
-    followUps: ['What would make you pause the rollout instead of rolling it back entirely?', 'How long would you leave it at each stage before ramping further?'],
   },
   {
     id: 'debrief-029',
@@ -574,12 +555,14 @@ export const debrief: Question[] = [
       'Do not fold immediately or get defensive — take the challenge seriously and re-state the actual reasoning briefly: the constraint that drove it, the alternative considered, and why the trade-off was accepted, since a real defense requires restating the logic, not just repeating the conclusion.',
       'If the reasoning genuinely holds up, cite the specific evidence it rests on — the data size in the brief, the API shape, the time-box — and name the condition under which you would change your mind; a good defense is not stubbornness, it comes with a stated falsification condition.',
       'If the challenge actually reveals a real gap once you think it through out loud, say so directly and update in real time: "you are right, I did not weigh [X] enough" reads as far stronger to a staff-level panel than defending a position past the point it holds up, since staff engineers are expected to update on good evidence, not just defend their prior calls.',
+      'If they hold their position and you still disagree, yield without friction and say which it is: "happy to go with that — I would still lean the other way, for [reason], but it is a reasonable call." Being overruled cleanly while keeping your actual position on the record reads better at staff level than either winning the argument or pretending to be convinced.',
     ],
     keyPoints: [
       'Asks what the specific objection is before responding to the verdict',
       'Restates the actual reasoning rather than just repeating the conclusion',
       'Cites the specific evidence, or says "you\'re right" explicitly',
       'Names a real condition that would change their mind',
+      'Can yield without friction while still stating the disagreement, rather than fake-conceding',
     ],
     followUps: ['What would it take for you to actually change this decision today?', 'Was there a moment while building this where you almost chose the other way?'],
   },
