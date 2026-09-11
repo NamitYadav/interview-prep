@@ -41,6 +41,7 @@ export function DesignSession({ state, dispatch }: { state: Persisted; dispatch:
       // deadline instead of getting its own 45 minutes.
       key={`${question.id}-${attempt}`}
       question={question}
+      attempt={attempt}
       state={state}
       dispatch={dispatch}
       onRestart={() => {
@@ -52,11 +53,11 @@ export function DesignSession({ state, dispatch }: { state: Persisted; dispatch:
 }
 
 function DesignPrompt({
-  question, state, dispatch, onRestart,
-}: { question: Question; state: Persisted; dispatch: Dispatch<Action>; onRestart: () => void }) {
+  question, attempt, state, dispatch, onRestart,
+}: { question: Question; attempt: number; state: Persisted; dispatch: Dispatch<Action>; onRestart: () => void }) {
   const [finished, setFinished] = useState(false);
   const [checkedPhases, setCheckedPhases] = useState<Set<number>>(new Set());
-  const scratch = useDraft(draftKey(question.id, 'design-scratch'));
+  const scratch = useDraft(draftKey(question.id, `design-scratch-${attempt}`));
 
   // Visible 45-minute countdown that never forces anything — a real loop doesn't
   // cut you off, it just tells you the clock is running.

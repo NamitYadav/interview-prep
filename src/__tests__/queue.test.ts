@@ -78,6 +78,15 @@ describe('roundStats', () => {
       c: { rating: 2, seen: 1, lastSeen: 1 },
       zzz: { rating: 3, seen: 1, lastSeen: 1 }, // not in this round, ignored
     };
-    expect(roundStats(qs, progress)).toEqual({ total: 5, unrated: 2, weak: 1, ok: 1, solid: 1 });
+    // `now` pinned just after lastSeen so nothing has decayed.
+    expect(roundStats(qs, progress, 2)).toEqual({ total: 5, unrated: 2, weak: 1, ok: 1, solid: 1 });
+  });
+
+  // Counts go through the same bucket() the queue orders by, so the progress bar can't
+  // claim "solid" for a question the drill is about to serve you again as OK.
+  test('a decayed solid is counted as ok, matching the queue', () => {
+    const progress: Progress = { a: { rating: 3, seen: 1, lastSeen: 0 } };
+    expect(roundStats(qs, progress, 1)).toMatchObject({ solid: 1, ok: 0 });
+    expect(roundStats(qs, progress, SOLID_DECAY_MS + 1)).toMatchObject({ solid: 0, ok: 1 });
   });
 });

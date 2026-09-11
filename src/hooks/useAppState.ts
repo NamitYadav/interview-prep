@@ -142,5 +142,5 @@ export function useAppState() {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  return { state, dispatch, saveFailed, staleTab };
+  return { state, dispatch, saveFailed, staleTab, dismissStaleTab: () => setStaleTab(false) };
 }

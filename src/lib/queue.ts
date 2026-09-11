@@ -47,14 +47,18 @@ export interface RoundStats {
   solid: number;
 }
 
-export function roundStats(questions: Question[], progress: Progress): RoundStats {
+// Counted through the same bucket() the queue orders by, so a Solid that has decayed
+// back into the OK bucket is reported as OK rather than the progress bar claiming
+// "solid" for a question the drill is about to serve you again.
+export function roundStats(questions: Question[], progress: Progress, now: number = Date.now()): RoundStats {
   const stats: RoundStats = { total: questions.length, unrated: 0, weak: 0, ok: 0, solid: 0 };
   for (const q of questions) {
-    const r = progress[q.id]?.rating;
-    if (r === 1) stats.weak++;
-    else if (r === 2) stats.ok++;
-    else if (r === 3) stats.solid++;
-    else stats.unrated++;
+    switch (bucket(progress, q.id, now)) {
+      case 0: stats.weak++; break;
+      case 1: stats.unrated++; break;
+      case 2: stats.ok++; break;
+      default: stats.solid++;
+    }
   }
   return stats;
 }

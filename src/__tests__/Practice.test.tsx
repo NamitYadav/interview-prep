@@ -331,6 +331,45 @@ describe('lap position survives a reload', () => {
     expect(screen.getByText('First question?')).toBeInTheDocument();
   });
 
+  // Laps used to share one storage slot, so merely opening another round, a category
+  // chip or the Weak drill destroyed the lap you were part-way through.
+  test('visiting another set does not destroy the lap you were in', async () => {
+    const a = render(<Harness3 />);
+    await userEvent.click(screen.getByRole('button', { name: /skip/i }));
+    expect(screen.getByText('Second question?')).toBeInTheDocument();
+    a.unmount();
+
+    // Open a different set and touch nothing at all.
+    render(<Harness />).unmount();
+
+    render(<Harness3 />);
+    expect(screen.getByText('Second question?')).toBeInTheDocument();
+  });
+
+  // The bank's content changes between sessions — round 4 cut 17 questions — and the
+  // lap key only covers length and endpoints, so a restored id can be gone.
+  test('drops restored ids the set no longer contains instead of dead-ending', () => {
+    localStorage.setItem(
+      'interview-prep:laps',
+      JSON.stringify({
+        [`3:hm-001:hm-003`]: { history: ['hm-001', 'hm-deleted'], historyPos: 1, requeued: [{ id: 'hm-gone', at: 2 }], step: 2 },
+      }),
+    );
+    render(<Harness3 />);
+    expect(screen.queryByText(/no questions match/i)).not.toBeInTheDocument();
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+  });
+
+  test('falls back to a fresh lap when no restored id survives', () => {
+    localStorage.setItem(
+      'interview-prep:laps',
+      JSON.stringify({ [`3:hm-001:hm-003`]: { history: ['gone-1', 'gone-2'], historyPos: 1, requeued: [], step: 2 } }),
+    );
+    render(<Harness3 />);
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /back/i })).toBeDisabled();
+  });
+
   test('a finished lap is not restored', async () => {
     const { unmount } = render(<Harness />);
     await userEvent.click(screen.getByRole('button', { name: /skip/i }));

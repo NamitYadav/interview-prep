@@ -35,7 +35,27 @@ export function Practice({
   // top of a 287-question queue. `saved` restores the lap when the stored position
   // belongs to THIS question set; a key mismatch starts fresh.
   const key = useMemo(() => lapKey(questions), [questions]);
-  const [saved] = useState(() => readLap(key));
+  // lapKey is a heuristic (length + endpoints), and the bank's content changes between
+  // sessions, so a restored history can name ids this set no longer contains — which
+  // would render "No questions match" with no way out. Drop those, and fall back to a
+  // fresh lap if the position no longer survives.
+  const [saved] = useState(() => {
+    const stored = readLap(key);
+    if (!stored) return undefined;
+    const known = new Set(questions.map((q) => q.id));
+    const history = stored.history.filter((id) => known.has(id));
+    if (history.length === 0) return undefined;
+    const currentId = stored.history[stored.historyPos];
+    const historyPos = currentId !== undefined && known.has(currentId)
+      ? history.indexOf(currentId)
+      : history.length - 1;
+    return {
+      ...stored,
+      history,
+      historyPos: historyPos < 0 ? history.length - 1 : historyPos,
+      requeued: stored.requeued.filter((r) => known.has(r.id)),
+    };
+  });
 
   const [history, setHistory] = useState<string[]>(() => {
     if (saved) return saved.history;
@@ -64,12 +84,15 @@ export function Practice({
 
   useEffect(() => {
     if (lapDone) {
-      clearLap();
+      clearLap(key);
       return;
     }
     if (history.length === 0) return;
+    // Nothing has happened yet — don't write a lap that is just "question 1", which
+    // would otherwise let merely opening a set count as progress in it.
+    if (!saved && historyPos === 0 && step === 0) return;
     writeLap({ key, history, historyPos, requeued, step });
-  }, [key, history, historyPos, requeued, step, lapDone]);
+  }, [key, saved, history, historyPos, requeued, step, lapDone]);
 
   const currentId = history[historyPos];
   const current = useMemo(() => questions.find((q) => q.id === currentId), [questions, currentId]);

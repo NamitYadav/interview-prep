@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import { draftKey, readDraft, writeDraft } from '../lib/drafts';
+import { clearDraft, draftKey, readDraft, writeDraft } from '../lib/drafts';
 
 beforeEach(() => localStorage.clear());
 
@@ -18,12 +18,20 @@ describe('drafts', () => {
     expect(readDraft(draftKey('coding-001', 'design-scratch'))).toBe('c');
   });
 
-  test('an emptied draft is removed rather than stored blank', () => {
+  // The scratch editor starts pre-filled with the question's code, so treating "" as
+  // absent meant deliberately clearing it brought the starter text back on remount.
+  test('an emptied draft stays empty rather than falling back to the starter value', () => {
     const k = draftKey('coding-001', 'scratch');
     writeDraft(k, 'something');
     writeDraft(k, '');
+    expect(readDraft(k)).toBe('');
+  });
+
+  test('clearDraft drops it so the starter value returns', () => {
+    const k = draftKey('coding-001', 'scratch');
+    writeDraft(k, '');
+    clearDraft(k);
     expect(readDraft(k)).toBeUndefined();
-    expect(localStorage.getItem('interview-prep:drafts')).toBe('{}');
   });
 
   test('returns undefined for an unknown key', () => {

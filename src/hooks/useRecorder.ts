@@ -64,23 +64,36 @@ export function useRecorder() {
       }
       streamRef.current = stream;
       const recorder = new MediaRecorder(stream);
+      // Chunks are captured per-recording rather than shared through a ref: onstop is
+      // async, so a stop-then-immediately-record leaves recording #1's onstop landing
+      // partway through recording #2, where a shared array mixes their audio together.
+      const chunks: Blob[] = [];
+      chunksRef.current = chunks;
       recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
+        if (e.data.size > 0) chunks.push(e.data);
       };
       recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' });
+        stream.getTracks().forEach((t) => t.stop());
+        // onstop is async, so by the time it runs a NEW recording may already have
+        // replaced this one. Publish only if this is still the current recorder —
+        // keyed on the recorder itself, not runId, which stop() bumps before the
+        // handler fires. Without this the late handler cleared streamRef for the run
+        // that replaced it, so unmount stopped no tracks and the mic stayed live.
+        if (recorderRef.current !== recorder) return;
+        streamRef.current = null;
+        const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
         const next = URL.createObjectURL(blob);
         urlRef.current = next;
         setUrl(next);
-        stream.getTracks().forEach((t) => t.stop());
-        streamRef.current = null;
       };
       recorderRef.current = recorder;
       recorder.start();
       setRecording(true);
     } catch {
       // Mic permission denied or unavailable — fail silently, same as "not supported".
-      wantRecordingRef.current = false;
+      // Only clear intent if this run is still the current one: an abandoned prompt
+      // rejecting later must not cancel a recording the user has since started.
+      if (runId === runIdRef.current) wantRecordingRef.current = false;
     }
   };
 

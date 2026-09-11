@@ -17,7 +17,7 @@ import { ThemeToggle } from './components/ThemeToggle';
 const isRoundId = (r: Route): r is RoundId => (ROUND_IDS as readonly string[]).includes(r);
 
 export default function App() {
-  const { state, dispatch, saveFailed, staleTab } = useAppState();
+  const { state, dispatch, saveFailed, staleTab, dismissStaleTab } = useAppState();
   const route = useHashRoute();
   const [strictMode, setStrictMode] = useStrictMode();
 
@@ -45,6 +45,9 @@ export default function App() {
           Another tab changed your progress. Reload to see it — saving from here will overwrite that change.{' '}
           <button type="button" onClick={() => window.location.reload()} className="underline underline-offset-2">
             Reload
+          </button>{' '}
+          <button type="button" onClick={dismissStaleTab} className="underline underline-offset-2">
+            Dismiss
           </button>
         </div>
       )}

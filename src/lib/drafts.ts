@@ -25,10 +25,20 @@ export const readDraft = (key: string): string | undefined => read()[key];
 export function writeDraft(key: string, value: string): void {
   try {
     const all = read();
-    // An empty draft is an absent draft — otherwise clearing a scratch pad leaves a
-    // row behind forever and the store only ever grows.
-    if (value === '') delete all[key];
-    else all[key] = value;
+    // An empty draft is stored, not deleted: the scratch editor starts pre-filled with
+    // the question's code, so treating "" as absent meant deliberately clearing it
+    // brought the starter text straight back on the next remount.
+    all[key] = value;
     localStorage.setItem(KEY, JSON.stringify(all));
   } catch { /* storage unavailable — drafts just won't survive a reload */ }
+}
+
+// Drop a draft entirely, so the field falls back to its starter value again.
+export function clearDraft(key: string): void {
+  try {
+    const all = read();
+    if (!(key in all)) return;
+    delete all[key];
+    localStorage.setItem(KEY, JSON.stringify(all));
+  } catch { /* empty */ }
 }
