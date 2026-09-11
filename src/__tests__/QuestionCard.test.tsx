@@ -40,6 +40,22 @@ describe('QuestionCard code block', () => {
   });
 });
 
+describe('QuestionCard scratch editor (Build prompts)', () => {
+  const buildPrompt: Question = { ...base, category: 'Build prompts', code: 'function f() {\n  // TODO\n}' };
+
+  test('renders an editable textarea pre-filled with the starter code, not a read-only block', () => {
+    const { container } = renderCard(buildPrompt);
+    expect(container.querySelector('pre')).toBeNull();
+    expect(screen.getByRole('textbox', { name: /scratch editor/i })).toHaveValue(buildPrompt.code);
+  });
+
+  test('a non-Build-prompts question with code still renders the read-only block', () => {
+    const { container } = renderCard({ ...base, code: 'const x = 1;' });
+    expect(container.querySelector('pre')).not.toBeNull();
+    expect(screen.queryByRole('textbox', { name: /scratch editor/i })).not.toBeInTheDocument();
+  });
+});
+
 describe('QuestionCard reveal', () => {
   test('the reveal button calls onReveal', async () => {
     const onReveal = vi.fn();

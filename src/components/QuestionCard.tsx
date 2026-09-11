@@ -81,9 +81,20 @@ export function QuestionCard({
       <h2 ref={headingRef} tabIndex={-1} className="mb-4 text-lg font-medium outline-none">{question.question}</h2>
 
       {question.code && (
-        <pre className="mb-4 overflow-x-auto rounded bg-zinc-100 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-800">
-          <code>{question.code}</code>
-        </pre>
+        question.round === 'coding' && question.category === 'Build prompts' ? (
+          <textarea
+            key={question.id}
+            defaultValue={question.code}
+            spellCheck={false}
+            rows={question.code.split('\n').length + 2}
+            aria-label="Scratch editor"
+            className="mb-4 w-full overflow-x-auto rounded bg-zinc-100 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-800"
+          />
+        ) : (
+          <pre className="mb-4 overflow-x-auto rounded bg-zinc-100 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-800">
+            <code>{question.code}</code>
+          </pre>
+        )
       )}
 
       {!revealed ? (
