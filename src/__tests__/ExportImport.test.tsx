@@ -53,6 +53,7 @@ describe('ExportImport', () => {
   });
 
   test('import replaces state and clears a prior error on success', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     render(<Harness initial={seeded} />);
     const input = screen.getByLabelText(/import backup file/i);
     await userEvent.upload(input, file('not json'));
@@ -63,6 +64,42 @@ describe('ExportImport', () => {
       file(JSON.stringify({ version: 1, progress: {}, notes: { 'hm-001': 'restored' } })),
     );
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByTestId('notes')).toHaveTextContent('restored');
+    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('status')).toHaveTextContent(/imported 0 rated, 1 notes, 0 stories/i);
+  });
+
+  // Import wipes everything and cannot be undone, and it fires exactly when someone is
+  // recovering after clearing browser data — declining must leave the current data alone.
+  test('declining the import confirm leaves existing data untouched', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    render(<Harness initial={seeded} />);
+    await userEvent.upload(
+      screen.getByLabelText(/import backup file/i),
+      file(JSON.stringify({ version: 1, progress: {}, notes: { 'hm-001': 'restored' } })),
+    );
+    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('notes')).toHaveTextContent('my story');
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  test('the confirm names what is being replaced and what replaces it', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    render(<Harness initial={seeded} />);
+    await userEvent.upload(
+      screen.getByLabelText(/import backup file/i),
+      file(JSON.stringify({ version: 1, progress: {}, notes: { 'hm-001': 'restored' } })),
+    );
+    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/1 rated, 1 notes, 0 stories/);
+    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/0 rated, 1 notes, 0 stories/);
+  });
+
+  test('a parse failure never prompts', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    render(<Harness initial={seeded} />);
+    await userEvent.upload(screen.getByLabelText(/import backup file/i), file('not json'));
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(screen.getByTestId('notes')).toHaveTextContent('my story');
   });
 
   test('reset dispatches only after the confirm dialog is accepted', async () => {

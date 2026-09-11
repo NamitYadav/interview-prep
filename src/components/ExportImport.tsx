@@ -10,6 +10,7 @@ export function ExportImport({
 }: { state: Persisted; dispatch: Dispatch<Action>; onExport?: () => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [imported, setImported] = useState<string | null>(null);
 
   const exportJson = () => {
     setError(null);
@@ -27,12 +28,25 @@ export function ExportImport({
     onExport?.();
   };
 
+  // Import replaces everything. It used to do that the instant a file was picked —
+  // no confirm, no summary, no undo — while Reset, which destroys strictly less,
+  // did confirm. This fires exactly when someone is recovering after clearing
+  // browser data, so it states what is being traded before doing it.
   const importJson = async (file: File | undefined) => {
     if (!file) return;
     try {
-      dispatch({ type: 'import', data: parseBackup(await file.text()) });
+      const data = parseBackup(await file.text());
       setError(null);
+      setImported(null);
+      const summary = (p: Persisted) =>
+        `${Object.keys(p.progress).length} rated, ${Object.keys(p.notes).length} notes, ${Object.keys(p.stories).length} stories`;
+      if (!window.confirm(`Replace your current data (${summary(state)}) with this backup (${summary(data)})? This cannot be undone.`)) {
+        return;
+      }
+      dispatch({ type: 'import', data });
+      setImported(summary(data));
     } catch (e) {
+      setImported(null);
       setError(e instanceof Error ? e.message : 'Import failed');
     } finally {
       if (fileRef.current) fileRef.current.value = '';
@@ -60,6 +74,7 @@ export function ExportImport({
         onChange={(e) => void importJson(e.target.files?.[0])}
       />
       <button type="button" className={`${btn} text-red-600 dark:text-red-400`} onClick={reset}>Reset progress</button>
+      {imported && <p role="status" className="text-sm text-emerald-700 dark:text-emerald-400">Imported {imported}.</p>}
       {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
     </div>
   );
