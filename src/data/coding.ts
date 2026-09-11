@@ -1,7 +1,7 @@
 import type { Question } from '../types';
 
 export const coding: Question[] = [
-  // Pairing & building (9)
+  // Pairing & building (4)
   {
     id: 'coding-001',
     round: 'coding',
@@ -102,7 +102,7 @@ export const coding: Question[] = [
     followUps: ['What would you say if almost nothing worked?', 'How do you keep the summary from sounding like excuses?'],
   },
 
-  // Debugging (7)
+  // Debugging (6)
   {
     id: 'coding-010',
     round: 'coding',
@@ -268,7 +268,7 @@ export const coding: Question[] = [
     followUps: ['When is useMemo genuinely the right fix for this shape?', 'How would a lint rule have caught this earlier?'],
   },
 
-  // Code review (6)
+  // Code review (4)
   {
     id: 'coding-020',
     round: 'coding',
@@ -305,12 +305,12 @@ export const coding: Question[] = [
     category: 'Code review',
     question: 'How do you phrase a blocking comment so it lands as a technical judgement rather than a personal one?',
     answer: [
-      'Anchor on the failing case rather than the author. "This throws when the code is not in the map, so a typo in a discount code becomes a crash on checkout" is impossible to take personally and impossible to argue with. "This is fragile" is both an opinion and an invitation to defend.',
-      'Say plainly that it is blocking and why, because softening the signal is its own failure mode. A comment written so gently that the author reads it as optional wastes a round trip; "this needs to change before merge, because it can crash a paid flow" is kinder than three hedged sentences that get skipped.',
-      'Separate the requirement from the solution. State the problem as non-negotiable and the fix as a suggestion: it leaves the author room to solve it better than you would have, and it avoids review turning into dictation.',
-      'Assume competence in the wording. "Was there a reason to skip the guard here, or is this an oversight?" costs one clause and protects against the case where they know something you do not, which happens more often than review culture likes to admit.',
-      'The same principle scales up to the review as a whole: make the required change unmistakable and everything else visibly optional. That means blocking only on correctness, clarity, or consistency with the existing codebase — approving working, tested code you would have built differently, and labelling any alternative explicitly as non-blocking — and it means commenting once on the first instance of a repeated mistake, saying it applies throughout, and folding the remainder into the summary rather than inline. Fifteen inline comments read as a verdict on the author and leave them guessing which two actually matter; naming those two is the job.',
-      'Two things belong in the summary rather than inline. Read the tests as part of the diff, not as an appendix: a test that asserts nothing, or that would pass against the unfixed code, is a defect in the PR and worth flagging as plainly as the implementation. And say what you did not review — if a business rule or an unfamiliar subsystem is outside what you can judge, write that into the verdict and name who should also look, because an approval that implies more scrutiny than you applied is worse than declining the review.',
+      'Anchor on the failing case rather than the author. "This throws when the code is not in the map, so a typo in a discount code becomes a crash on checkout" is impossible to take personally and hard to argue with. "This is fragile" is an opinion and an invitation to defend.',
+      'Say plainly that it is blocking and why; softening the signal is its own failure mode. A comment so gentle the author reads it as optional wastes a round trip; "this needs to change before merge, because it can crash a paid flow" is kinder than three hedged sentences that get skipped.',
+      'Separate the requirement from the solution. State the problem as non-negotiable and the fix as a suggestion: it leaves the author room to solve it better than you would have, and keeps review from becoming dictation. Assume competence while doing it: "was there a reason to skip the guard here?" costs one clause and covers the case where they know something you do not.',
+      'The same principle scales up: make the required change unmistakable and everything else visibly optional. Block only on correctness, clarity, or consistency with the existing codebase — approve working, tested code you would have built differently, and label any alternative non-blocking. Comment once on the first instance of a repeated mistake, say it applies throughout, and fold the rest into the summary. Fifteen inline comments read as a verdict on the author and leave them guessing which two matter; naming those two is the job.',
+      'Close with an explicit verdict and the reasons driving it: approve, approve-with-nits, or request changes, in one line at the top of the summary with the findings that decided it. Left implicit, the author guesses whether they may merge; a request-changes with no named blocker reads as a mood, not a judgement.',
+      'Two other things belong in that summary. Read the tests as part of the diff: a test that asserts nothing, or that would pass against the unfixed code, is a defect in the PR, worth flagging as plainly as the implementation. And say what you did not review: a business rule or unfamiliar subsystem you cannot judge goes into the verdict with a name of who should also look, because an approval implying more scrutiny than you applied is worse than declining the review.',
     ],
     keyPoints: [
       'Anchors the comment on a concrete failing case, not on the code style',
@@ -318,7 +318,11 @@ export const coding: Question[] = [
       'Separates the required outcome from a suggested implementation, and asks whether a reason exists',
       'Approves correct, tested code instead of blocking on preference, and labels the alternative non-blocking',
       'Names the two or three findings that must change rather than listing fifteen',
+      'Ends with an explicit verdict — approve, approve-with-nits, or request changes — and the findings that drove it',
       'Treats the tests as part of the reviewable diff, and states in the verdict what was outside their scope to judge',
+    ],
+    deeper: [
+      'The competence assumption is worth holding even when you are confident: "is this an oversight, or is there something about this path I am missing?" happens to be true more often than review culture likes to admit, and the one time the author has a reason you did not know about, you have kept the review a conversation instead of an accusation you now have to walk back.',
     ],
     followUps: ['How do you handle it when the author pushes back and you still disagree?', 'What do you do differently when reviewing across a language barrier or timezone?'],
   },

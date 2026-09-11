@@ -345,7 +345,7 @@ export const debrief: Question[] = [
       'Separate the layers, and name the tooling for each rather than saying "monitoring": client-side error tracking (Sentry or equivalent) to catch uncaught exceptions and rejected promises with enough context to reproduce them, real-user performance monitoring for the metrics that actually affect the user (LCP for initial load, INP for interaction responsiveness, CLS for layout stability) — field data from a RUM provider or the browser\'s own web-vitals reporting, not a lab score — and product analytics on the key actions to know if the feature is being used as intended. Naming the layer and a real tool for it is the difference between having shipped monitoring and having read about it.',
       'Name one or two specific events or errors from this submission that would be worth instrumenting first — e.g. "[a failed fetch on the main data load, or a filter action]" — rather than a generic "add logging everywhere."',
       'Address alerting explicitly: what threshold would actually page someone versus what belongs in a dashboard only, since undifferentiated alerting is itself a production risk (alert fatigue).',
-      'For EU users, cite the two regimes rather than reasoning them out here: the §25 TDDDG consent gate governs the tool touching the device at all, GDPR governs what it then captures. The practical consequence for monitoring is that error and analytics tools pick up IP addresses and session identifiers even unintentionally, so scrub to what debugging needs and confirm a data processing agreement covers the vendor.',
+      'For EU users, cite the two regimes rather than reasoning them out here — the consent-management question covers that split in full: the §25 TDDDG consent gate governs the tool touching the device at all, GDPR governs what it then captures. The practical consequence for monitoring is that error and analytics tools pick up IP addresses and session identifiers even unintentionally, so scrub to what debugging needs and confirm a data processing agreement covers the vendor.',
     ],
     keyPoints: [
       'Separates error tracking, performance monitoring, and product analytics as distinct layers',
@@ -470,7 +470,7 @@ export const debrief: Question[] = [
     followUps: ['Which file would confuse a junior most on first read?', 'What one comment or README line would have prevented that?'],
   },
 
-  // From your CV (5)
+  // From your CV (4)
   {
     id: 'debrief-026',
     round: 'debrief',
@@ -497,7 +497,7 @@ export const debrief: Question[] = [
     answer: [
       'Order gates by how cheap and fast they are relative to the risk they catch: linting and type-checking first (near-instant, catches a wide class of mistakes), then the test suite, then a build step to confirm the artifact actually compiles for production, then anything slower like an end-to-end pass or a dependency vulnerability scan.',
       'Justify the order explicitly: fast, cheap gates should fail a pull request before anyone waits on a slow one, so contributors get feedback in seconds for the common mistakes and only wait longer for the checks that need it.',
-      'Name one gate specific to this submission\'s actual risk, not a generic list — e.g. "[a gate that fails if a new component ships without a corresponding test, given how much this submission leans on [the part carrying the most logic]]" — to show the ordering is reasoned about this codebase, not copy-pasted from a template. If the panel has already named a defect in the submission, say which of these gates would have caught it, since tying the list to a real miss beats justifying it against a hypothetical one.',
+      'Name one gate specific to this submission\'s actual risk, not a generic list — e.g. "[a gate that fails if a new component ships without a corresponding test, given how much this submission leans on the part carrying the most logic]" — to show the ordering is reasoned about this codebase, not copy-pasted from a template. If the panel has already named a defect in the submission, say which of these gates would have caught it, since tying the list to a real miss beats justifying it against a hypothetical one.',
     ],
     keyPoints: [
       'Orders gates fast-and-cheap first: lint/type-check, then tests, then build, then slower checks',

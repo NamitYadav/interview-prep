@@ -1,7 +1,7 @@
 import type { Question } from '../types';
 
 export const hm: Question[] = [
-  // Architecture & system design (9)
+  // Architecture & system design (8)
   {
     id: 'hm-001',
     round: 'hm',
@@ -204,8 +204,8 @@ export const hm: Question[] = [
     category: 'Performance',
     question: 'How do you handle rendering performance in large tables or lists?',
     answer: [
-      'For genuinely large datasets, virtualization is the primary lever: render only the visible rows plus a small buffer, since no amount of memoization saves you from rendering thousands of DOM nodes. The windowing mechanics and what they cost in find-in-page and screen-reader behaviour are covered separately.',
-      'Use memoization deliberately, not everywhere: memoize expensive cell renderers or derived data, and recognize its real limits — the comparison has its own cost, so over-memoizing simple components can make things slower rather than faster. With the React Compiler shipped and stable (covered in full separately), check which regime the codebase is in before adding any hand-written memo.',
+      'For genuinely large datasets, virtualization is the primary lever: render only the visible rows plus a small buffer, since no amount of memoization saves you from rendering thousands of DOM nodes. The windowing mechanics and what they cost in find-in-page and screen-reader behaviour are worked through in the virtualised-list coding exercise.',
+      'Use memoization deliberately, not everywhere: memoize expensive cell renderers or derived data, and recognize its real limits — the comparison has its own cost, so over-memoizing simple components can make things slower rather than faster. With the React Compiler shipped and stable — the excess-re-render question covers it in full — check which regime the codebase is in before adding any hand-written memo.',
       'Watch for the classic large-table traps: recreating row/column definitions or callback props on every render (breaking memoization downstream), and expensive formatting/derivation logic running per cell per render instead of being precomputed once.',
       'Measure with a real dataset size in mind: performance work validated on 50 rows tells you nothing about behavior at [your product\'s realistic upper bound], so test against representative scale before declaring a fix done.',
     ],
@@ -246,7 +246,7 @@ export const hm: Question[] = [
       'Set the budget as a concrete threshold tied to user impact, not an arbitrary round number — anchor it to [the current baseline plus an agreed tolerance], and revisit it periodically rather than letting it go stale.',
       'Decide the failure mode deliberately: a hard CI block for a clear regression versus a warning/dashboard for softer signals, since blocking merges on every noisy metric will just get the check disabled by a frustrated team.',
       'Pair budgets with real-user monitoring in production, since a synthetic CI check catches regressions before merge but cannot replace seeing what actually happens for real users after deploy.',
-      'For an EU audience, treat the RUM tool as a device-access question before a data question: the §25 TDDDG consent gate covered separately applies to it whether or not what it reads is personal. Two consequences for the budget — the field data only covers consenting users, so it is a sample rather than the population, and what it captures should be minimized (IP, precise identifiers) regardless of the legal basis.',
+      'For an EU audience, treat the RUM tool as a device-access question before a data question: the §25 TDDDG consent gate — the consent-management question covers that split in full — applies to it whether or not what it reads is personal. Two consequences for the budget — the field data only covers consenting users, so it is a sample rather than the population, and what it captures should be minimized (IP, precise identifiers) regardless of the legal basis.',
     ],
     keyPoints: [
       'Chooses stable, CI-appropriate metrics over noisy real-user ones',
@@ -773,7 +773,7 @@ export const hm: Question[] = [
       'Then the argument itself, including the pushback and what you did after. Calibration is comparative, so the real question is never "are they good" but "are they at the level, compared to these other people" — and the useful move is to raise the strongest objection yourself before someone else does. Name the objection you got, whether it was fair, and what you told the person afterwards, including in the case that did not go through.',
     ],
     deeper: [
-      'Describe the argument itself honestly, including the pushback. Calibration is comparative, so the real question is never "are they good" but "are they operating at the level, compared to these other people" — and the useful move is to address the strongest objection yourself before someone else raises it, since a sponsor who only presents the flattering half loses credibility for every future case they bring. Name the objection you got and whether it was fair.',
+      'The reason for raising the objection yourself is credibility that compounds: a sponsor who presents only the flattering half gets discounted on every future case they bring, so the room stops weighing their cases on the evidence and starts weighing them on the sponsor.',
       'Close on the outcome and on what you did with it either way. If it went through, say what you told them about which evidence actually carried the room, because that is what makes the next person you sponsor easier to argue for. If it did not, say what you told them plainly and what specific gap you then went and arranged work to close — a sponsor who disappears after an unsuccessful case is worse than no sponsor, and handling that badly is the most common real failure here.',
     ],
     keyPoints: [
@@ -786,7 +786,7 @@ export const hm: Question[] = [
     followUps: ['How do you sponsor someone whose strongest work is invisible to the calibration room?', 'What would you do if you concluded mid-cycle that the case was not actually there?'],
   },
 
-  // Delivery & process (6)
+  // Delivery & process (5)
   {
     id: 'hm-038',
     round: 'hm',
@@ -1018,7 +1018,7 @@ a:hover { color: blue; }`,
       'Flag the hover rule\'s own defect separately from the fact that it never fires: a bare element selector styles every link on the page, so once the specificity is fixed it leaks beyond the sidebar. And there is no focus-visible style anywhere in this block — the finding I would raise loudest, because it is invisible to anyone testing with a mouse.',
     ],
     deeper: [
-      'That dead hover rule is a better argument for flattening than any appeal to cleanliness. On the selectors themselves: :where() contributes zero specificity and :is() takes that of its most specific argument, which is the mechanism a modern reset uses to stay overridable rather than needing !important of its own.',
+      'The dead hover rule above is a better argument for flattening the selectors than any appeal to cleanliness. On the selectors themselves: :where() contributes zero specificity and :is() takes that of its most specific argument, which is the mechanism a modern reset uses to stay overridable rather than needing !important of its own.',
       'Leave the smaller points as comments so the review does not read as a pile-on: raw hex values rather than the design tokens the codebase presumably has, and if the project uses cascade layers, this whole class of conflict has a structural answer rather than a per-rule one. Both are worth saying once, not worth blocking on.',
     ],
     keyPoints: [
@@ -1060,7 +1060,7 @@ a:hover { color: blue; }`,
     ],
     deeper: [
       'On the centring technique: the negative margin only works because the width is hardcoded, and the hardcoded width is itself the problem on a narrow screen. A transform-based or grid-based centre fixes the vertical axis and the coupling in one move and works at any width, and a max-width with a percentage keeps it on screen at 320px.',
-      'position: fixed has the same family of surprise. It is normally relative to the viewport, but an ancestor with a transform, a filter, will-change on either, or containment establishes a containing block and silently captures it — so a dialog can land somewhere unrelated to the viewport because someone added a transform for an animation three levels up.',
+      'The `position: fixed` case carries the same family of surprise. It is normally relative to the viewport, but an ancestor with a transform, a filter, will-change on either, or containment establishes a containing block and silently captures it — so a dialog can land somewhere unrelated to the viewport because someone added a transform for an animation three levels up.',
       'The next overlay will be 10000, and the structural fix is not a bigger number — render the modal in a portal at the top level of the document so it is trapped in neither a stacking context nor someone else\'s containing block, and keep a small named scale for the few layers that genuinely exist. You find the culprit by walking up the ancestors in devtools. Ask whether the project already has a scale, since introducing one is a codebase-wide conversation rather than a comment on this file.',
     ],
     keyPoints: [
@@ -1582,7 +1582,7 @@ a:hover { color: blue; }`,
       'State what CSP actually is: an HTTP response header (or meta tag) that tells the browser which sources are allowed to load scripts, styles, images, fonts, and make connections from this page, acting as a second line of defense if an XSS payload does get injected — it does not prevent the injection itself.',
       'Start restrictive and allow-list explicitly: default-src \'self\', then add each third-party script/style/connect origin by name as needed, rather than starting from unsafe-inline or a wildcard and trying to tighten later, which rarely happens in practice.',
       'Avoid unsafe-inline and unsafe-eval specifically: they defeat most of CSP\'s XSS protection, and the practical alternative is nonce- or hash-based allow-listing for any inline script that is genuinely required, generated per response.',
-      'Then name the modern shape rather than the 2016 one. A host allowlist is barely a control on its own: a JSONP endpoint or an open redirect on an allowed origin bypasses it, and any CDN you allow serves whatever anyone else published there. What holds up is a per-response nonce plus \'strict-dynamic\' — trust the scripts I nonce and trust what they load — so third-party loaders keep working without you enumerating their origins, and the host list stays only as a fallback for browsers that ignore strict-dynamic. Pair it with Trusted Types, which is the other half of the problem: CSP stops injected script from running, Trusted Types stops the injection reaching a DOM sink at all, by making innerHTML and its relatives reject a plain string unless it has been through a named policy. That turns DOM XSS from a code-review habit into something enforced.',
+      'Then name the modern shape rather than the 2016 one. A host allowlist is barely a control on its own: a JSONP endpoint or an open redirect on an allowed origin bypasses it, and any CDN you allow serves whatever anyone else published there. What holds up is a per-response nonce plus \'strict-dynamic\' — trust the scripts I nonce and trust what they load — so third-party loaders keep working without you enumerating their origins, and the host list stays only as a fallback for browsers that ignore strict-dynamic. Pair it with Trusted Types, turned on by require-trusted-types-for \'script\' with a trusted-types directive naming the allowed policies: CSP stops injected script from running, Trusted Types stops the injection reaching a DOM sink at all, by making innerHTML and its relatives reject a plain string that has not been through a policy. That turns DOM XSS from a code-review habit into something enforced.',
       'Roll it out safely: deploy first in Content-Security-Policy-Report-Only mode with a report-uri/report-to endpoint, review real violation reports from production traffic (third-party scripts often do surprising things), then switch to enforcing once the policy is verified against real traffic, not just local testing.',
     ],
     keyPoints: [
@@ -1590,7 +1590,7 @@ a:hover { color: blue; }`,
       'Starts restrictive (default-src self) and allow-lists explicitly, not the reverse',
       'Avoids unsafe-inline/unsafe-eval in favor of nonces or hashes',
       'Prefers nonce plus strict-dynamic over a host allowlist, and says why an allowlist is bypassable',
-      'Names Trusted Types as the DOM-sink guard, covering the DOM-XSS case CSP alone does not',
+      'Names the directive that turns Trusted Types on — require-trusted-types-for \'script\' — as the DOM-sink guard covering the DOM-XSS case CSP alone does not',
       'Rolls out via report-only mode with real traffic before enforcing',
     ],
     followUps: ['How would you handle a third-party script that needs unsafe-inline to function?', 'How would you generate and deliver a per-response nonce in your stack?'],
@@ -1621,17 +1621,20 @@ a:hover { color: blue; }`,
     question: 'Where should an auth token live on the frontend: localStorage, a cookie, or memory? Walk me through the trade-offs.',
     answer: [
       'Name the concrete risk for each: localStorage (and sessionStorage) is readable by any script running on the page, so a single XSS vulnerability anywhere in the app or a compromised third-party script can exfiltrate the token directly — that is the core objection to it for anything sensitive.',
-      'An HttpOnly cookie is not readable by JavaScript at all, which closes that specific exfiltration path, but shifts the risk to CSRF (mitigated by SameSite plus a CSRF token as covered separately) and requires the backend to set and manage the cookie rather than the frontend handling the token explicitly.',
+      'An HttpOnly cookie is not readable by JavaScript at all, which closes that exfiltration path but shifts the risk to CSRF (SameSite plus a CSRF token) and puts the backend in charge of setting the cookie.',
       'In-memory (a JS variable, not persisted) avoids both storage-based exfiltration and CSRF, but the token is lost on refresh, so it is usually paired with an HttpOnly refresh cookie that silently re-mints an access token in memory on load.',
-      'Then name what the current guidance actually points at: the OAuth 2.0 for Browser-Based Apps BCP treats a token-mediating backend — a BFF — as the recommended shape for anything sensitive. The browser holds no tokens at all, only an HttpOnly session cookie to your own origin, while a small backend you control holds the access and refresh tokens and attaches them to the calls it proxies, so there is nothing in the page to steal. Say the limit honestly: an XSS can still ride that session and act as the user, it just cannot take a token away to use later. And wherever a refresh token does reach the browser, it has to rotate — each use mints a new one and invalidates the old, and a replayed token is treated as a compromise that revokes the whole family.',
-      'Give the practical staff-level recommendation: HttpOnly, Secure, SameSite cookies for anything session-critical, with short-lived access tokens kept in memory if a separate access/refresh split is in play — and explicitly avoid localStorage for tokens on any app that also loads third-party scripts, which describes most real apps.',
+      'Then name what the current guidance actually points at: the OAuth 2.0 for Browser-Based Apps BCP treats a token-mediating backend — a BFF — as the recommended shape for anything sensitive. The browser holds no tokens at all, only an HttpOnly session cookie to your own origin, while a small backend you control holds the access and refresh tokens and attaches them to the calls it proxies, so there is nothing in the page to steal. Say the limit honestly: an XSS can still ride that session and act as the user, it just cannot take a token away to use later. Wherever a refresh token does reach the browser, it has to rotate.',
+      'Give the practical staff-level recommendation as a sequence rather than a single answer: a BFF where you control a backend and the data is sensitive enough to justify it, and otherwise HttpOnly, Secure, SameSite cookies for anything session-critical, with short-lived access tokens kept in memory if a separate access/refresh split is in play — and explicitly avoid localStorage for tokens on any app that also loads third-party scripts, which describes most real apps.',
+    ],
+    deeper: [
+      'Rotation means each use of a refresh token mints a new one and invalidates the old, and a replayed token is treated as a compromise that revokes the whole family — without that, a stolen refresh token is a permanent session.',
     ],
     keyPoints: [
       'Names localStorage\'s core risk: full exposure to any XSS or compromised script',
       'Explains HttpOnly cookies close that path but shift risk to CSRF',
       'Covers in-memory storage and its refresh-token pairing to survive reloads',
       'Names the BFF / token-mediating backend as the current BCP recommendation, and its honest limit: XSS can still ride the session',
-      'Requires refresh-token rotation with reuse detection wherever a refresh token reaches the browser',
+      'Requires refresh-token rotation wherever a refresh token reaches the browser',
       'Gives a clear practical recommendation, not just a list of options',
     ],
     followUps: ['How would you migrate an existing app off localStorage tokens without breaking every logged-in user?', 'What would you do for a mobile app or a non-browser client where cookies work differently?'],
@@ -1754,8 +1757,8 @@ a:hover { color: blue; }`,
       'Then make the return page a pure function of a server-owned status, because this path is re-entered constantly — back, refresh, two tabs. It reads state and never re-submits, so a second load shows the same result rather than starting a second payment, and the statuses it renders include an explicit pending one for the window where the payment is neither confirmed nor failed.',
     ],
     deeper: [
-      'Make the resume idempotent, because this path is re-entered more often than anyone expects: the user hits back, refreshes the return page, has two tabs open, or the challenge completes while the tab is backgrounded and the app reconnects. Resuming means reading state, never re-submitting. The intent carries a status the server owns (requires_action, processing, succeeded, failed), and the return page is a pure function of that status — so a second load of the same URL shows the same result rather than starting a second payment. Pair that with a submit that carries an idempotency key, so even a genuine retry cannot double-charge.',
-      'The states the happy path forgets are where a payment product earns or loses trust. There is a real window where the payment is neither confirmed nor failed and you must show something honest rather than a spinner forever — a pending state, a poll or a push channel, and a rule for what happens when the challenge is abandoned or times out on the issuer side. Do not present an unknown outcome as either success or failure, do not offer a retry button that could produce a second charge, and make sure the pending state is reachable again if the user simply closes the tab and comes back.',
+      'What actually resolves the pending state is the part to have ready: a poll on the intent with backoff, or a push channel if you have one, plus a stated rule for the challenge being abandoned or timing out on the issuer side, because the ACS can simply never come back. Give that state a durable URL, so a user who closes the tab and returns lands on their payment rather than on a fresh checkout.',
+      'Carry an idempotency key on the submit itself, so even a genuine retry after a lost response cannot produce a second charge — and do not offer a retry button on an unknown outcome, since an unknown the user can re-fire is exactly how a double charge reaches support.',
     ],
     keyPoints: [
       'States that the challenge runs on the issuer ACS, a page you neither control nor style, and that most transactions come back frictionless',
@@ -1778,8 +1781,8 @@ a:hover { color: blue; }`,
       'Close on why that holds. Any script on the page can read any input on it, so one compromised dependency or a marketing tag skims cards — Magecart, with session replay capturing the field as the quieter version. So no third-party tag goes on the checkout route, enforced by policy rather than convention.',
     ],
     deeper: [
-      'Explain why card data must never touch your DOM even transiently, with the failure that actually happens rather than an abstract rule. Any script on the page can read any input on the page, so one compromised dependency, one supply-chain attack on a CDN, or one marketing tag added without review can skim cards — that is Magecart, and it is the single most common way a merchant learns it was in scope. Analytics is the quieter version: session-replay and form-analytics tools capture inputs by default, so a card field in your own DOM means cardholder data is being recorded and shipped to a third party by a tool nobody thought of as a payments system. With hosted fields, none of these can reach the value at all.',
-      'Scope is lost by drift rather than by design, so the operational discipline matters — the checkout route needs a rule that no third-party tag goes on it, enforced by the policy rather than by a code-review convention, and any change to that page — including a dependency bump — is a change to a page in your assessment. State plainly that the frontend decision here is architectural and one-way: choosing to render your own card form to get a nicer look costs the organisation an entire compliance regime, and that trade-off belongs in front of whoever owns it rather than being made quietly in a component.',
+      'Spell out what "lost by drift" means operationally: any change to the checkout page — including a dependency bump — is a change to a page inside your assessment, which is what makes the 6.4.3 script inventory a living document rather than an audit artefact produced once a year. Worth naming the detection side too: the tamper check is on the page\'s own content and headers, so it has to run somewhere the compromised page cannot quietly switch off.',
+      'Then state the frontend decision as architectural and one-way, because that is the part an engineer is uniquely placed to say: choosing to render your own card form for a nicer look moves the organisation from SAQ A to A-EP and the obligations that carries. That trade-off belongs in front of whoever owns compliance, rather than being settled quietly inside a component.',
     ],
     keyPoints: [
       'Frames the goal as never possessing card data, with PSP iframes enforcing isolation via same-origin policy rather than by discipline',
@@ -1802,8 +1805,8 @@ a:hover { color: blue; }`,
       'Two things you rely on, so state them rather than assume them: the server replays the original response for a repeated key and rejects the same key with a different payload. Confirm that with the backend, because a key the server ignores is worse than none. And automatic retry is for network failures and 5xx only, with backoff and a cap, never a 4xx.',
     ],
     deeper: [
-      'State the server semantics you are relying on so the contract is explicit rather than assumed: the same key replays the original response instead of executing again, a request with the same key but a different payload is an error rather than a silent choice between them, keys are retained for a stated window, and a request that arrives while the first is still in flight gets a defined answer — usually a conflict status — rather than racing. Say that you would confirm this with the backend rather than assume it, because an idempotency key that the server ignores is worse than none: it makes the client behave as though retrying is safe when it is not.',
-      'Two details separate a designed flow from a hopeful one. First, retry policy: retry automatically only for network-level failures and 5xx, with backoff, never for a 4xx, and cap the attempts — then hand it to the pending state rather than retrying forever. Second, reconciliation: the authoritative record is the server\'s, so on reload the client rebuilds from the intent status, and the client-side optimistic entry is never treated as fact. In a regulated product this is worth stating in the strongest form — the frontend is allowed to be wrong about whether money moved, as long as it never tells the user something the backend has not confirmed.',
+      'Two parts of that server contract the headline version leaves open, and they are what the follow-up actually asks for. Keys are retained for a stated window, not forever, so a retry arriving after it expires is a fresh payment rather than a replay — which bounds how long the client may keep offering to resume. And a repeat that arrives while the first is still in flight needs a defined answer, normally a conflict status the client treats as pending, rather than two executions racing.',
+      'Reconciliation closes it: the authoritative record is the server\'s, so on reload the client rebuilds from the intent status and never treats its own optimistic entry as fact. In a regulated product state that in the strongest form — the frontend is allowed to be wrong about whether money moved, as long as it never tells the user something the backend has not confirmed.',
     ],
     keyPoints: [
       'Says a timeout is an unknown outcome, not a failure, so the client cannot decide it',
@@ -1850,8 +1853,8 @@ a:hover { color: blue; }`,
       'Then say where the control lives: on the server, which rejects an approval whose approver id equals the submitter id and checks the approver\'s authority against the amount — hiding the button is a UI convenience. And in an immutable record of every transition with actor, timestamp and a snapshot of the exact payload approved.',
     ],
     deeper: [
-      'Enforce the separation server-side and say so, since this is the most common real defect: hiding the approve button from the maker is a UI convenience, not a control. The server rejects an approval whose approver id equals the submitter id, and it also has to handle the cases people forget — the same human behind two accounts, a shared or service account, someone approving under a delegation granted by the maker, and an approver whose authority does not cover the amount. Approval limits by role and value are part of the same check. The frontend surfaces these rejections clearly rather than pretending the control lives in the UI.',
-      'Evidence and the human factor close it out. Every transition is recorded immutably with actor, timestamp, and a hash or snapshot of the exact payload approved, so a later dispute can establish what was approved rather than what the record now says — and that record is written by the backend, with the frontend contributing only what the server cannot see, such as which warnings were actually displayed. Then name the failure mode a staff answer should raise unprompted: the control degrades into a ritual if approvers face a queue of items they cannot meaningfully review, so keeping the threshold high enough that approvals stay rare is part of the design rather than a policy detail someone else owns.',
+      'The self-approval check is more than an id comparison, and the cases people forget are the interesting half: the same human behind two accounts, a shared or service account that several people use, and someone approving under a delegation the maker themselves granted. None of those are visible to an id equality test. The frontend\'s job is to surface the resulting server rejections legibly, not to try to pre-empt them.',
+      'On evidence, be clear about who writes it: the backend owns the immutable record, and the frontend contributes only the part the server cannot observe — which warnings and disclosures were actually on screen when the approver clicked. Then name the failure mode a staff answer raises unprompted: the control degrades into a ritual if approvers face a queue they cannot meaningfully review, so keeping the threshold high enough that approvals stay rare is part of the design, not a policy detail someone else owns.',
     ],
     keyPoints: [
       'States the purpose as independent confirmation, not a second click, and designs the review view for checking rather than reusing the maker\'s form',
@@ -1874,8 +1877,8 @@ a:hover { color: blue; }`,
       'Two closing rules. Nothing about the credential is cached or logged — not the OTP, not the biometric assertion, and never into analytics or an error report, which is how these values actually leak. And a failed or abandoned challenge returns the user to their unsubmitted work, because losing a filled form to a mistyped code is how users learn to hate the flow.',
     ],
     deeper: [
-      'Be explicit about what is cached and what never is. Cacheable: the fact and time of authentication, the strength achieved, and the scoped elevation token for its short life, in memory rather than in localStorage. Never cached, never stored, never logged: the credential itself, the OTP or PIN, the biometric assertion, and anything that would let the step-up be replayed — and that includes not putting it in analytics, session replay, or an error report, which is the way these values usually leak. Clear the elevation on logout, on tab close, and when the action completes or is abandoned rather than letting it linger.',
-      'These are the parts teams get wrong in practice. Handle the challenge failing or being abandoned by returning the user to their unsubmitted work rather than discarding it, since losing a filled form to a mistyped code is how users learn to hate the flow. Do not challenge so often that the prompt becomes reflexive, because a user trained to approve every push notification will approve the attacker\'s — frequency is a security property, not only a usability one. Make sure the step-up covers the escalation paths too: changing the phone number or email that receives the second factor is itself a high-risk action, and a design that protects payees but not contact details has left the door open.',
+      'Say what is cacheable too, since "cache nothing" is not a design: the fact and time of authentication, the strength achieved, and the scoped elevation token for its short life — held in memory rather than localStorage, and cleared on logout, on tab close, and when the action completes or is abandoned rather than left to linger until it expires on its own.',
+      'Two things teams get wrong in practice. Challenge frequency is itself a security property, not only a usability one: a user trained to approve every push will approve the attacker\'s, so a design that challenges on everything is weaker than one that challenges on the few actions that warrant it. And the step-up has to cover the escalation paths — changing the phone number or email that receives the second factor is a high-risk action in its own right, so protecting payees but not contact details leaves the door open.',
     ],
     keyPoints: [
       'Explains that a session proves past authentication, not present presence, and that adding a beneficiary attracts SCA in its own right',
@@ -1898,20 +1901,20 @@ a:hover { color: blue; }`,
       'Two things make it usable later: a trace id the client sends on every call and stamps on its own events, so one investigation reconstructs a sequence across client and server rather than two logs nobody can join, and the app build version on every event. And audit-grade events and product analytics are separate pipelines, because their retention obligations are not the same.',
     ],
     deeper: [
-      'Tie it together with correlation, which is what makes any of it usable later. The client generates or receives a request or trace id and sends it on every call, the backend records it against its own entries, and the client events carry the same id plus a stable session id. That way one investigation reconstructs a coherent sequence across client and server instead of two logs nobody can join. Include the app and build version on every event, because "which version of the UI was this user running" is the first question in half of all investigations, and the answer is unrecoverable after the fact if it was not captured at the time.',
-      'Retention and governance are where the answer is not one number. Regulatory records have long mandated periods — anti-money-laundering evidence is typically held for years — while product analytics should be short, and GDPR storage limitation means you need a stated period per purpose rather than a single default. So audit-grade events and behavioural analytics are different pipelines with different retention, different access controls and different legal bases, and merging them for convenience is how a five-year obligation accidentally becomes applied to everything a user ever clicked. Add the German angle if the product has internal-facing tooling: telemetry on employees\' own actions can be a system suitable for monitoring under §87(1) Nr. 6 BetrVG and goes through the works council before it ships.',
+      'Put numbers and reasons behind the split, because "different retention" on its own is not an answer. Anti-money-laundering evidence is typically held for years under a mandated period, product analytics should be short, and GDPR storage limitation means a stated period per purpose rather than one default across the estate. The pipelines also differ in who may read them and on what legal basis, which is the real argument against merging them: do it for convenience and a multi-year obligation quietly attaches to everything a user ever clicked, while the audit record becomes readable by anyone with an analytics login.',
+      'Add the German angle if the product has any internal-facing tooling: telemetry on employees\' own actions can be a technical system suitable for monitoring performance or behaviour under §87(1) Nr. 6 BetrVG, which makes it co-determined and takes it through the works council before it ships — a lead time to plan for rather than discover.',
     ],
     keyPoints: [
       'States that the frontend is never the system of record, because the client is untrusted and lossy',
       'Names what only the client knows: the amount, rate, warning, disclosure or consent variant actually rendered before confirmation',
       'Propagates a correlation/trace id across client and server events, and captures app build version on every event',
       'Minimises by design with a typed allowlist schema, and names session replay and error reporting as the accidental capture channels',
-      'Separates audit-grade events from analytics into different pipelines with different retention and access, rather than one default',
+      'Separates audit-grade events from product analytics into different pipelines, because their retention obligations are not the same',
     ],
     followUps: ['A dispute arrives about a transfer from eight months ago. What can you actually show?', 'How would you stop a new event being added that quietly logs a field it should not?'],
   },
 
-  // TypeScript depth (5)
+  // TypeScript depth (4)
   {
     id: 'hm-090',
     round: 'hm',

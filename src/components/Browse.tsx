@@ -12,7 +12,7 @@ export function Browse({ questions, state, dispatch }: { questions: Question[]; 
   // Recomputed only when the question set itself changes (a round or category
   // switch), not per keystroke — the filter below is then a plain lookup.
   const haystack = useMemo(
-    () => new Map(questions.map((q) => [q.id, `${q.question} ${q.category} ${q.answer.join(' ')} ${q.keyPoints.join(' ')}`.toLowerCase()])),
+    () => new Map(questions.map((q) => [q.id, `${q.question} ${q.category} ${q.answer.join(' ')} ${(q.deeper ?? []).join(' ')} ${q.keyPoints.join(' ')}`.toLowerCase()])),
     [questions],
   );
   const needle = search.trim().toLowerCase();

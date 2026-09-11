@@ -337,7 +337,7 @@ export const caseStudy: Question[] = [
     followUps: ['What would you do if the brief\'s sample API key had to be embedded client-side?', 'How do you check a repo is clean of secrets before submitting?'],
   },
 
-  // Presentation (8)
+  // Presentation (5)
   {
     id: 'case-019',
     round: 'case',
@@ -360,7 +360,7 @@ export const caseStudy: Question[] = [
     id: 'case-020',
     round: 'case',
     category: 'Presentation',
-    question: 'How do you run the demo — without dead air, when something breaks live, and when the room stops following?',
+    question: 'Walk me through how you run the demo portion.',
     answer: [
       'Script the demo path explicitly beforehand — the exact sequence of clicks and states you will show — and rehearse it at least once end to end so you are narrating from memory, not discovering the app live in front of the panel. Start from a known-good state: data seeded, correct tab open, dev tools closed unless you specifically need them, so setup friction does not eat into your demo time.',
       'Narrate what you are about to do before doing it ("[now I will trigger the error state by...]") rather than clicking silently and explaining after, since silence during a demo reads as uncertainty even when the app is working fine.',
@@ -509,7 +509,7 @@ export const caseStudy: Question[] = [
     followUps: ['What would you do if you found a real bug while refactoring — fix it or leave it for a separate change?', 'How do you know your refactor did not change behavior without full test coverage?'],
   },
 
-  // From your CV (4)
+  // From your CV (3)
   {
     id: 'case-031',
     round: 'case',

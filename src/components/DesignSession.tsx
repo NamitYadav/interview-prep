@@ -125,6 +125,14 @@ function DesignPrompt({
           <section className="space-y-2">
             {question.answer.map((p, i) => <p key={i}>{p}</p>)}
           </section>
+          {question.deeper && question.deeper.length > 0 && (
+            <section className="border-l-2 border-zinc-300 pl-3 dark:border-zinc-600">
+              <h3 className="mb-1 font-semibold">If they dig deeper</h3>
+              <div className="space-y-2 text-zinc-700 dark:text-zinc-300">
+                {question.deeper.map((p, i) => <p key={i}>{p}</p>)}
+              </div>
+            </section>
+          )}
           <section>
             <h3 className="mb-1 font-semibold">Key points</h3>
             <ul className="list-disc space-y-1 pl-5">

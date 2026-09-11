@@ -196,7 +196,7 @@ export const design: Question[] = [
       'Inline recategorization is an optimistic cache write that updates row and totals together',
       'States numeric budgets (first page p95 under 1s, filter under 500ms, INP under 200ms) up front',
       'Names the EAA/BFSG as a compliance floor pointing at EN 301 549, builds to WCAG 2.2 AA, and says the cited version needs checking rather than quoting one — plus what that means for a data table',
-      'Measures those budgets in RUM with a flagged rollout and a named rollback trigger',
+      'Measures those budgets in RUM on the table itself, with a flagged rollout and a named rollback trigger',
     ],
     followUps: ['How would you keep the running balance column correct while a filter is applied?', 'How would you handle a search term that matches a merchant name stored inconsistently across transactions?'],
   },
@@ -248,7 +248,7 @@ export const design: Question[] = [
       'States numeric budgets (update-to-paint under 100ms, INP under 200ms, LCP under 2.5s) before designing',
       'Routes the EAA/BFSG hook through the e-commerce service rather than claiming parcel delivery is covered by its passenger-transport scope, builds to WCAG 2.2 AA under EN 301 549, and says the cited version needs checking',
       'Gives the map a text equivalent for ETA, courier status and address',
-      'Measures those budgets in RUM with a flagged rollout and a named rollback trigger',
+      'Measures those budgets in RUM on the live tracking view, with a flagged rollout and a named rollback trigger',
     ],
     followUps: ['How would you handle multiple couriers on one map view (e.g. a dispatcher dashboard)?', 'How would you test the interpolation logic without a live GPS feed?'],
   },
@@ -322,7 +322,7 @@ export const design: Question[] = [
     followUps: ['How would you prove the coalescing never drops the final update of a burst?', 'What changes if the same screen has to show twenty instruments at once instead of one?'],
   },
 
-  // Platform & scale (10)
+  // Platform & scale (11)
   {
     id: 'design-007',
     round: 'design',
@@ -333,6 +333,7 @@ export const design: Question[] = [
       "Theming should be data, not code: a tenant config resolved at load time (by subdomain or auth claim) drives CSS custom properties and asset URLs, so adding a tenant never means a deploy.",
       "Feature availability should be a capability check at the route and component level, backed by the same tenant config, not scattered environment checks or hardcoded tenant-id conditionals that rot the moment a new tenant needs a slightly different mix.",
       "Data isolation is a backend contract the frontend must respect defensively: always scope requests by the resolved tenant id from the session, never trust a tenant id passed in the URL or a client-editable field, and treat any endpoint that skips this as a blocking bug, not a nice-to-have.",
+      "Say how it is tested, since the whole risk here is a change that is correct for the tenant you looked at: CI has to exercise at least one representative tenant configuration beyond the default.",
       "Close on the non-functionals: RUM has to be sliced per tenant, or a regression in one tenant's theme or bundle reaches you as a support ticket from that tenant rather than as a metric. Roll tenant-config changes out per tenant behind a flag, with the previous config as a one-step rollback.",
     ],
     deeper: [
@@ -419,6 +420,7 @@ export const design: Question[] = [
       "For the caching layer, use a service worker to cache the app shell and recent data responses, so the app still loads and shows something useful, not a blank screen or a browser error page, when the network is gone.",
       "For read-write offline, queue mutations locally (an outbox pattern) with enough context to replay them on reconnect, and design for conflict explicitly: last-write-wins is fine for some data, but anything collaborative needs a real merge or a conflict UI, not a silent overwrite.",
       "Make connectivity state visible and honest — show the user when they are offline and when a queued action is pending sync, rather than letting the UI silently pretend everything succeeded while a mutation sits unsent in a queue.",
+      "Name the data-protection consequence, because offline-first means deliberately putting personal data on the device: cache only what the offline flow needs, give queued data a bounded lifetime, and make logout or account deletion actually clear the local store.",
       "Close on the non-functionals: instrument outbox depth, sync success rate, and time-to-sync after reconnect — an outbox that quietly grows is the offline failure mode nobody notices until a user complains. Ship the offline path behind a flag to a small cohort first, and roll back on a rise in failed or conflicting syncs.",
     ],
     deeper: [

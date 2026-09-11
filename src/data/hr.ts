@@ -236,7 +236,7 @@ export const hr: Question[] = [
     question: 'What is your current compensation?',
     answer: [
       'In Germany you are not obligated to disclose current compensation, and the EU Pay Transparency Directive (2023/970) bars employers from asking about pay history once transposed into national law — the transposition deadline (7 June 2026) has passed, though whether Germany\'s implementing law is actually in force yet is worth a quick check, since member states often lag past the deadline. Either way, decline politely: "I would prefer to focus on the expectations for this role rather than share current pay."',
-      'Redirect immediately and constructively to the researched range from the previous question, so the conversation keeps moving rather than stalling on a refusal.',
+      'Redirect immediately and constructively to the researched range from the salary-expectations question, so the conversation keeps moving rather than stalling on a refusal.',
       'If you choose to share, keep it factual and brief, but the stronger staff-level move is usually the polite decline plus redirect, since current pay at a different market/company is not a reliable anchor anyway.',
     ],
     keyPoints: [
@@ -545,7 +545,7 @@ export const hr: Question[] = [
     followUps: ['How would a works council change this picture?', 'What would you want in the contract if you were relocating for a fixed-term role?'],
   },
 
-  // Process & culture (4)
+  // Process & culture (3)
   {
     id: 'hr-018',
     round: 'hr',

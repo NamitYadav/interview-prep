@@ -55,6 +55,16 @@ describe('question bank', () => {
     }
   });
 
+  // QuestionCard splits on /(\[[^\]]+\])/ to underline fill-in slots, and that pattern
+  // cannot cross a ']'. A nested "[outer [inner] text]" therefore renders as an
+  // underlined "[outer [inner]" plus a literal " text]" — visibly broken.
+  test('placeholders never nest', () => {
+    for (const q of questions) {
+      const text = [q.question, ...q.answer, ...q.keyPoints, ...(q.followUps ?? []), ...(q.deeper ?? [])].join(' ');
+      expect(text, q.id).not.toMatch(/\[[^\][]*\[/);
+    }
+  });
+
   test('every STORY_CATEGORIES entry matches at least one real question category', () => {
     const categories = new Set(questions.map((q) => q.category));
     for (const c of STORY_CATEGORIES) expect(categories.has(c), c).toBe(true);
