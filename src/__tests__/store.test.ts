@@ -2,18 +2,26 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { EMPTY, STORAGE_KEY } from '../lib/storage';
 import { reducer, useAppState } from '../hooks/useAppState';
+import { DEFAULT_EASE_FACTOR, nextDueAt, nextInterval } from '../lib/queue';
 
 beforeEach(() => localStorage.clear());
 
 describe('reducer', () => {
-  test('rate creates an entry with seen=1', () => {
+  test('rate creates an entry with seen=1, dueAt/interval/easeFactor from nextInterval', () => {
     const s = reducer(EMPTY, { type: 'rate', id: 'hm-001', rating: 2, now: 100 });
-    expect(s.progress['hm-001']).toEqual({ rating: 2, seen: 1, lastSeen: 100 });
+    const { interval, easeFactor } = nextInterval(2, 0, DEFAULT_EASE_FACTOR);
+    expect(s.progress['hm-001']).toEqual({
+      rating: 2, seen: 1, lastSeen: 100, dueAt: nextDueAt(100, interval), interval, easeFactor,
+    });
   });
-  test('rate increments seen and overwrites rating', () => {
+  test('rate increments seen, overwrites rating, and re-derives the schedule from the prior one', () => {
     let s = reducer(EMPTY, { type: 'rate', id: 'hm-001', rating: 1, now: 100 });
     s = reducer(s, { type: 'rate', id: 'hm-001', rating: 3, now: 200 });
-    expect(s.progress['hm-001']).toEqual({ rating: 3, seen: 2, lastSeen: 200 });
+    const first = nextInterval(1, 0, DEFAULT_EASE_FACTOR);
+    const second = nextInterval(3, first.interval, first.easeFactor);
+    expect(s.progress['hm-001']).toEqual({
+      rating: 3, seen: 2, lastSeen: 200, dueAt: nextDueAt(200, second.interval), interval: second.interval, easeFactor: second.easeFactor,
+    });
   });
   test('note sets and blank note deletes', () => {
     let s = reducer(EMPTY, { type: 'note', id: 'hm-001', text: 'STAR story' });
@@ -55,7 +63,10 @@ describe('useAppState', () => {
     const { result } = renderHook(() => useAppState());
     expect(result.current.state.notes.a).toBe('hi');
     act(() => result.current.dispatch({ type: 'rate', id: 'b', rating: 3, now: 5 }));
-    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).progress.b).toEqual({ rating: 3, seen: 1, lastSeen: 5 });
+    const { interval, easeFactor } = nextInterval(3, 0, DEFAULT_EASE_FACTOR);
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).progress.b).toEqual({
+      rating: 3, seen: 1, lastSeen: 5, dueAt: nextDueAt(5, interval), interval, easeFactor,
+    });
     expect(result.current.saveFailed).toBe(false);
   });
 

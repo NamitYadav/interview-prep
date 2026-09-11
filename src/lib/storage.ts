@@ -12,11 +12,16 @@ export const emptyState = (): Persisted => ({ version: 2, progress: {}, notes: {
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
+const isOptionalNumber = (v: unknown): v is number | undefined => v === undefined || typeof v === 'number';
+
 const isEntry = (v: unknown): v is ProgressEntry =>
   isRecord(v) &&
   (v.rating === 1 || v.rating === 2 || v.rating === 3) &&
   typeof v.seen === 'number' &&
-  typeof v.lastSeen === 'number';
+  typeof v.lastSeen === 'number' &&
+  isOptionalNumber(v.dueAt) &&
+  isOptionalNumber(v.interval) &&
+  isOptionalNumber(v.easeFactor);
 
 const isStory = (v: unknown): v is Story =>
   isRecord(v) &&
