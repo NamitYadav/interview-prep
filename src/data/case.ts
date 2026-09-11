@@ -72,8 +72,7 @@ export const caseStudy: Question[] = [
     keyPoints: [
       'Chooses familiar tools over impressive-but-risky ones under time pressure',
       'Justifies the stack against the actual problem requirements',
-      'Distinguishes take-home-scale choices from production-scale choices explicitly',
-      'Names one thing they would reconsider at production scale, and why not here',
+      'Names one concrete choice they would make differently at production scale, and why it would be over-engineering here',
     ],
     followUps: ['What stack would you never use for a take-home, even if you knew it well?', 'When would you deliberately pick something less familiar?'],
   },
@@ -176,6 +175,7 @@ export const caseStudy: Question[] = [
     question: 'How do you approach state management for a small app without over-engineering it?',
     answer: [
       'Default to local component state and plain props for anything scoped to one feature — reaching for a global store or a heavy state library in a small take-home is a common over-engineering tell that panels notice.',
+      'Name the condition that would justify one rather than leaving it as a blanket prohibition: a global store earns its place when several components that are far apart in the tree both read and write the same state, so the update path would otherwise be threaded through layers of components that have no interest in it. A take-home rarely grows a tree deep enough for that, and saying which of the two you are looking at is the judgment being scored.',
       'Introduce context only where state is genuinely shared across a few components with no natural common parent, and keep it narrow (one concern per context) rather than one big app-wide store.',
       'If the brief involves server data, separate that from UI state explicitly even at small scale — a simple fetch-and-cache pattern for server state, plain state for UI concerns — since conflating the two is a bad habit worth demonstrating you do not have, even in miniature.',
       'Name the concrete server-state options and the rule between them: a fetch in an effect is fine for one resource with no caching needs; a query library earns its place once several resources need caching, invalidation, or retries; Suspense with use() is the React 19 way to read a promise declaratively — pick the lightest one the brief needs and say why.',
@@ -196,7 +196,7 @@ export const caseStudy: Question[] = [
     question: 'How do you treat error, loading, and empty states — as an afterthought or first-class?',
     answer: [
       'Design all three states alongside the happy path from the start, not bolted on at the end — sketch what the UI looks like for "no data yet," "data failed to load," and "data loaded but the list is empty" before writing the main render logic.',
-      'Make each state actually useful, not just present: a loading state that matches the eventual layout (skeleton over spinner) where reasonable, an error state with a retry action rather than a dead end, and an empty state that tells the user what to do next rather than a blank rectangle.',
+      'Make each state actually useful, not just present: a loading state that matches the eventual layout (skeleton over spinner) where reasonable, an error state with a retry action rather than a dead end, and an empty state that names the next action in words the user can act on ("[no rows match this filter — clear it to see all 240]") rather than a blank rectangle.',
       'Call this out explicitly in the presentation — panels specifically look for these states because their absence is one of the fastest tells of a rushed or junior submission, so naming that you handled them deliberately is worth doing out loud.',
     ],
     keyPoints: [
@@ -252,7 +252,7 @@ export const caseStudy: Question[] = [
     answer: [
       'Write a small number of meaningful tests targeting the logic most likely to have a subtle bug — data transformation, a tricky conditional, a hook with real branching — rather than chasing a coverage percentage or testing trivial render output.',
       'Prefer one solid integration-style test of the core user flow over ten shallow unit tests of implementation details, since it proves the feature actually works end to end and survives refactors better.',
-      'State the strategy explicitly in the README — "[N] tests covering the [core flow] and the [trickiest edge case], not exhaustive coverage, given the time-box" — so the panel sees a deliberate choice rather than wondering if you ran out of time.',
+      'State the strategy explicitly in the README — "[N] tests covering the [core flow] and the [trickiest edge case], not exhaustive coverage, given the time-box" — so the panel sees a deliberate choice rather than wondering if you ran out of time. Name one thing you deliberately left untested and why in the same breath ("[no tests on the table rendering: it has no branching worth pinning, and a snapshot there would only break on styling]"), since the omission you can defend is stronger evidence of judgment than the tests you wrote.',
     ],
     keyPoints: [
       'Targets tests at genuinely risky logic, not coverage percentage',
@@ -287,8 +287,7 @@ export const caseStudy: Question[] = [
     question: 'When would you deliberately NOT add memoization or virtualisation in a take-home, and how do you defend leaving them out?',
     answer: [
       'Start from the data size actually in front of you: for the fixed sample most briefs ship — a few dozen or a few hundred rows — memo wrappers, a windowing library and code-splitting buy nothing measurable and cost the reviewer comprehension, so the default is to leave them out and say so.',
-      'Draw the line between avoiding waste and optimising: not re-fetching data that has not changed, not writing an accidentally quadratic loop, not re-rendering an expensive subtree on every keystroke are free and always worth doing; a memoization layer or a virtualised list is a deliberate addition that has to earn its place.',
-      'Check which regime you are in before hand-memoizing at all — if the project runs the React Compiler, component-level memoization is already handled and hand-wrapping everything in useMemo adds noise a reviewer has to read past.',
+      'Draw the line between avoiding waste and optimising: not re-fetching data that has not changed, not writing an accidentally quadratic loop, not re-rendering an expensive subtree on every keystroke are free and always worth doing; a memoization layer or a virtualised list is a deliberate addition that has to earn its place — and check whether the project runs the React Compiler before hand-memoizing at all, since it already covers the component-level case.',
       'Defend the omission by naming the trigger rather than apologising for the gap: state the row count or the measured symptom (input lag on the filter, a visibly slow first paint) that would make you add it, and the order you would add it in — memoize the derived computation, then virtualise the list, then move filtering server-side.',
     ],
     keyPoints: [
@@ -361,19 +360,21 @@ export const caseStudy: Question[] = [
     id: 'case-020',
     round: 'case',
     category: 'Presentation',
-    question: 'How do you demo without dead air or fumbling?',
+    question: 'How do you run the demo — without dead air, when something breaks live, and when the room stops following?',
     answer: [
-      'Script the demo path explicitly beforehand — the exact sequence of clicks and states you will show — and rehearse it at least once end to end so you are narrating from memory, not discovering the app live in front of the panel.',
+      'Script the demo path explicitly beforehand — the exact sequence of clicks and states you will show — and rehearse it at least once end to end so you are narrating from memory, not discovering the app live in front of the panel. Start from a known-good state: data seeded, correct tab open, dev tools closed unless you specifically need them, so setup friction does not eat into your demo time.',
       'Narrate what you are about to do before doing it ("[now I will trigger the error state by...]") rather than clicking silently and explaining after, since silence during a demo reads as uncertainty even when the app is working fine.',
-      'Have the app in a known-good state before you start — data seeded, correct tab open, dev tools closed unless you specifically need them — so setup friction does not eat into your demo time.',
+      'When something breaks live, the bug is not what is being scored — your composure is. Say plainly what you are seeing ("[that is not the expected behavior, let me look at what is happening]") instead of going quiet, and give the diagnosis a stated budget of roughly a minute, narrated, which can land as a genuine demonstration of how you debug under pressure. Past that, say what you believe is happening, move to a working part of the flow rather than burning the panel\'s time, and close the loop with a one-line note afterward if a natural moment comes.',
+      'Keep a rough checkpoint of where you should be at each time mark, and adjust to the room rather than to the script: a question mid-section or visible note-taking means go deeper there, a neutral "okay, let\'s keep going" means compress what is left and protect the ending instead of rushing it. If a tangential question would eat the remaining time, answer it in a sentence and offer to go deeper after the planned content, so you neither brush the panel off nor lose the whole structure to one thread.',
     ],
     keyPoints: [
-      'Scripts and rehearses the exact demo path in advance',
+      'Scripts and rehearses the exact demo path, starting from a known-good seeded state',
       'Narrates the upcoming action before performing it, not after',
-      'Starts from a known-good, pre-seeded application state',
-      'Can recite the first three steps of the demo path from memory',
+      'Stays composed on a live failure and states a debugging time limit before switching to a working path',
+      'Reads engagement signals and adapts pacing instead of following the script rigidly',
+      'Handles a derailing question with a brief answer plus a deferred deep-dive offer',
     ],
-    followUps: ['What is your fallback if the seeded data does not look right live?', 'How much do you script versus improvise during the demo?'],
+    followUps: ['What is your fallback if the seeded data does not look right live?', 'How do you decide the cutoff for "still worth debugging live"?', 'How do you tell the difference between a clarifying question and a derailing one?'],
   },
   {
     id: 'case-021',
@@ -410,60 +411,6 @@ export const caseStudy: Question[] = [
       'Prepares reasoning, not a memorized script, to sound genuine',
     ],
     followUps: ['What question caught you off guard in a past take-home debrief?', 'How do you handle a question about a part you did not think much about?'],
-  },
-  {
-    id: 'case-023',
-    round: 'case',
-    category: 'Presentation',
-    question: 'How do you phrase a decision you regret without over-apologizing or making excuses?',
-    answer: [
-      'State the decision and the real constraint that drove it plainly — usually time — without over-apologizing or spending too long on it; one clear sentence of context is enough before moving to what you would do differently.',
-      'Be specific about the better alternative you would have chosen with more time or information, since a vague "I would do it better" is less convincing than naming the actual approach you would take instead and why.',
-      'Move on confidently afterward — dwelling on a single regret past the point of usefulness reads worse than the original decision did, and a staff-level candidate is expected to make imperfect calls under real constraints and own them briefly.',
-    ],
-    keyPoints: [
-      'States the decision and real constraint plainly, without over-apologizing',
-      'Names a specific, credible better alternative rather than a vague regret',
-      'Moves on promptly rather than dwelling',
-      'Says why the alternative would have been better, not only what it was',
-    ],
-    followUps: ['What would you have needed to know earlier to avoid that decision?', 'How do you decide when a decision is worth revisiting mid-build versus living with it?'],
-  },
-  {
-    id: 'case-024',
-    round: 'case',
-    category: 'Presentation',
-    question: 'A bug happens live during your demo. What do you do?',
-    answer: [
-      'Stay calm and narrate what you are seeing plainly — "[that is not the expected behavior, let me see what is happening]" — rather than going silent or panicking, since composure under a live failure is itself part of what is being evaluated.',
-      'Make a fast judgment call: if it is quick to diagnose and fix live, do so briefly while narrating your debugging process, which can actually become a positive demonstration of how you debug under pressure; if not, acknowledge it plainly, describe what you believe is happening, and move on to a working part of the demo rather than burning the panel\'s time.',
-      'Follow up afterward if there is a natural moment: a one-line note on what you found post-demo shows follow-through, but do not let chasing the bug live derail the rest of your allotted time.',
-    ],
-    keyPoints: [
-      'Stays composed and narrates rather than going silent',
-      'Makes a fast triage call: fix briefly and narrate, or move on cleanly',
-      'States a time limit for debugging live before switching to a working path',
-      'Follows up afterward if a natural moment allows it',
-    ],
-    followUps: ['Tell me about a real time this happened to you.', 'How do you decide the cutoff for "still worth debugging live"?'],
-  },
-  {
-    id: 'case-025',
-    round: 'case',
-    category: 'Presentation',
-    question: 'How do you manage time and read the room during the presentation?',
-    answer: [
-      'Keep a rough mental (or literal) checkpoint of where you should be at each time mark, and be willing to compress or skip a planned section if you are behind, rather than rushing the ending or running over.',
-      'Watch for signals the panel wants to go deeper or move on — a question mid-section, visible note-taking on one point, or a neutral "okay, let\'s keep going" — and adjust pacing to match rather than sticking rigidly to a script regardless of engagement.',
-      'If you are asked a tangential question that would derail your remaining time, answer briefly and offer to go deeper after the planned content, rather than either ignoring the panel or losing the whole structure to one thread.',
-    ],
-    keyPoints: [
-      'Tracks time checkpoints and adapts by compressing, not rushing or overrunning',
-      'Reads panel engagement signals and adjusts pacing accordingly',
-      'Handles a derailing question with a brief answer plus a deferred deep-dive offer',
-      'Balances structure with genuine responsiveness to the room',
-    ],
-    followUps: ['What would you do if you were only halfway through content with two minutes left?', 'How do you tell the difference between a clarifying question and a derailing one?'],
   },
   {
     id: 'case-026',
@@ -575,9 +522,8 @@ export const caseStudy: Question[] = [
     ],
     keyPoints: [
       'Reframes migration/infra work as still requiring real UI-building skill',
-      'Points to the submission itself as concrete evidence, not just claims',
+      'Points to a specific decision in the submission as the evidence, rather than arguing it in the abstract',
       'Honest about any specific rust, framed as fast ramp-up rather than a gap',
-      'Names a specific file or decision in the submission as the evidence',
     ],
     followUps: ['What part of this take-home felt least familiar to you?', 'How do you keep product-UI instincts sharp while doing mostly infrastructure work?'],
   },
@@ -600,24 +546,6 @@ export const caseStudy: Question[] = [
     followUps: ['What is the minimal version of a flag you would build if asked to demonstrate the concept?', 'When have you seen feature flags introduced too early on a real team?'],
   },
   {
-    id: 'case-033',
-    round: 'case',
-    category: 'From your CV',
-    question: 'If you are an advocate for visual regression testing, would you add it here? Justify the cost.',
-    answer: [
-      'Be honest about the cost-benefit at this scale: visual regression tooling has real setup and baseline-maintenance overhead that is hard to justify for a single throwaway prototype reviewed once, so the default answer is no for the take-home as a whole.',
-      'Name the specific condition under which it would earn its place even here: if the brief centers on a shared, reusable component (e.g. a design-system-style component meant to be visually stable across many consumers), a single targeted snapshot test on that one component could be worth the setup cost as a demonstration.',
-      'Connect it back to the same judgment principle as the flag question: knowing a pattern well is not the same as applying it everywhere — the staff-level signal is choosing not to add it here and being able to say exactly why, and exactly where it would change.',
-    ],
-    keyPoints: [
-      'States the default no clearly, with the real cost-benefit reasoning',
-      'Names the specific narrow condition where it would still be worth adding',
-      'Ties the answer to scale-appropriate judgment, not blanket advocacy',
-      'Names the one component type where it would still earn its setup cost',
-    ],
-    followUps: ['What would the minimal visual regression setup look like if you did add it?', 'How do you decide which components in a real design system get this coverage first?'],
-  },
-  {
     id: 'case-034',
     round: 'case',
     category: 'From your CV',
@@ -630,8 +558,7 @@ export const caseStudy: Question[] = [
     keyPoints: [
       'Names the transferable principle: stable API over ad hoc special-casing',
       'Points to a concrete, present example in the actual submission',
-      'Clearly scopes what does and does not transfer at take-home scale',
-      'Names what does not transfer: migration tooling, cross-team rollout, deprecation',
+      'Scopes the analogy honestly by naming what does not transfer: migration tooling, cross-team rollout, deprecation of old implementations',
     ],
     followUps: ['Describe how the column configuration in your table stays generic.', 'What would the first step of a real consolidation effort look like, versus this table?'],
   },
