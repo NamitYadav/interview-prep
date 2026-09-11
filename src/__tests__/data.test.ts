@@ -65,6 +65,25 @@ describe('question bank', () => {
     }
   });
 
+  // `scratch: true` turns the code block into an editable pad, but QuestionCard only
+  // renders it inside `question.code && ...` — so a scratch question with no code
+  // silently shows no editor at all, and the types allow exactly that.
+  test('a scratch question always carries starter code', () => {
+    for (const q of questions) {
+      if (q.scratch) expect(q.code, `${q.id} is scratch with no code`).toBeTruthy();
+    }
+  });
+
+  // The habit the data-structures questions exist to train is saying a complexity out
+  // loud. If it is not in the checklist, the drill never scores it.
+  test('every data-structures question puts a complexity in its key points', () => {
+    const ds = questions.filter((q) => q.category === 'Data structures & traversal');
+    expect(ds.length).toBeGreaterThan(0);
+    for (const q of ds) {
+      expect(q.keyPoints.join(' '), `${q.id} key points name no complexity`).toMatch(/O\(/);
+    }
+  });
+
   test('every STORY_CATEGORIES entry matches at least one real question category', () => {
     const categories = new Set(questions.map((q) => q.category));
     for (const c of STORY_CATEGORIES) expect(categories.has(c), c).toBe(true);

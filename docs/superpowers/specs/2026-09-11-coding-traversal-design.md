@@ -25,8 +25,8 @@ All land in a new category, `Data structures & traversal`, after `Build prompts`
 `scratch: true` with a starter signature, so the drill's scratch editor (now persisted)
 is usable. Ids `coding-041` through `coding-048`.
 
-1. **Lowest common ancestor of two DOM nodes.** Asked verbatim at Google and Amazon.
-   Parent-chain-plus-set vs depth-equalise-then-walk; the `Node.contains` shortcut and
+1. **Lowest common ancestor of two DOM nodes.** A long-standing staple of frontend
+   loops at the large US employers with EU offices. Parent-chain-plus-set vs depth-equalise-then-walk; the `Node.contains` shortcut and
    why an interviewer usually bars it; detached nodes and different documents.
 2. **Implement `getElementsByClassName`.** Tree walk, recursion vs an explicit stack and
    why the stack matters on deep trees, `classList` vs `className` parsing, and the

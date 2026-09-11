@@ -62,10 +62,11 @@ follow-ups. Reveal, rate yourself, and weak questions come back first.
 - `[bracket slots]` in an answer are yours to fill from your own experience — the
   answers are coaching scaffolds, not a script to memorise.
 - Every question takes a **note**.
-- The **Live coding → Build prompts** category gives you an editable scratch pad
-  pre-filled with the starter code, instead of a read-only snippet — write your
-  approach out before revealing. It's scratch space only: not saved, and reset on the
-  next question.
+- The **Live coding** build prompts and the data-structures questions give you an
+  editable scratch pad pre-filled with the starter code, instead of a read-only
+  snippet — write your approach out before revealing. What you type is kept per
+  question on this device, so a reload or a switch to another question doesn't lose
+  it; it stays out of export/import backups.
 
 ## Your own material
 - **My notes** — every note you have written, in round order, read-only. Edit them on
