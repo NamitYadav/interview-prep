@@ -76,6 +76,18 @@ describe('RoundView', () => {
     expect(screen.queryByRole('button', { name: /reveal/i })).not.toBeInTheDocument();
   });
 
+  test('the design round gets a third "45-min prompt" tab; other rounds do not', () => {
+    render(<Harness />); // hr round
+    expect(screen.queryByRole('tab', { name: /45-min prompt/i })).not.toBeInTheDocument();
+
+    function DesignHarness() {
+      const [state, dispatch] = useReducer(reducer, EMPTY);
+      return <RoundView roundId="design" state={state} dispatch={dispatch} strictMode={false} />;
+    }
+    render(<DesignHarness />);
+    expect(screen.getByRole('tab', { name: /45-min prompt/i })).toBeInTheDocument();
+  });
+
   test('an unknown round id renders a not-found message instead of throwing', () => {
     function BadHarness() {
       const [state, dispatch] = useReducer(reducer, EMPTY);

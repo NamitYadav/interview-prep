@@ -3,26 +3,18 @@ import { act, renderHook } from '@testing-library/react';
 import { STORAGE_KEY } from '../lib/storage';
 import { EMPTY } from './helpers';
 import { reducer, useAppState } from '../hooks/useAppState';
-import { DEFAULT_EASE_FACTOR, nextDueAt, nextInterval } from '../lib/queue';
 
 beforeEach(() => localStorage.clear());
 
 describe('reducer', () => {
-  test('rate creates an entry with seen=1, dueAt/interval/easeFactor from nextInterval', () => {
+  test('rate creates an entry with seen=1 and only rating/seen/lastSeen', () => {
     const s = reducer(EMPTY, { type: 'rate', id: 'hm-001', rating: 2, now: 100 });
-    const { interval, easeFactor } = nextInterval(2, 0, DEFAULT_EASE_FACTOR);
-    expect(s.progress['hm-001']).toEqual({
-      rating: 2, seen: 1, lastSeen: 100, dueAt: nextDueAt(100, interval), interval, easeFactor,
-    });
+    expect(s.progress['hm-001']).toEqual({ rating: 2, seen: 1, lastSeen: 100 });
   });
-  test('rate increments seen, overwrites rating, and re-derives the schedule from the prior one', () => {
+  test('rate increments seen and overwrites rating and lastSeen', () => {
     let s = reducer(EMPTY, { type: 'rate', id: 'hm-001', rating: 1, now: 100 });
     s = reducer(s, { type: 'rate', id: 'hm-001', rating: 3, now: 200 });
-    const first = nextInterval(1, 0, DEFAULT_EASE_FACTOR);
-    const second = nextInterval(3, first.interval, first.easeFactor);
-    expect(s.progress['hm-001']).toEqual({
-      rating: 3, seen: 2, lastSeen: 200, dueAt: nextDueAt(200, second.interval), interval: second.interval, easeFactor: second.easeFactor,
-    });
+    expect(s.progress['hm-001']).toEqual({ rating: 3, seen: 2, lastSeen: 200 });
   });
   test('note sets and blank note deletes', () => {
     let s = reducer(EMPTY, { type: 'note', id: 'hm-001', text: 'STAR story' });
@@ -30,6 +22,19 @@ describe('reducer', () => {
     s = reducer(s, { type: 'note', id: 'hm-001', text: '   ' });
     expect(s.notes).toEqual({});
   });
+  test('saveStory merges a partial update against the current story, not a caller-supplied snapshot', () => {
+    let s = reducer(EMPTY, { type: 'saveStory', id: 'a', title: 'Migration', body: 'Situation...' });
+    // Commit only the body — as if two independently-debounced fields fired close
+    // together and this one's closure never knew the title had just changed.
+    s = reducer(s, { type: 'saveStory', id: 'a', body: 'Situation... Task... Action...' });
+    expect(s.stories.a).toEqual({ title: 'Migration', body: 'Situation... Task... Action...' });
+  });
+
+  test('saveStory on a new id defaults missing fields to empty rather than undefined', () => {
+    const s = reducer(EMPTY, { type: 'saveStory', id: 'new', title: 'Just a title' });
+    expect(s.stories.new).toEqual({ title: 'Just a title', body: '' });
+  });
+
   test('import replaces state', () => {
     const data = { version: 2 as const, progress: { x: { rating: 1 as const, seen: 1, lastSeen: 1 } }, notes: {}, stories: {} };
     expect(reducer(EMPTY, { type: 'import', data })).toEqual(data);
@@ -70,9 +75,8 @@ describe('useAppState', () => {
 
       act(() => vi.advanceTimersByTime(500));
 
-      const { interval, easeFactor } = nextInterval(3, 0, DEFAULT_EASE_FACTOR);
       expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).progress.b).toEqual({
-        rating: 3, seen: 1, lastSeen: 5, dueAt: nextDueAt(5, interval), interval, easeFactor,
+        rating: 3, seen: 1, lastSeen: 5,
       });
       expect(result.current.saveFailed).toBe(false);
     } finally {

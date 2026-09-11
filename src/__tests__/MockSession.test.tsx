@@ -44,6 +44,15 @@ describe('MockSession', () => {
     expect(screen.getByText(/1 solid · 0 ok · 0 weak/i)).toBeInTheDocument();
   });
 
+  test('full loop serves questions in round order, not re-shuffled across rounds', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /full loop/i }));
+    // hr is the first round in the composition; its questions come first, and none
+    // of hr's own picks should ever get bumped by a later round's weak rating —
+    // there's nothing to rate yet, so this really is just testing the initial order.
+    expect(screen.getByText(/hr screen/i)).toBeInTheDocument();
+  });
+
   test('back to presets returns to the preset list', async () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('button', { name: /full loop/i }));

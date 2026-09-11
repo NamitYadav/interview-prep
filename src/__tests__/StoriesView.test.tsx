@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
 import type { Persisted } from '../types';
@@ -40,6 +40,20 @@ describe('StoriesView', () => {
     await userEvent.click(screen.getByRole('button', { name: /new story/i }));
     expect(screen.getByPlaceholderText(/story title/i)).toBeInTheDocument();
     expect(screen.queryByText(/no stories yet/i)).not.toBeInTheDocument();
+  });
+
+  test('editing title then body within the same debounce window commits both, not just the last one', () => {
+    vi.useFakeTimers();
+    try {
+      render(<Harness initial={withStory('', '')} />);
+      fireEvent.change(screen.getByLabelText(/story title/i), { target: { value: 'Migration' } });
+      fireEvent.change(screen.getByLabelText(/story body/i), { target: { value: 'Situation...' } });
+      act(() => vi.advanceTimersByTime(300));
+      expect(screen.getByLabelText(/story title/i)).toHaveValue('Migration');
+      expect(screen.getByLabelText(/story body/i)).toHaveValue('Situation...');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   test('deleting a story asks for confirmation and removes it on accept', async () => {

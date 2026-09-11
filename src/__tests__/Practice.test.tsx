@@ -33,15 +33,13 @@ const rateVisible = async () => {
 };
 
 describe('Practice', () => {
-  test('reveal shows answer and key points; follow-ups stay gated until asked for', async () => {
+  test('reveal shows answer, key points, and follow-ups as a plain list', async () => {
     render(<Harness />);
     expect(screen.getByText('First question?')).toBeInTheDocument();
     expect(screen.queryByText('Answer one.')).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
     expect(screen.getByText('Answer one.')).toBeInTheDocument();
     expect(screen.getByText('Point one')).toBeInTheDocument();
-    expect(screen.queryByText('Follow one')).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /answer the follow-up/i }));
     expect(screen.getByText('Follow one')).toBeInTheDocument();
   });
 
@@ -157,10 +155,10 @@ describe('Practice', () => {
 
   test('a double Back followed by a re-rating can resurface a skipped question later in the same lap', async () => {
     // Documents a known, accepted edge case (see the comment on seenInPath in
-    // Practice.tsx): re-rating Q1 after backing up two steps changes its due date,
-    // which can make the queue jump straight to Q3 — skipping past Q2 without
-    // forgetting it. Q2 still comes back before the lap ends; nothing is lost or
-    // stuck, it just takes one extra rating for this 3-question lap.
+    // Practice.tsx): re-rating Q1 after backing up two steps moves it to a new
+    // bucket, which can make the queue jump straight to Q3 — skipping past Q2
+    // without forgetting it. Q2 still comes back before the lap ends; nothing is
+    // lost or stuck, it just takes one extra rating for this 3-question lap.
     render(<Harness3 />);
     await rateVisible(); // Q1 -> Q2
     await rateVisible(); // Q2 -> Q3
@@ -206,5 +204,93 @@ describe('Practice', () => {
   test('empty state when no questions', () => {
     render(<Practice questions={[]} state={EMPTY} dispatch={() => {}} strictMode={false} />);
     expect(screen.getByText(/no questions match/i)).toBeInTheDocument();
+  });
+});
+
+const qs10: Question[] = Array.from({ length: 10 }, (_, i) => ({
+  id: `hm-${String(i + 1).padStart(3, '0')}`,
+  round: 'hm', category: 'A', question: `Question ${i + 1}?`, answer: [`Answer ${i + 1}.`], keyPoints: [`Point ${i + 1}`],
+}));
+
+function Harness10() {
+  const [state, dispatch] = useReducer(reducer, EMPTY);
+  return <Practice questions={qs10} state={state} dispatch={dispatch} strictMode={false} />;
+}
+
+const currentQuestionText = () => screen.getByRole('heading', { level: 2 }).textContent;
+const rateWeak = async () => {
+  await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+  await userEvent.click(screen.getByRole('radio', { name: /weak/i }));
+};
+const skipVisible = async () => {
+  await userEvent.click(screen.getByRole('button', { name: /skip/i }));
+};
+
+describe('Practice ordered mode and round-boundary banner', () => {
+  const mixedRounds: Question[] = [
+    { id: 'hr-001', round: 'hr', category: 'A', question: 'HR one?', answer: ['a'], keyPoints: ['k'] },
+    { id: 'hr-002', round: 'hr', category: 'A', question: 'HR two?', answer: ['a'], keyPoints: ['k'] },
+    { id: 'hm-001', round: 'hm', category: 'A', question: 'HM one?', answer: ['a'], keyPoints: ['k'] },
+  ];
+  function OrderedHarness() {
+    const [state, dispatch] = useReducer(reducer, EMPTY);
+    return <Practice questions={mixedRounds} state={state} dispatch={dispatch} strictMode={false} ordered />;
+  }
+
+  test('serves questions in array order and banners each round transition', async () => {
+    render(<OrderedHarness />);
+    expect(currentQuestionText()).toBe('HR one?');
+    expect(screen.getByText(/round 1 of 2 — hr screen/i)).toBeInTheDocument();
+
+    await skipVisible();
+    expect(currentQuestionText()).toBe('HR two?');
+    expect(screen.queryByText(/round \d of \d/i)).not.toBeInTheDocument();
+
+    await skipVisible();
+    expect(currentQuestionText()).toBe('HM one?');
+    expect(screen.getByText(/round 2 of 2 — hiring manager/i)).toBeInTheDocument();
+  });
+});
+
+describe('Practice weak-question requeuing', () => {
+  test('a weak rating resurfaces 8 advances later, not immediately and not lost', async () => {
+    render(<Harness10 />);
+    expect(currentQuestionText()).toBe('Question 1?');
+
+    await rateWeak(); // Question 1 rated weak -> requeued, not shown again yet
+    expect(currentQuestionText()).toBe('Question 2?');
+
+    // Skip through the next 8 questions (Q2..Q9) — none of them is Q1 resurfacing early.
+    for (let i = 2; i <= 9; i++) {
+      expect(currentQuestionText()).toBe(`Question ${i}?`);
+      await skipVisible();
+    }
+    // The 8th advance since the weak rating lands back on Question 1, ahead of the
+    // still-unshown Question 10 — the requeue wins over the regular queue once due.
+    expect(currentQuestionText()).toBe('Question 1?');
+  });
+
+  test('a pending requeue keeps the lap open past the point every other question is shown', async () => {
+    const threeQs = qs10.slice(0, 3);
+    function Harness3q() {
+      const [state, dispatch] = useReducer(reducer, EMPTY);
+      return <Practice questions={threeQs} state={state} dispatch={dispatch} strictMode={false} />;
+    }
+    render(<Harness3q />);
+
+    await rateWeak(); // Question 1 -> requeued for step 0+8=8, far beyond this 3-question set
+    expect(currentQuestionText()).toBe('Question 2?');
+    await skipVisible();
+    expect(currentQuestionText()).toBe('Question 3?');
+
+    // The regular queue is now exhausted (Q1, Q2, Q3 all shown), but Question 1's
+    // requeue hasn't reached its scheduled step yet — the lap must not end here.
+    await skipVisible();
+    expect(screen.queryByText(/lap done/i)).not.toBeInTheDocument();
+    expect(currentQuestionText()).toBe('Question 1?');
+
+    // Now that the one pending requeue has been drained, the lap can actually end.
+    await rateWeak();
+    expect(screen.getByText(/lap done/i)).toBeInTheDocument();
   });
 });

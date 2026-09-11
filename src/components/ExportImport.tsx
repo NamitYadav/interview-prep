@@ -3,7 +3,11 @@ import type { Persisted } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { backupFilename, parseBackup } from '../lib/storage';
 
-export function ExportImport({ state, dispatch }: { state: Persisted; dispatch: Dispatch<Action> }) {
+export const LAST_EXPORT_KEY = 'interview-prep:last-export';
+
+export function ExportImport({
+  state, dispatch, onExport,
+}: { state: Persisted; dispatch: Dispatch<Action>; onExport?: () => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,6 +21,10 @@ export function ExportImport({ state, dispatch }: { state: Persisted; dispatch: 
     a.click();
     // Safari can drop the download if the blob URL is revoked synchronously.
     setTimeout(() => URL.revokeObjectURL(url), 0);
+    try {
+      localStorage.setItem(LAST_EXPORT_KEY, String(Date.now()));
+    } catch { /* storage unavailable — the export nudge just won't clear */ }
+    onExport?.();
   };
 
   const importJson = async (file: File | undefined) => {

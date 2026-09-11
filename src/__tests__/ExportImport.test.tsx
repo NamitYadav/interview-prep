@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
 import type { Persisted } from '../types';
 import { reducer } from '../hooks/useAppState';
-import { ExportImport } from '../components/ExportImport';
+import { ExportImport, LAST_EXPORT_KEY } from '../components/ExportImport';
 
 const seeded: Persisted = {
   version: 2,
@@ -43,6 +43,13 @@ describe('ExportImport', () => {
     await userEvent.click(screen.getByRole('button', { name: /export/i }));
     expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
     expect(HTMLAnchorElement.prototype.click).toHaveBeenCalledTimes(1);
+  });
+
+  test('export records a last-export timestamp', async () => {
+    localStorage.removeItem(LAST_EXPORT_KEY);
+    render(<Harness initial={seeded} />);
+    await userEvent.click(screen.getByRole('button', { name: /export/i }));
+    expect(localStorage.getItem(LAST_EXPORT_KEY)).not.toBeNull();
   });
 
   test('import replaces state and clears a prior error on success', async () => {

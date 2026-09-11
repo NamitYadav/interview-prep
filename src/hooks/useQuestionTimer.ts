@@ -8,9 +8,13 @@ import { useEffect, useRef, useState } from 'react';
 // timeout from time-remaining-until-that-same-deadline, never a fresh full
 // duration.
 export function useQuestionTimer({
-  targetSeconds, strictMode, revealed, onAutoReveal,
+  targetSeconds, strictMode, revealed, onAutoReveal, autoReveal = true,
 }: {
   targetSeconds: number | undefined; strictMode: boolean; revealed: boolean; onAutoReveal: () => void;
+  // Set false for a visible countdown that never forces anything (DesignSession's
+  // 45-minute clock) — the interval still ticks `remainingMs`, the timeout just
+  // never gets scheduled.
+  autoReveal?: boolean;
 }) {
   // Set in an effect, not `useRef(Date.now())` in the render body — Date.now() is
   // impure, and the effect always commits before a user could click Reveal, so the
@@ -35,17 +39,17 @@ export function useQuestionTimer({
   useEffect(() => {
     if (!strictMode || revealed || targetSeconds === undefined) return;
     const deadline = (mountedAt.current ?? Date.now()) + targetSeconds * 1000;
-    const timeout = setTimeout(() => {
+    const timeout = autoReveal ? setTimeout(() => {
       setElapsedMs(Date.now() - mountedAt.current!);
       setAutoRevealed(true);
       onAutoRevealRef.current();
-    }, Math.max(0, deadline - Date.now()));
+    }, Math.max(0, deadline - Date.now())) : undefined;
     const interval = setInterval(() => setRemainingMs(Math.max(0, deadline - Date.now())), 250);
     return () => {
-      clearTimeout(timeout);
+      if (timeout !== undefined) clearTimeout(timeout);
       clearInterval(interval);
     };
-  }, [strictMode, revealed, targetSeconds]);
+  }, [strictMode, revealed, targetSeconds, autoReveal]);
 
   const markRevealed = () => {
     setElapsedMs(Date.now() - mountedAt.current!);

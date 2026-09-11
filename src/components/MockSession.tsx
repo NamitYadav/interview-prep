@@ -3,7 +3,6 @@ import { BackLink } from './BackLink';
 import type { Persisted, Question, RoundId } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { questionsByRound } from '../data';
-import { orderQueue } from '../lib/queue';
 import { Practice } from './Practice';
 
 interface Preset { id: string; title: string; blurb: string; composition: Partial<Record<RoundId, number>> }
@@ -12,7 +11,7 @@ const PRESETS: Preset[] = [
   {
     id: 'full-loop',
     title: 'Full loop',
-    blurb: 'A slice of every round, weighted toward your weak spots in each.',
+    blurb: 'A slice of every round, in round order.',
     composition: { hr: 4, hm: 6, coding: 4, design: 3, case: 4, debrief: 4, hoe: 3 },
   },
   {
@@ -23,10 +22,12 @@ const PRESETS: Preset[] = [
   },
 ];
 
-function buildSet(composition: Preset['composition'], progress: Persisted['progress']): Question[] {
+// Plain array order, not weak-weighted — a real loop doesn't let you pick your
+// weakest questions in each round, so neither does this preset.
+function buildSet(composition: Preset['composition']): Question[] {
   const picked: Question[] = [];
   for (const [roundId, count] of Object.entries(composition) as [RoundId, number][]) {
-    picked.push(...orderQueue(questionsByRound(roundId), progress).slice(0, count));
+    picked.push(...questionsByRound(roundId).slice(0, count));
   }
   return picked;
 }
@@ -40,7 +41,7 @@ export function MockSession({
   const start = (preset: Preset) => {
     // Frozen on entry, like the weak drill: freezing baseline progress too, so the
     // recap can tell "rated this session" apart from ratings you already had.
-    setSession({ preset, drill: buildSet(preset.composition, state.progress), baseline: state.progress });
+    setSession({ preset, drill: buildSet(preset.composition), baseline: state.progress });
     setFinished(false);
   };
 
@@ -52,7 +53,7 @@ export function MockSession({
         <BackLink />
         <h1 tabIndex={-1} className="text-2xl font-semibold">Mock session</h1>
         <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-          A curated, cross-round set in one sitting. Go at your own pace — each question shows how long you took once you reveal it, but nothing forces a hide.
+          A curated, cross-round set in round order, like a real loop day. Go at your own pace — each question shows how long you took once you reveal it, but nothing forces a hide.
         </p>
         <ul className="space-y-3">
           {PRESETS.map((p) => (
@@ -110,7 +111,7 @@ export function MockSession({
       <BackLink />
       <h1 tabIndex={-1} className="text-2xl font-semibold">{preset.title}</h1>
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{drill.length} questions. Rate as you go, finish whenever.</p>
-      <Practice questions={drill} state={state} dispatch={dispatch} strictMode={strictMode} onLapComplete={() => setFinished(true)} />
+      <Practice questions={drill} state={state} dispatch={dispatch} strictMode={strictMode} ordered onLapComplete={() => setFinished(true)} />
       <div className="mt-3 flex justify-end">
         <button type="button" onClick={() => setFinished(true)} className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">
           Finish session
