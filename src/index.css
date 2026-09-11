@@ -55,6 +55,11 @@
   --color-amber-900: #5c4a11;
 }
 
+/* Bumps every rem-based Tailwind size utility (text-xs..text-2xl, spacing, etc.)
+   proportionally in one place — a percentage, not a fixed px, so it still scales
+   on top of a user's own browser font-size setting instead of overriding it. */
+html { font-size: 112.5%; }
+
 :root { color-scheme: dark; }
 [data-theme='light'] { color-scheme: light; }
 body { @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 antialiased; }
