@@ -9,7 +9,9 @@ import { ProgressBar } from './ProgressBar';
 
 type Tab = 'practice' | 'browse';
 
-export function RoundView({ roundId, state, dispatch }: { roundId: RoundId; state: Persisted; dispatch: Dispatch<Action> }) {
+export function RoundView({
+  roundId, state, dispatch, strictMode,
+}: { roundId: RoundId; state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean }) {
   const round = rounds.find((r) => r.id === roundId);
   const all = useMemo(() => questionsByRound(roundId), [roundId]);
   const categories = useMemo(() => [...new Set(all.map((q) => q.category))], [all]);
@@ -57,7 +59,7 @@ export function RoundView({ roundId, state, dispatch }: { roundId: RoundId; stat
       </div>
 
       {tab === 'practice'
-        ? <Practice key={selected ?? ''} questions={filtered} state={state} dispatch={dispatch} />
+        ? <Practice key={selected ?? ''} questions={filtered} state={state} dispatch={dispatch} strictMode={strictMode} />
         : <Browse questions={filtered} state={state} dispatch={dispatch} />}
     </main>
   );

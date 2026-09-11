@@ -14,7 +14,7 @@ const weakOn = (...ids: string[]): Persisted => ({
 
 function Harness({ initial }: { initial: Persisted }) {
   const [state, dispatch] = useReducer(reducer, initial);
-  return <WeakDrill state={state} dispatch={dispatch} />;
+  return <WeakDrill state={state} dispatch={dispatch} strictMode={false} />;
 }
 
 describe('WeakDrill', () => {

@@ -14,7 +14,7 @@
       // Key duplicated from src/hooks/useTheme.ts — keep the two in sync.
       try {
         var t = localStorage.getItem('interview-prep:theme');
-        if (t === 'gruvbox') document.documentElement.dataset.theme = t;
+        if (t === 'gruvbox' || t === 'light') document.documentElement.dataset.theme = t;
       } catch (e) { /* storage unavailable: keep the default */ }
     </script>
   </head>

@@ -2,18 +2,26 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { EMPTY, STORAGE_KEY } from '../lib/storage';
 import { reducer, useAppState } from '../hooks/useAppState';
+import { DEFAULT_EASE_FACTOR, nextDueAt, nextInterval } from '../lib/queue';
 
 beforeEach(() => localStorage.clear());
 
 describe('reducer', () => {
-  test('rate creates an entry with seen=1', () => {
+  test('rate creates an entry with seen=1, dueAt/interval/easeFactor from nextInterval', () => {
     const s = reducer(EMPTY, { type: 'rate', id: 'hm-001', rating: 2, now: 100 });
-    expect(s.progress['hm-001']).toEqual({ rating: 2, seen: 1, lastSeen: 100 });
+    const { interval, easeFactor } = nextInterval(2, 0, DEFAULT_EASE_FACTOR);
+    expect(s.progress['hm-001']).toEqual({
+      rating: 2, seen: 1, lastSeen: 100, dueAt: nextDueAt(100, interval), interval, easeFactor,
+    });
   });
-  test('rate increments seen and overwrites rating', () => {
+  test('rate increments seen, overwrites rating, and re-derives the schedule from the prior one', () => {
     let s = reducer(EMPTY, { type: 'rate', id: 'hm-001', rating: 1, now: 100 });
     s = reducer(s, { type: 'rate', id: 'hm-001', rating: 3, now: 200 });
-    expect(s.progress['hm-001']).toEqual({ rating: 3, seen: 2, lastSeen: 200 });
+    const first = nextInterval(1, 0, DEFAULT_EASE_FACTOR);
+    const second = nextInterval(3, first.interval, first.easeFactor);
+    expect(s.progress['hm-001']).toEqual({
+      rating: 3, seen: 2, lastSeen: 200, dueAt: nextDueAt(200, second.interval), interval: second.interval, easeFactor: second.easeFactor,
+    });
   });
   test('note sets and blank note deletes', () => {
     let s = reducer(EMPTY, { type: 'note', id: 'hm-001', text: 'STAR story' });
@@ -50,22 +58,112 @@ describe('reducer', () => {
 });
 
 describe('useAppState', () => {
-  test('loads from storage and persists changes', () => {
+  test('loads from storage and persists changes after the debounce', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, progress: {}, notes: { a: 'hi' } }));
-    const { result } = renderHook(() => useAppState());
-    expect(result.current.state.notes.a).toBe('hi');
-    act(() => result.current.dispatch({ type: 'rate', id: 'b', rating: 3, now: 5 }));
-    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).progress.b).toEqual({ rating: 3, seen: 1, lastSeen: 5 });
-    expect(result.current.saveFailed).toBe(false);
+    vi.useFakeTimers();
+    try {
+      const { result } = renderHook(() => useAppState());
+      expect(result.current.state.notes.a).toBe('hi');
+      act(() => result.current.dispatch({ type: 'rate', id: 'b', rating: 3, now: 5 }));
+      expect(localStorage.getItem(STORAGE_KEY)).not.toContain('"b"');
+
+      act(() => vi.advanceTimersByTime(500));
+
+      const { interval, easeFactor } = nextInterval(3, 0, DEFAULT_EASE_FACTOR);
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).progress.b).toEqual({
+        rating: 3, seen: 1, lastSeen: 5, dueAt: nextDueAt(5, interval), interval, easeFactor,
+      });
+      expect(result.current.saveFailed).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('rapid successive dispatches coalesce into a single debounced write', () => {
+    vi.useFakeTimers();
+    try {
+      const { result } = renderHook(() => useAppState());
+      const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+      act(() => result.current.dispatch({ type: 'rate', id: 'a', rating: 1, now: 1 }));
+      act(() => vi.advanceTimersByTime(200));
+      act(() => result.current.dispatch({ type: 'rate', id: 'b', rating: 2, now: 2 }));
+      act(() => vi.advanceTimersByTime(200));
+      expect(setItemSpy).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(300));
+      expect(setItemSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('pagehide flushes a pending debounced write immediately', () => {
+    vi.useFakeTimers();
+    try {
+      const { result } = renderHook(() => useAppState());
+      act(() => result.current.dispatch({ type: 'rate', id: 'a', rating: 1, now: 1 }));
+      expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+      act(() => window.dispatchEvent(new Event('pagehide')));
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).progress.a).toBeDefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('backgrounding the tab (visibilitychange -> hidden) flushes a pending write', () => {
+    vi.useFakeTimers();
+    const visibilitySpy = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    try {
+      const { result } = renderHook(() => useAppState());
+      act(() => result.current.dispatch({ type: 'rate', id: 'a', rating: 1, now: 1 }));
+      expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+      act(() => document.dispatchEvent(new Event('visibilitychange')));
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).progress.a).toBeDefined();
+    } finally {
+      visibilitySpy.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  test('does not write again on flush when nothing is pending', () => {
+    vi.useFakeTimers();
+    try {
+      const { result } = renderHook(() => useAppState());
+      act(() => result.current.dispatch({ type: 'rate', id: 'a', rating: 1, now: 1 }));
+      act(() => vi.advanceTimersByTime(500));
+      const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+      act(() => window.dispatchEvent(new Event('pagehide')));
+      expect(setItemSpy).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('unmounting with a pending debounced write flushes it', () => {
+    vi.useFakeTimers();
+    try {
+      const { result, unmount } = renderHook(() => useAppState());
+      act(() => result.current.dispatch({ type: 'rate', id: 'a', rating: 1, now: 1 }));
+      expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+      unmount();
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).progress.a).toBeDefined();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   test('flags saveFailed when the underlying storage write throws', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('quota exceeded');
     });
-    const { result } = renderHook(() => useAppState());
-    act(() => result.current.dispatch({ type: 'rate', id: 'a', rating: 1, now: 1 }));
-    expect(result.current.saveFailed).toBe(true);
+    vi.useFakeTimers();
+    try {
+      const { result } = renderHook(() => useAppState());
+      act(() => result.current.dispatch({ type: 'rate', id: 'a', rating: 1, now: 1 }));
+      act(() => vi.advanceTimersByTime(500));
+      expect(result.current.saveFailed).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

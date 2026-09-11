@@ -9,9 +9,10 @@
   --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-/* Both themes are dark, so `dark:` is unconditionally on — one variant, no media
-   query, no toggle class. A future light theme would narrow this to its own value. */
-@custom-variant dark (&:where([data-theme] *, [data-theme]));
+/* dark: fires for the two dark themes (dark, gruvbox — gruvbox rides on the same
+   dark: utilities) but not for light, which reuses the undecorated (non-dark:)
+   classes as its palette — no separate light color block needed. */
+@custom-variant dark (&:where([data-theme='dark'] *, [data-theme='dark'], [data-theme='gruvbox'] *, [data-theme='gruvbox']));
 
 /* Gruvbox is a palette swap and nothing else: redefining Tailwind's color variables
    on the theme root remaps every existing zinc/emerald/red/amber utility in place,
@@ -52,6 +53,7 @@
 }
 
 :root { color-scheme: dark; }
+[data-theme='light'] { color-scheme: light; }
 body { @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 antialiased; }
 
 /* Pointer cursor on every clickable control, plus smooth color/border transitions on
@@ -80,9 +82,9 @@ a, button, [role='button'], input, textarea, select {
   }
 }
 
-/* Both themes are dark-on-dark, and browsers drop background colors when printing
-   by default — without this, the cheat sheet prints light text on white paper.
-   Force plain black-on-white instead of trying to preserve either theme's palette. */
+/* Dark and gruvbox are dark-on-dark, and browsers drop background colors when
+   printing by default — without this, the cheat sheet prints light text on white
+   paper. Force plain black-on-white instead of trying to preserve any theme's palette. */
 @media print {
   html, body { background: #fff !important; }
   body, body * { color: #000 !important; border-color: #999 !important; }

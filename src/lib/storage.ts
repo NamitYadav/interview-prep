@@ -12,11 +12,19 @@ export const emptyState = (): Persisted => ({ version: 2, progress: {}, notes: {
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
+// Number.isFinite, not typeof — typeof accepts Infinity/NaN, which JSON.stringify
+// silently turns into `null`, making the backup fail to re-validate on next load.
+const isFiniteNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+const isOptionalFiniteNumber = (v: unknown): v is number | undefined => v === undefined || isFiniteNumber(v);
+
 const isEntry = (v: unknown): v is ProgressEntry =>
   isRecord(v) &&
   (v.rating === 1 || v.rating === 2 || v.rating === 3) &&
-  typeof v.seen === 'number' &&
-  typeof v.lastSeen === 'number';
+  isFiniteNumber(v.seen) &&
+  isFiniteNumber(v.lastSeen) &&
+  isOptionalFiniteNumber(v.dueAt) &&
+  isOptionalFiniteNumber(v.interval) &&
+  isOptionalFiniteNumber(v.easeFactor);
 
 const isStory = (v: unknown): v is Story =>
   isRecord(v) &&

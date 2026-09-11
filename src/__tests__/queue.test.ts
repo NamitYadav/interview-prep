@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { Progress, Question } from '../types';
-import { nextQuestion, orderQueue, roundStats } from '../lib/queue';
+import { nextInterval, nextQuestion, orderQueue, roundStats } from '../lib/queue';
 
 const q = (id: string): Question => ({
   id, round: 'hm', category: 'X', question: id, answer: ['a'], keyPoints: ['k'],
@@ -8,30 +8,77 @@ const q = (id: string): Question => ({
 const qs = ['a', 'b', 'c', 'd', 'e'].map(q);
 
 describe('orderQueue', () => {
-  test('weak first, then unrated, ok, solid', () => {
+  test('never scheduled first, then by dueAt ascending', () => {
     const progress: Progress = {
-      a: { rating: 3, seen: 1, lastSeen: 10 },
-      b: { rating: 1, seen: 1, lastSeen: 10 },
-      c: { rating: 2, seen: 1, lastSeen: 10 },
+      a: { rating: 3, seen: 2, lastSeen: 10, dueAt: 500 },
+      b: { rating: 1, seen: 1, lastSeen: 10, dueAt: 100 },
+      c: { rating: 2, seen: 1, lastSeen: 10, dueAt: 300 },
+      // d, e never rated -> no dueAt -> sort first
     };
-    expect(orderQueue(qs, progress).map((x) => x.id)).toEqual(['b', 'd', 'e', 'c', 'a']);
+    expect(orderQueue(qs, progress).map((x) => x.id)).toEqual(['d', 'e', 'b', 'c', 'a']);
   });
 
-  test('within a bucket, oldest lastSeen first', () => {
+  test('ties preserve original order (stable sort)', () => {
     const progress: Progress = {
-      a: { rating: 1, seen: 1, lastSeen: 30 },
-      b: { rating: 1, seen: 1, lastSeen: 10 },
-      c: { rating: 1, seen: 1, lastSeen: 20 },
-      d: { rating: 1, seen: 1, lastSeen: 10 },
-      e: { rating: 1, seen: 1, lastSeen: 5 },
+      a: { rating: 1, seen: 1, lastSeen: 30, dueAt: 100 },
+      c: { rating: 1, seen: 1, lastSeen: 20, dueAt: 100 },
     };
-    expect(orderQueue(qs, progress).map((x) => x.id)).toEqual(['e', 'b', 'd', 'c', 'a']);
+    expect(orderQueue(qs, progress).map((x) => x.id)).toEqual(['b', 'd', 'e', 'a', 'c']);
+  });
+
+  test('legacy entries (rated before dueAt existed) fall back to lastSeen, still behind never-rated', () => {
+    const progress: Progress = {
+      a: { rating: 3, seen: 2, lastSeen: 500 }, // legacy: no dueAt
+      b: { rating: 1, seen: 1, lastSeen: 100 }, // legacy: no dueAt
+      c: { rating: 2, seen: 1, lastSeen: 10, dueAt: 50 }, // already re-rated under SM-2
+      // d, e never rated at all -> dueAt 0, ahead of every legacy/lastSeen fallback
+    };
+    expect(orderQueue(qs, progress).map((x) => x.id)).toEqual(['d', 'e', 'c', 'b', 'a']);
   });
 
   test('does not mutate input', () => {
     const copy = [...qs];
     orderQueue(qs, {});
     expect(qs).toEqual(copy);
+  });
+});
+
+describe('nextInterval', () => {
+  test('a fail is due again immediately (interval 0), not a day out', () => {
+    const { interval, easeFactor } = nextInterval(1, 6, 2.5);
+    expect(interval).toBe(0);
+    expect(easeFactor).toBeCloseTo(2.18, 5);
+  });
+
+  test('first-ever pass (ok or solid) sets interval to 1 day', () => {
+    expect(nextInterval(2, 0, 2.5).interval).toBe(1);
+    expect(nextInterval(3, 0, 2.5).interval).toBe(1);
+  });
+
+  test('second pass sets interval to 6 days', () => {
+    expect(nextInterval(3, 1, 2.5).interval).toBe(6);
+  });
+
+  test('later passes multiply interval by ease factor', () => {
+    expect(nextInterval(3, 6, 2.5).interval).toBe(16); // round(6 * 2.6)
+  });
+
+  test('a lapse restarts the 1-day/6-day ramp instead of jumping back to 6 days', () => {
+    let s = { interval: 0, easeFactor: 2.5 };
+    s = nextInterval(3, s.interval, s.easeFactor); // solid -> 1 day
+    s = nextInterval(3, s.interval, s.easeFactor); // solid -> 6 days
+    s = nextInterval(1, s.interval, s.easeFactor); // weak -> due immediately (0), not 1 day
+    expect(s.interval).toBe(0);
+    s = nextInterval(3, s.interval, s.easeFactor); // solid again -> back to 1 day, not 6
+    expect(s.interval).toBe(1);
+    s = nextInterval(3, s.interval, s.easeFactor);
+    expect(s.interval).toBe(6);
+  });
+
+  test('ease factor never drops below the floor', () => {
+    let ease = 1.3;
+    for (let i = 0; i < 10; i++) ease = nextInterval(1, 1, ease).easeFactor;
+    expect(ease).toBe(1.3);
   });
 });
 

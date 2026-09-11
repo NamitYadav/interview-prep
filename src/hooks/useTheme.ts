@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 
-export const THEMES = ['dark', 'gruvbox'] as const;
+// Adding a theme means touching three other, untyped places: the pre-paint script in
+// index.html (which values flash-avoid before first paint), the `@custom-variant dark`
+// selector in index.css (which theme values ride on the dark: utilities), and
+// ThemeToggle's LABELS (that one is type-checked against this array already).
+export const THEMES = ['dark', 'gruvbox', 'light'] as const;
 export type Theme = (typeof THEMES)[number];
 
 // Separate from the progress store on purpose: the theme is a per-device preference,

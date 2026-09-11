@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import type { Question } from '../types';
@@ -40,6 +40,22 @@ describe('QuestionCard code block', () => {
   });
 });
 
+describe('QuestionCard scratch editor (Build prompts)', () => {
+  const buildPrompt: Question = { ...base, category: 'Build prompts', code: 'function f() {\n  // TODO\n}' };
+
+  test('renders an editable textarea pre-filled with the starter code, not a read-only block', () => {
+    const { container } = renderCard(buildPrompt);
+    expect(container.querySelector('pre')).toBeNull();
+    expect(screen.getByRole('textbox', { name: /scratch editor/i })).toHaveValue(buildPrompt.code);
+  });
+
+  test('a non-Build-prompts question with code still renders the read-only block', () => {
+    const { container } = renderCard({ ...base, code: 'const x = 1;' });
+    expect(container.querySelector('pre')).not.toBeNull();
+    expect(screen.queryByRole('textbox', { name: /scratch editor/i })).not.toBeInTheDocument();
+  });
+});
+
 describe('QuestionCard reveal', () => {
   test('the reveal button calls onReveal', async () => {
     const onReveal = vi.fn();
@@ -72,6 +88,84 @@ describe('QuestionCard stopwatch', () => {
   test('shows no stopwatch line for a card rendered already revealed (Browse)', () => {
     renderCard(base, true);
     expect(screen.queryByText(/answered in/i)).not.toBeInTheDocument();
+  });
+});
+
+function StrictHarness({ question }: { question: Question }) {
+  const [revealed, setRevealed] = useState(false);
+  return (
+    <QuestionCard
+      question={question} revealed={revealed} note="" strictMode
+      onReveal={() => setRevealed(true)} onNote={noop} onRate={noop}
+    />
+  );
+}
+
+describe('QuestionCard strict mode', () => {
+  test('auto-reveals when the round target elapses, tagged "Out of time"', () => {
+    vi.useFakeTimers();
+    try {
+      render(<StrictHarness question={base} />);
+      act(() => vi.advanceTimersByTime(180_000));
+      expect(screen.getByText(/out of time · target 3:00/i)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('shows a live countdown before reveal, so the answer never pops with no warning', () => {
+    vi.useFakeTimers();
+    try {
+      render(<StrictHarness question={base} />);
+      act(() => vi.advanceTimersByTime(250)); // first tick
+      expect(screen.getByText(/time left: 3:00/i)).toBeInTheDocument();
+      act(() => vi.advanceTimersByTime(60_000));
+      expect(screen.getByText(/time left: 2:00/i)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('no countdown line when strict mode is off', () => {
+    render(<RevealHarness question={base} />);
+    expect(screen.queryByText(/time left/i)).not.toBeInTheDocument();
+  });
+
+  test('does not auto-reveal when strict mode is off', () => {
+    vi.useFakeTimers();
+    try {
+      render(<RevealHarness question={base} />);
+      act(() => vi.advanceTimersByTime(180_000));
+      expect(screen.queryByText(/answered in|out of time/i)).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('manual reveal before the target is not tagged out of time', () => {
+    vi.useFakeTimers();
+    try {
+      render(<StrictHarness question={base} />);
+      act(() => vi.advanceTimersByTime(5_000));
+      fireEvent.click(screen.getByRole('button', { name: /reveal/i }));
+      expect(screen.getByText(/answered in 0:05/i)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('a manual reveal clears the countdown — it does not fire "out of time" later', () => {
+    vi.useFakeTimers();
+    try {
+      render(<StrictHarness question={base} />);
+      act(() => vi.advanceTimersByTime(5_000));
+      fireEvent.click(screen.getByRole('button', { name: /reveal/i }));
+      act(() => vi.advanceTimersByTime(200_000)); // well past the 3:00 target
+      expect(screen.getByText(/answered in 0:05/i)).toBeInTheDocument();
+      expect(screen.queryByText(/out of time/i)).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

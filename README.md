@@ -17,10 +17,11 @@ follow-ups. Reveal, rate yourself, and weak questions come back first.
 7. Head of engineering
 
 ## Ways to drill
-- **Round practice** — a weak-first queue for one round. Filter by category, or switch
-  to the **Browse** tab to search every question, answer and key point at once. A lap
-  ends once every question has been shown once, with a summary and a way to start
-  another.
+- **Round practice** — a spaced-repetition queue (SM-2) for one round: the questions
+  you're due to see soonest come first, and rating one reschedules it further out the
+  better you know it. Filter by category, or switch to the **Browse** tab to search
+  every question, answer and key point at once. A lap ends once every question has
+  been shown once, with a summary and a way to start another.
 - **Weak drill** — everything you rated Weak, across all seven rounds, in one queue.
   The set is frozen on entry; re-enter it to rebuild.
 - **Mock session** — a cross-round set in one sitting, weighted toward your weak spots.
@@ -34,13 +35,18 @@ follow-ups. Reveal, rate yourself, and weak questions come back first.
 ## Working a question
 - **Reveal** the model answer, then tick off the key points you actually said out loud.
   The hit count suggests a rating. Once revealed, the card shows how long you took and
-  the round's target time — a stopwatch, not a countdown, so nothing forces a hide.
+  the round's target time — a stopwatch, not a countdown, so nothing forces a hide,
+  unless you turn on **Strict mode** (below).
 - **Back** steps to the previous question if you want to re-rate it; disabled at the
   start of a lap.
 - **Likely follow-ups** stay behind a button, so you answer before you read.
 - `[bracket slots]` in an answer are yours to fill from your own experience — the
   answers are coaching scaffolds, not a script to memorise.
 - Every question takes a **note**.
+- The **Live coding → Build prompts** category gives you an editable scratch pad
+  pre-filled with the starter code, instead of a read-only snippet — write your
+  approach out before revealing. It's scratch space only: not saved, and reset on the
+  next question.
 
 ## Your own material
 - **My notes** — every note you have written, in round order, read-only. Edit them on
@@ -56,8 +62,11 @@ follow-ups. Reveal, rate yourself, and weak questions come back first.
 - Ratings, notes and stories stay in your browser (localStorage). Nothing is sent
   anywhere. **Export** / **Import** to back up or move devices; **Reset progress**
   clears everything.
-- **Theme**: Dark or Gruvbox, switchable from the top of any page. Stored per device,
-  outside the backup.
+- **Theme**: Dark, Gruvbox or Light, switchable from the top of any page. Stored per
+  device, outside the backup.
+- **Strict mode**: switchable from the top of any page. When on, running out of a
+  round's target time auto-reveals the answer instead of waiting for you to click
+  Reveal. Stored per device, outside the backup.
 
 ## Adding questions
 Edit `src/data/<round>.ts`. Ids are `<round>-<nnn>`. `npm test` validates shape and uniqueness.

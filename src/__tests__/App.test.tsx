@@ -14,11 +14,17 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: /interview prep/i })).toBeInTheDocument();
   });
 
-  test('shows the save-failed banner when storage writes throw', () => {
+  test('shows the save-failed banner when storage writes throw', async () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('quota exceeded');
     });
-    render(<App />);
-    expect(screen.getByRole('status')).toHaveTextContent(/not being saved/i);
+    vi.useFakeTimers();
+    try {
+      render(<App />);
+      await vi.advanceTimersByTimeAsync(500);
+      expect(screen.getByRole('status')).toHaveTextContent(/not being saved/i);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

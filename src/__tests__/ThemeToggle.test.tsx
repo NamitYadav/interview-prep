@@ -30,6 +30,13 @@ describe('ThemeToggle', () => {
     expect(screen.getByRole('button', { name: 'Gruvbox' })).toHaveAttribute('aria-pressed', 'true');
   });
 
+  test('switching to light applies and persists it', async () => {
+    render(<ThemeToggle />);
+    await userEvent.click(screen.getByRole('button', { name: 'Light' }));
+    expect(document.documentElement.dataset.theme).toBe('light');
+    expect(localStorage.getItem(THEME_KEY)).toBe('light');
+  });
+
   test('ignores an unknown stored theme', () => {
     localStorage.setItem(THEME_KEY, 'solarized');
     render(<ThemeToggle />);
