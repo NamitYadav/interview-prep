@@ -317,7 +317,31 @@ describe('QuestionCard scratch editor', () => {
   });
 });
 
+describe('QuestionCard scratch that cannot be stored', () => {
+  const scratchQ: Question = { ...base, id: 'coding-097', code: 'function solve() {}', scratch: true };
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    localStorage.clear();
+  });
+
+  // A full quota was swallowed, so the drill's code was simply gone on the next
+  // reload with nothing ever having said it was not being kept.
+  test('says the write failed rather than losing the code silently', () => {
+    renderCard(scratchQ);
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('QuotaExceededError');
+    });
+    const editor = screen.getByLabelText(/scratch editor/i);
+    fireEvent.change(editor, { target: { value: 'const answer = 42;' } });
+    fireEvent.blur(editor);
+    expect(screen.getByRole('alert')).toHaveTextContent(/storage is full/i);
+  });
+});
+
 describe('QuestionCard recording is not stranded by a reveal', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
   // The toggle renders only pre-reveal, so revealing mid-recording unmounted the only
   // Stop control: the mic stayed live for the session and the take was discarded on
   // advance, because unmount detaches onstop before stopping the tracks.
@@ -355,6 +379,8 @@ describe('QuestionCard recording is not stranded by a reveal', () => {
     await userEvent.click(screen.getByRole('button', { name: /force reveal/i }));
     expect(stop).toHaveBeenCalled();
     for (const t of tracks) expect(t.stop).toHaveBeenCalled();
-    vi.unstubAllGlobals();
+    // The other half of the defect: the take used to be discarded, so the post-reveal
+    // player never appeared. onstop fires on a microtask, hence findBy.
+    expect(await screen.findByText(/your recording/i)).toBeInTheDocument();
   });
 });

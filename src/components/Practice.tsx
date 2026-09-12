@@ -142,11 +142,18 @@ export function Practice({
   // A lap ends only once nextQuestion has nothing left AND every requeue has been
   // served — a pending requeue keeps the lap open past the point every question
   // would otherwise have been "shown once".
-  const advance = (progress: Persisted['progress'], seen: ReadonlySet<string>) => {
-    const dueIndex = requeued.findIndex((r) => r.at <= step);
+  const advance = (
+    progress: Persisted['progress'],
+    seen: ReadonlySet<string>,
+    // The caller's view of the requeue list. rate() passes its own append explicitly,
+    // because that setRequeued has not landed in state yet when advance() runs.
+    pending: RequeueEntry[] = requeued,
+  ) => {
+    const dueIndex = pending.findIndex((r) => r.at <= step);
     if (dueIndex !== -1) {
-      setRequeued((r) => r.filter((_, i) => i !== dueIndex));
-      serveNext(requeued[dueIndex]!.id);
+      const due = pending[dueIndex]!;
+      setRequeued((r) => r.filter((e) => e !== due));
+      serveNext(due.id);
       return;
     }
     const next = pickNext(progress, seen);
@@ -154,14 +161,16 @@ export function Practice({
       serveNext(next.id);
       return;
     }
-    if (requeued.length > 0) {
-      // Nothing left in the regular queue — drain whatever's pending, in the order
-      // it was scheduled, rather than making the lap wait out the rest of the gap.
-      const first = requeued[0]!;
-      // Functional, like the due-index branch above: rate() has already queued an
-      // append for a weak rating on THIS question, and `requeued` in this closure
-      // predates it. Overwriting with a pre-computed tail silently dropped it.
-      setRequeued((r) => r.slice(1));
+    // Nothing left in the regular queue — drain whatever's pending, in the order it
+    // was scheduled, rather than making the lap wait out the rest of the gap. The
+    // question just rated is excluded: re-serving it on the spot is a pure repeat with
+    // nothing interleaved, and it would keep repeating until rated something else.
+    const drainable = pending.filter((e) => e.id !== current?.id);
+    if (drainable.length > 0) {
+      const first = drainable[0]!;
+      // Functional, and filtered by identity rather than index: rate() may have just
+      // queued an append, and overwriting with a pre-computed tail silently dropped it.
+      setRequeued((r) => r.filter((e) => e !== first));
       serveNext(first.id);
       return;
     }
@@ -177,20 +186,16 @@ export function Practice({
   const rate = (rating: Rating) => {
     if (!current) return;
     dispatch({ type: 'rate', id: current.id, rating, now: Date.now() });
-    if (rating === 1) setRequeued((r) => [...r, { id: current.id, at: step + REQUEUE_GAP }]);
+    // A weak rating requeues the question. The setRequeued below has not landed in
+    // state by the time advance() runs in this same closure, so the entry is handed
+    // over explicitly — otherwise advance() sees a list without it and can end the lap
+    // on a question the user just rated weak.
+    const entry = rating === 1 ? { id: current.id, at: step + REQUEUE_GAP } : undefined;
+    if (entry) setRequeued((r) => [...r, entry]);
     // The current id is excluded from `seen` either way, so the pre-rate progress
     // is fine here — re-running the reducer just to get progress with this one
     // entry updated was a provable no-op for what advance() actually uses it for.
-    //
-    // Note: the setRequeued call above hasn't landed in state yet when advance()
-    // reads `requeued` a line down (same render's closure) — so rating the very
-    // last question of a lap Weak does not actually reschedule it: advance() sees
-    // the requeue list as still empty, finds nothing else to serve either, and
-    // ends the lap on the spot. There's nothing else to interleave it with in that
-    // case anyway, so ending the lap is the right call — see the final rating in
-    // Practice.test.tsx's "a pending requeue keeps the lap open past the point
-    // every other question is shown" test.
-    advance(state.progress, seenInPath());
+    advance(state.progress, seenInPath(), entry ? [...requeued, entry] : requeued);
   };
 
   const skip = () => {

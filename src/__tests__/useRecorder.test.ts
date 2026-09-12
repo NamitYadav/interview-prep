@@ -168,6 +168,37 @@ describe('useRecorder', () => {
     for (const t of s2) expect(t.stop).toHaveBeenCalled();
   });
 
+  // getUserMedia can succeed — mic open, recording light on — and the MediaRecorder
+  // constructor then throw (an unsupported mime type, an already-ended track). The
+  // catch cleared intent only, so the mic stayed live until the component unmounted.
+  test('a MediaRecorder that throws on construction still releases the mic', async () => {
+    const { tracks } = setup();
+    vi.stubGlobal('MediaRecorder', class { constructor() { throw new Error('NotSupportedError'); } });
+
+    const { result } = renderHook(() => useRecorder());
+    await act(async () => result.current.toggle());
+
+    expect(result.current.recording).toBe(false);
+    for (const t of tracks) expect(t.stop).toHaveBeenCalled();
+  });
+
+  test('a MediaRecorder that throws on start() still releases the mic', async () => {
+    const { tracks } = setup();
+    vi.stubGlobal('MediaRecorder', class {
+      state = 'inactive';
+      ondataavailable: unknown = null;
+      onstop: unknown = null;
+      start() { throw new Error('InvalidStateError'); }
+      stop() {}
+    });
+
+    const { result } = renderHook(() => useRecorder());
+    await act(async () => result.current.toggle());
+
+    expect(result.current.recording).toBe(false);
+    for (const t of tracks) expect(t.stop).toHaveBeenCalled();
+  });
+
   // An abandoned permission prompt rejecting later must not cancel a recording the
   // user has since successfully started.
   test('a late permission rejection does not cancel a newer recording', async () => {

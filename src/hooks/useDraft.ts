@@ -11,12 +11,17 @@ import { useDebouncedField } from './useDebouncedField';
 // both already do. Passing a changing key to a mounted instance would show the old
 // draft and then commit it under the new key, so that is asserted rather than
 // silently tolerated.
+export const DRAFT_SAVE_FAILED = 'Not saved — this browser’s storage is full. Copy this somewhere safe before leaving the page.';
+
 export function useDraft(key: string, fallback = '') {
   const [stored] = useState(() => readDraft(key) ?? fallback);
   const [mountKey] = useState(key);
   if (mountKey !== key) {
     throw new Error(`useDraft: key changed from "${mountKey}" to "${key}" without a remount — key the component instead.`);
   }
-  const commit = useCallback((text: string) => writeDraft(key, text), [key]);
-  return useDebouncedField(stored, commit);
+  // A failed write is reported, not swallowed: this is the field someone spends 45
+  // minutes in, and the failure mode was the whole thing gone on reload with no signal.
+  const [saveFailed, setSaveFailed] = useState(false);
+  const commit = useCallback((text: string) => setSaveFailed(!writeDraft(key, text)), [key]);
+  return { ...useDebouncedField(stored, commit), saveFailed };
 }

@@ -2,6 +2,8 @@ import { useRef, useState, type Dispatch } from 'react';
 import type { Persisted } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { backupFilename, parseBackup } from '../lib/storage';
+import { clearAllLaps } from '../lib/lap';
+import { clearAllDrafts } from '../lib/drafts';
 
 export const LAST_EXPORT_KEY = 'interview-prep:last-export';
 
@@ -44,6 +46,12 @@ export function ExportImport({
         return;
       }
       dispatch({ type: 'import', data });
+      // Laps and drafts are position and scratch for the data that was just replaced.
+      // Kept, they point into a set that no longer exists: the restored lap resumes
+      // somebody else's session, and the scratch editor opens full of code written
+      // against a question the imported data may not even contain.
+      clearAllLaps();
+      clearAllDrafts();
       setImported(summary(data));
     } catch (e) {
       setImported(null);
@@ -57,9 +65,19 @@ export function ExportImport({
     // Name everything this destroys. It wipes stories too — emptyState() clears all
     // three — and the old copy mentioned only ratings and notes, so someone clearing
     // ratings to start a fresh cycle lost every STAR story they had written.
-    const counts = `${Object.keys(state.progress).length} ratings, ${Object.keys(state.notes).length} notes and ${Object.keys(state.stories).length} stories`;
-    if (window.confirm(`Delete all ${counts}? This cannot be undone — export first if you want a backup.`)) {
+    const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+    const counts = [
+      plural(Object.keys(state.progress).length, 'rating', 'ratings'),
+      plural(Object.keys(state.notes).length, 'note', 'notes'),
+      plural(Object.keys(state.stories).length, 'story', 'stories'),
+    ];
+    // Laps and drafts are named too, and actually cleared. Clearing only the ratings
+    // left the user resuming mid-lap through a set where nothing is rated any more,
+    // with the last session's code still sitting in the scratch editor.
+    if (window.confirm(`Delete all ${counts.slice(0, -1).join(', ')} and ${counts[counts.length - 1]}, plus your place in every drill and any scratch work? This cannot be undone — export first if you want a backup.`)) {
       dispatch({ type: 'reset' });
+      clearAllLaps();
+      clearAllDrafts();
     }
   };
 

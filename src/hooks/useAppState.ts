@@ -136,6 +136,11 @@ export function useAppState() {
       // key === null is a storage.clear() from another tab; newValue === null is a
       // removal. Both mean what we hold no longer matches what is on disk.
       if (e.key !== null && e.key !== STORAGE_KEY) return;
+      // Chrome fires `storage` even when the written value is identical to what was
+      // already there, and every tab re-writes the state it just loaded ~500ms after
+      // mount — so merely opening a second tab warned the first one that its progress
+      // had changed when nothing had. An identical blob is not a change.
+      if (e.newValue !== null && e.newValue === JSON.stringify(stateRef.current)) return;
       setStaleTab(true);
     };
     window.addEventListener('storage', onStorage);

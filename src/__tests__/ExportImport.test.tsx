@@ -36,6 +36,7 @@ describe('ExportImport', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    localStorage.clear();
   });
 
   test('export creates and clicks a download link for the current state', async () => {
@@ -107,11 +108,72 @@ describe('ExportImport', () => {
   // cycle silently destroyed every STAR story the user had written.
   test('the reset confirm names stories, which it also deletes', async () => {
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
-    const withStories: Persisted = { ...seeded, stories: { s1: { title: 'Migration', body: '...' } } };
+    const withStories: Persisted = {
+      ...seeded,
+      stories: { s1: { title: 'Migration', body: '...' }, s2: { title: 'Mentoring', body: '...' } },
+    };
     render(<Harness initial={withStories} />);
     await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
     expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/stories/i);
-    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/1 ratings, 1 notes and 1 stories/);
+    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/1 rating, 1 note and 2 stories/);
+  });
+
+  test('the reset confirm reads naturally at one and at none', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const one: Persisted = { ...seeded, stories: { s1: { title: 'Migration', body: '...' } } };
+    const { unmount } = render(<Harness initial={one} />);
+    await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
+    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/1 rating, 1 note and 1 story\b/);
+    unmount();
+
+    render(<Harness initial={{ version: 2, progress: {}, notes: {}, stories: {} }} />);
+    await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
+    expect(confirmSpy.mock.calls[1]?.[0]).toMatch(/0 ratings, 0 notes and 0 stories/);
+  });
+
+  // Reset cleared interview-prep:v1 and nothing else, so the user carried on mid-lap
+  // through a set where nothing was rated any more, with the last session's code still
+  // sitting in the scratch editor.
+  test('reset clears laps and drafts too, and says it will', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    localStorage.setItem('interview-prep:laps', JSON.stringify({ k: { history: ['a'], historyPos: 0, requeued: [], step: 3, savedAt: 1 } }));
+    localStorage.setItem('interview-prep:drafts', JSON.stringify({ 'coding-001:scratch': { text: 'old code', savedAt: 1 } }));
+    render(<Harness initial={seeded} />);
+    await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
+    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/place in every drill|scratch/i);
+    expect(localStorage.getItem('interview-prep:laps')).toBeNull();
+    expect(localStorage.getItem('interview-prep:drafts')).toBeNull();
+  });
+
+  test('a declined reset leaves laps and drafts alone', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    localStorage.setItem('interview-prep:laps', JSON.stringify({ k: {} }));
+    render(<Harness initial={seeded} />);
+    await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
+    expect(localStorage.getItem('interview-prep:laps')).not.toBeNull();
+  });
+
+  // A restored lap points at a position in the data that was just replaced.
+  test('a successful import clears laps and drafts', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    localStorage.setItem('interview-prep:laps', JSON.stringify({ k: { history: ['a'], historyPos: 0, requeued: [], step: 3, savedAt: 1 } }));
+    localStorage.setItem('interview-prep:drafts', JSON.stringify({ 'coding-001:scratch': { text: 'old code', savedAt: 1 } }));
+    render(<Harness initial={seeded} />);
+    await userEvent.upload(
+      screen.getByLabelText(/import backup file/i),
+      file(JSON.stringify({ version: 1, progress: {}, notes: { 'hm-001': 'restored' } })),
+    );
+    expect(screen.getByTestId('notes')).toHaveTextContent('restored');
+    expect(localStorage.getItem('interview-prep:laps')).toBeNull();
+    expect(localStorage.getItem('interview-prep:drafts')).toBeNull();
+  });
+
+  test('a failed import leaves laps and drafts alone', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    localStorage.setItem('interview-prep:laps', JSON.stringify({ k: {} }));
+    render(<Harness initial={seeded} />);
+    await userEvent.upload(screen.getByLabelText(/import backup file/i), file('not json'));
+    expect(localStorage.getItem('interview-prep:laps')).not.toBeNull();
   });
 
   test('reset dispatches only after the confirm dialog is accepted', async () => {

@@ -36,7 +36,15 @@ Repro: rate Q1 Weak, rate Q2..Q4 Solid, rate Q5 Weak. The queue is exhausted and
 yet due, so the drain branch fires and Q5's requeue vanishes. The user rates a question
 Weak and never sees it again.
 
-**Fix:** `setRequeued((r) => r.slice(1))`.
+**Fix:** hand the pending list to `advance()` explicitly, since `rate()`'s append has
+not landed in state when `advance()` runs in the same closure, and drain by identity
+rather than index.
+
+Note the boundary deliberately kept: when the ONLY pending entry is the question just
+rated — the last question of a lap, nothing else outstanding — the lap ends rather than
+re-serving it. Re-serving is a pure repeat with nothing interleaved, and it would keep
+repeating until the user rated it something else. The rating is still recorded as weak,
+so it sorts first next lap.
 
 ## 3. Reloading on a requeued repeat rewinds the whole lap
 
@@ -60,6 +68,11 @@ question.
 
 **Fix:** call `clearLap(key)` synchronously in `advance()` alongside `setLapDone(true)`.
 The effect stays as the cleanup path for laps that end while still mounted.
+
+`advance()` is not the only way out of a session: MockSession's "Finish session" link
+unmounts `Practice` directly, so it clears the lap too. Navigating away mid-session
+deliberately does NOT clear it — that is an interruption, not an ending, and the user
+should be able to pick the preset back up.
 
 ## 5. Hash-navigating between rounds leaves RoundView broken
 

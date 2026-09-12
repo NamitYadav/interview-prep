@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { STORAGE_KEY } from '../lib/storage';
+import { STORAGE_KEY, emptyState } from '../lib/storage';
 import App from '../App';
 
 afterEach(() => {
@@ -58,6 +58,18 @@ describe('cross-tab overwrite warning', () => {
       window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY, newValue: '{}' }));
     });
     expect(screen.getByText(/another tab changed your progress/i)).toBeInTheDocument();
+  });
+
+  // Every tab re-writes the state it just loaded ~500ms after mount, and Chrome fires
+  // `storage` even when the value written is byte-identical — so merely opening a
+  // second tab told the first one its progress had been changed by someone else.
+  test('an identical write from another tab is not a change', () => {
+    render(<App />);
+    const mine = localStorage.getItem(STORAGE_KEY) ?? JSON.stringify(emptyState());
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY, newValue: mine }));
+    });
+    expect(screen.queryByText(/another tab changed your progress/i)).not.toBeInTheDocument();
   });
 
   test('ignores writes to unrelated storage keys', () => {
