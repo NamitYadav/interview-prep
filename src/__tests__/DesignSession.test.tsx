@@ -73,8 +73,11 @@ describe('DesignSession', () => {
     await userEvent.click(screen.getByRole('button', { name: /finish/i }));
     screen.getByRole('radio', { name: /weak/i }).focus();
     await userEvent.keyboard('{ArrowRight}');
-    expect(screen.getByRole('radio', { name: /ok/i })).toBeChecked();
+    // Arrows navigate; they do not commit. Space does.
     expect(screen.getByRole('radio', { name: /ok/i })).toHaveFocus();
+    expect(screen.getByRole('radio', { name: /ok/i })).not.toBeChecked();
+    await userEvent.keyboard(' ');
+    expect(screen.getByRole('radio', { name: /ok/i })).toBeChecked();
   });
 
   test('another prompt restarts with a fresh checklist and scratch pad', async () => {
