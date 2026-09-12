@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { STORAGE_KEY, emptyState } from '../lib/storage';
 import App from '../App';
 
@@ -170,5 +171,20 @@ describe('what the printed sheet drops', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('shortcuts toggle', () => {
+  test('is on by default and persists being turned off', async () => {
+    const { unmount } = render(<App />);
+    const toggle = () => screen.getByRole('button', { name: /shortcuts/i });
+    expect(toggle()).toHaveAttribute('aria-pressed', 'true');
+
+    await userEvent.click(toggle());
+    expect(toggle()).toHaveAttribute('aria-pressed', 'false');
+    unmount();
+
+    render(<App />);
+    expect(screen.getByRole('button', { name: /shortcuts/i })).toHaveAttribute('aria-pressed', 'false');
   });
 });
