@@ -1,7 +1,8 @@
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useReducer } from 'react';
+import { useEffect, useReducer } from 'react';
+import type { Persisted } from '../types';
 import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { questionsByRound } from '../data';
@@ -114,5 +115,65 @@ describe('DesignSession', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('another prompt never repeats the very same prompt', () => {
+  // Rating Weak keeps a question in the lowest bucket, so without excluding the
+  // current id, nextQuestion picked it again on the very next call — "Another
+  // prompt" just restarted the exact same prompt over and over.
+  test('rating the current prompt Weak and restarting shows a different prompt', async () => {
+    render(<Harness />);
+    const design = questionsByRound('design');
+    const shown = design.find((q) => screen.queryByText(q.question) !== null)!;
+    await userEvent.click(screen.getByRole('button', { name: /finish/i }));
+    await userEvent.click(screen.getByRole('radio', { name: /weak/i }));
+    await userEvent.click(screen.getByRole('button', { name: /another prompt/i }));
+    expect(screen.queryByText(shown.question)).not.toBeInTheDocument();
+  });
+});
+
+describe('design scratch survives a reload across attempts', () => {
+  beforeEach(() => localStorage.clear());
+
+  let persisted: Persisted = EMPTY;
+  function ReloadableHarness() {
+    const [state, dispatch] = useReducer(reducer, persisted);
+    useEffect(() => { persisted = state; });
+    return <DesignSession state={state} dispatch={dispatch} />;
+  }
+
+  // The scratch key used to include the in-memory `attempt` counter, which restarts
+  // at 0 on every fresh mount. design-001 stays the weakest-rated design prompt
+  // throughout this test, so it recurs at attempt 0, then again at attempt 2 (once a
+  // different prompt has taken attempt 1) — and a reload always lands back at
+  // attempt 0. The write made at attempt 2 was therefore unreachable after a reload,
+  // not merely reset: attempt 0's key still held only the FIRST attempt's text.
+  test('the latest scratch for a recurring prompt is still there after a reload, not the first', async () => {
+    persisted = { ...EMPTY, progress: { 'design-001': { rating: 1, seen: 1, lastSeen: 0 } } };
+    const first = render(<ReloadableHarness />);
+
+    const [design1, design2] = questionsByRound('design');
+    expect(screen.getByText(design1!.question)).toBeInTheDocument(); // attempt 0: design-001
+
+    await userEvent.type(screen.getByLabelText(/scratch/i), 'v1');
+    fireEvent.blur(screen.getByLabelText(/scratch/i));
+    await userEvent.click(screen.getByRole('button', { name: /finish/i }));
+    await userEvent.click(screen.getByRole('button', { name: /another prompt/i }));
+
+    expect(screen.getByText(design2!.question)).toBeInTheDocument(); // attempt 1: design-002
+    await userEvent.click(screen.getByRole('button', { name: /finish/i }));
+    await userEvent.click(screen.getByRole('button', { name: /another prompt/i }));
+
+    expect(screen.getByText(design1!.question)).toBeInTheDocument(); // attempt 2: design-001 again
+    expect(screen.getByLabelText(/scratch/i)).toHaveValue('v1'); // the earlier attempt's draft, reloaded
+    await userEvent.clear(screen.getByLabelText(/scratch/i));
+    await userEvent.type(screen.getByLabelText(/scratch/i), 'v2 overwrite');
+    fireEvent.blur(screen.getByLabelText(/scratch/i));
+    first.unmount(); // simulate a reload
+
+    render(<ReloadableHarness />);
+    expect(screen.getByText(design1!.question)).toBeInTheDocument(); // back to attempt 0: design-001
+    expect(screen.getByLabelText(/scratch/i)).toHaveValue('v2 overwrite');
   });
 });

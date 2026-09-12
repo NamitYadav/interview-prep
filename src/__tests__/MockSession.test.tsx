@@ -147,3 +147,35 @@ describe('a reloaded mock session still counts what it rated', () => {
     expect(screen.getByText(/0 of 20 rated/i)).toBeInTheDocument();
   });
 });
+
+describe('a session abandoned before any action does not poison the next one', () => {
+  beforeEach(() => localStorage.clear());
+
+  let persisted: Persisted = EMPTY;
+  function ReloadableHarness() {
+    const [state, dispatch] = useReducer(reducer, persisted);
+    useEffect(() => { persisted = state; });
+    return <MockSession state={state} dispatch={dispatch} strictMode={false} />;
+  }
+
+  // Opening a preset writes a baseline immediately, but Practice only writes a lap once
+  // something actually happens (a skip or a rating) — so leaving before either (a
+  // reload, or navigating home right away) leaves a baseline on disk with no lap to
+  // match it. If the next session at the same preset reuses that stale baseline, a
+  // rating made OUTSIDE the mock session in between reads as "rated during this
+  // session" the next time this preset opens.
+  test('a rating made between an abandoned session and the next one is not miscounted', async () => {
+    persisted = { ...EMPTY, progress: { 'hm-001': { rating: 2, seen: 1, lastSeen: 1 } } };
+    const first = render(<ReloadableHarness />);
+    await userEvent.click(screen.getByRole('button', { name: /technical rounds/i }));
+    first.unmount(); // left before any skip or rating — no lap was ever written
+
+    // hm-001 gets re-rated in the ordinary round view, outside this mock session.
+    persisted = { ...persisted, progress: { ...persisted.progress, 'hm-001': { rating: 3, seen: 2, lastSeen: 2 } } };
+
+    render(<ReloadableHarness />);
+    await userEvent.click(screen.getByRole('button', { name: /technical rounds/i }));
+    await userEvent.click(screen.getByRole('button', { name: /finish session/i }));
+    expect(screen.getByText(/0 of 20 rated/i)).toBeInTheDocument();
+  });
+});

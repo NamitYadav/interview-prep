@@ -21,10 +21,17 @@ const noop = () => {};
 
 export function DesignSession({ state, dispatch }: { state: Persisted; dispatch: Dispatch<Action> }) {
   const designQuestions = questionsByRound('design');
-  const pickQuestionId = () => nextQuestion(designQuestions, state.progress)?.id;
-  const [questionId, setQuestionId] = useState(pickQuestionId);
+  // Excludes the prompt just shown: without this, nextQuestion is memoryless of what's
+  // on screen, and a question sitting in the lowest bucket (unrated, or just rated
+  // Weak — Weak keeps it there) got served again on the very next restart, over and
+  // over, rather than "Another prompt" ever moving on.
+  const pickQuestionId = (excludeId?: string) => {
+    const exclude = excludeId ? new Set([excludeId]) : undefined;
+    return nextQuestion(designQuestions, state.progress, exclude)?.id ?? excludeId;
+  };
+  const [questionId, setQuestionId] = useState(() => pickQuestionId());
   // Bumped on every restart so the key below changes even when the next prompt
-  // happens to be the very same question (e.g. restarting without rating it) —
+  // happens to be the very same question (e.g. only one prompt exists at all) —
   // relying on question.id alone wouldn't force a remount in that case.
   const [attempt, setAttempt] = useState(0);
 
@@ -41,11 +48,10 @@ export function DesignSession({ state, dispatch }: { state: Persisted; dispatch:
       // deadline instead of getting its own 45 minutes.
       key={`${question.id}-${attempt}`}
       question={question}
-      attempt={attempt}
       state={state}
       dispatch={dispatch}
       onRestart={() => {
-        setQuestionId(pickQuestionId());
+        setQuestionId(pickQuestionId(question.id));
         setAttempt((a) => a + 1);
       }}
     />
@@ -53,11 +59,17 @@ export function DesignSession({ state, dispatch }: { state: Persisted; dispatch:
 }
 
 function DesignPrompt({
-  question, attempt, state, dispatch, onRestart,
-}: { question: Question; attempt: number; state: Persisted; dispatch: Dispatch<Action>; onRestart: () => void }) {
+  question, state, dispatch, onRestart,
+}: { question: Question; state: Persisted; dispatch: Dispatch<Action>; onRestart: () => void }) {
   const [finished, setFinished] = useState(false);
   const [checkedPhases, setCheckedPhases] = useState<Set<number>>(new Set());
-  const scratch = useDraft(draftKey(question.id, `design-scratch-${attempt}`));
+  // Keyed by question id alone, not id+attempt: `attempt` is an in-memory counter that
+  // restarts at 0 on every fresh mount, so a reload after "Another prompt" (attempt 1+)
+  // read back attempt 0's key — which for that question may hold nothing, or an older
+  // draft — making whatever was written at the later attempt unreachable, not merely
+  // reset. Keying by question id means a reload always finds this question's latest
+  // scratch, and a genuinely fresh prompt naturally starts empty since it has none yet.
+  const scratch = useDraft(draftKey(question.id, 'design-scratch'));
 
   // Finish unmounts the button under the user, dropping focus to <body> with nothing
   // announced. Send it to the heading of the answer that replaced the working area.
