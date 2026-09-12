@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useStoredValue } from './useStoredValue';
 
 // Adding a theme means touching three other, untyped places: the pre-paint script in
 // index.html (which values flash-avoid before first paint), the `@custom-variant dark`
@@ -13,26 +14,14 @@ export type Theme = (typeof THEMES)[number];
 export const THEME_KEY = 'interview-prep:theme';
 
 const isTheme = (v: unknown): v is Theme => (THEMES as readonly unknown[]).includes(v);
-
-export function readTheme(): Theme {
-  try {
-    const v = localStorage.getItem(THEME_KEY);
-    return isTheme(v) ? v : 'dark';
-  } catch {
-    return 'dark';
-  }
-}
+const decode = (raw: string | null): Theme => (isTheme(raw) ? raw : 'dark');
+const encode = (t: Theme): string => t;
 
 export function useTheme(): [Theme, (t: Theme) => void] {
-  const [theme, setTheme] = useState<Theme>(readTheme);
+  const [theme, setTheme] = useStoredValue(THEME_KEY, decode, encode);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
-    // Storage can be unavailable (private mode, blocked cookies); the app already
-    // surfaces that for progress, so a lost theme preference just falls back.
-    try {
-      localStorage.setItem(THEME_KEY, theme);
-    } catch { /* empty */ }
   }, [theme]);
 
   return [theme, setTheme];

@@ -78,8 +78,9 @@ export function MockSession({
   // against the previous one's starting point.
   const endSession = () => {
     if (!session) return;
-    clearLap(lapKey(session.drill));
-    clearBaseline(lapKey(session.drill));
+    const key = lapKey(session.drill);
+    clearLap(key);
+    clearBaseline(key);
   };
   const finishSession = () => {
     endSession();

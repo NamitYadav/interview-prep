@@ -46,6 +46,7 @@ export function QuestionCard({
   const [ownChecked, setOwnChecked] = useState<Set<number>>(() => new Set());
   const checkedSet = checked ?? ownChecked;
   const setChecked = onCheckedChange ?? setOwnChecked;
+  const suggested = suggestedRating(checkedSet.size, question.keyPoints.length);
 
   const targetSeconds = rounds.find((r) => r.id === question.round)?.targetSeconds;
   const { elapsedMs, remainingMs, autoRevealed, markRevealed } = useQuestionTimer({
@@ -310,14 +311,11 @@ export function QuestionCard({
                 </li>
               ))}
             </ul>
-            {(() => {
-              const s = suggestedRating(checkedSet.size, question.keyPoints.length);
-              return s && (
-                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  {checkedSet.size}/{question.keyPoints.length} key points hit · suggested: {RATINGS.find((r) => r.value === s)!.label}
-                </p>
-              );
-            })()}
+            {suggested && (
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                {checkedSet.size}/{question.keyPoints.length} key points hit · suggested: {RATINGS.find((r) => r.value === suggested)!.label}
+              </p>
+            )}
           </section>
           {question.followUps && question.followUps.length > 0 && (
             <section>

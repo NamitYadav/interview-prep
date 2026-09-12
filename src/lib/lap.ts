@@ -1,4 +1,5 @@
 import type { Question } from '../types';
+import { keyedStore } from './keyedStore';
 
 // Where you are in each lap. Per-device and OUT of backups, like the theme and
 // strict-mode preferences — it is a position, not prep data.
@@ -58,54 +59,18 @@ const parseLap = (key: string, v: unknown): SavedLap | undefined => {
   };
 };
 
-const readAll = (): Record<string, SavedLap> => {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw === null) return {};
-    const parsed: unknown = JSON.parse(raw);
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {};
-    const out: Record<string, SavedLap> = {};
-    for (const [k, v] of Object.entries(parsed)) {
-      const lap = parseLap(k, v);
-      if (lap) out[k] = lap;
-    }
-    return out;
-  } catch {
-    return {};
-  }
-};
+const lapStore = keyedStore<SavedLap>(KEY, parseLap, { max: MAX_LAPS, recencyOf: (l) => l.savedAt });
 
 export function readLap(key: string): SavedLap | undefined {
-  return readAll()[key];
+  return lapStore.read(key);
 }
 
 export function writeLap(lap: Omit<SavedLap, 'savedAt'>, now: number = Date.now()): void {
-  try {
-    const all = readAll();
-    all[lap.key] = { ...lap, savedAt: now };
-    const entries = Object.entries(all).sort((a, b) => b[1].savedAt - a[1].savedAt).slice(0, MAX_LAPS);
-    localStorage.setItem(KEY, JSON.stringify(Object.fromEntries(entries)));
-  } catch { /* storage unavailable — the lap just won't survive a reload */ }
+  lapStore.write(lap.key, { ...lap, savedAt: now });
 }
 
 export function clearLap(key: string): void {
-  try {
-    const all = readAll();
-    if (!(key in all)) return;
-    delete all[key];
-    localStorage.setItem(KEY, JSON.stringify(all));
-  } catch { /* empty */ }
-}
-
-// Reset and Import replace the whole data set, so a lap pointing into the old one is
-// worse than no lap: after a reset you resume mid-lap with everything unrated, and
-// after an import your position belongs to somebody else's data. Baselines go with
-// them — they are the same session, and one without the other is just wrong counts.
-export function clearAllLaps(): void {
-  try {
-    localStorage.removeItem(KEY);
-    localStorage.removeItem(BASELINE_KEY);
-  } catch { /* empty */ }
+  lapStore.remove(key);
 }
 
 // id -> `seen` count at the moment the session started. The count, not the progress
@@ -114,40 +79,32 @@ export function clearAllLaps(): void {
 // replaces, a number survives being written to disk and read back.
 export type Baseline = Record<string, number>;
 
-const readBaselines = (): Record<string, Baseline> => {
-  try {
-    const raw = localStorage.getItem(BASELINE_KEY);
-    if (raw === null) return {};
-    const parsed: unknown = JSON.parse(raw);
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {};
-    const out: Record<string, Baseline> = {};
-    for (const [k, v] of Object.entries(parsed)) {
-      if (typeof v !== 'object' || v === null || Array.isArray(v)) continue;
-      out[k] = Object.fromEntries(Object.entries(v).filter(([, n]) => typeof n === 'number')) as Baseline;
-    }
-    return out;
-  } catch {
-    return {};
-  }
+const parseBaseline = (_key: string, v: unknown): Baseline | undefined => {
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) return undefined;
+  return Object.fromEntries(Object.entries(v).filter(([, n]) => typeof n === 'number')) as Baseline;
 };
-
-export function readBaseline(key: string): Baseline | undefined {
-  return readBaselines()[key];
-}
 
 // Uncapped on purpose: one entry per preset the user has an unfinished session in,
 // and every way out of a session clears its entry.
+const baselineStore = keyedStore<Baseline>(BASELINE_KEY, parseBaseline);
+
+export function readBaseline(key: string): Baseline | undefined {
+  return baselineStore.read(key);
+}
+
 export function writeBaseline(key: string, baseline: Baseline): void {
-  try {
-    localStorage.setItem(BASELINE_KEY, JSON.stringify({ ...readBaselines(), [key]: baseline }));
-  } catch { /* storage unavailable — the recap just counts from the current progress */ }
+  baselineStore.write(key, baseline);
 }
 
 export function clearBaseline(key: string): void {
-  try {
-    const all = readBaselines();
-    if (!(key in all)) return;
-    delete all[key];
-    localStorage.setItem(BASELINE_KEY, JSON.stringify(all));
-  } catch { /* empty */ }
+  baselineStore.remove(key);
+}
+
+// Reset and Import replace the whole data set, so a lap pointing into the old one is
+// worse than no lap: after a reset you resume mid-lap with everything unrated, and
+// after an import your position belongs to somebody else's data. Baselines go with
+// them — they are the same session, and one without the other is just wrong counts.
+export function clearAllLaps(): void {
+  lapStore.clear();
+  baselineStore.clear();
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useStoredValue } from './useStoredValue';
 
 // Per-device preference, same shape as useStrictMode: not prep data, so it stays out of
 // export/import backups and needs no schema version.
@@ -10,23 +10,9 @@ import { useEffect, useState } from 'react';
 // Practice binds n/b/1/2/3 and Space on window.
 export const SHORTCUTS_KEY = 'interview-prep:shortcuts';
 
-const readShortcuts = (): boolean => {
-  try {
-    return localStorage.getItem(SHORTCUTS_KEY) !== '0';
-  } catch {
-    return true;
-  }
-};
+const decode = (raw: string | null): boolean => raw !== '0';
+const encode = (v: boolean): string | null => (v ? null : '0');
 
 export function useShortcuts(): [boolean, (v: boolean) => void] {
-  const [shortcuts, setShortcuts] = useState<boolean>(readShortcuts);
-
-  useEffect(() => {
-    try {
-      if (shortcuts) localStorage.removeItem(SHORTCUTS_KEY);
-      else localStorage.setItem(SHORTCUTS_KEY, '0');
-    } catch { /* empty */ }
-  }, [shortcuts]);
-
-  return [shortcuts, setShortcuts];
+  return useStoredValue(SHORTCUTS_KEY, decode, encode);
 }

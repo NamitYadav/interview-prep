@@ -1,26 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useStoredValue } from './useStoredValue';
 
 // Per-device preference, same shape as useTheme: not prep data, so it stays out of
 // export/import backups and needs no schema version.
 export const STRICT_MODE_KEY = 'interview-prep:strict-mode';
 
-const readStrictMode = (): boolean => {
-  try {
-    return localStorage.getItem(STRICT_MODE_KEY) === '1';
-  } catch {
-    return false;
-  }
-};
+const decode = (raw: string | null): boolean => raw === '1';
+const encode = (v: boolean): string | null => (v ? '1' : null);
 
 export function useStrictMode(): [boolean, (v: boolean) => void] {
-  const [strict, setStrict] = useState<boolean>(readStrictMode);
-
-  useEffect(() => {
-    try {
-      if (strict) localStorage.setItem(STRICT_MODE_KEY, '1');
-      else localStorage.removeItem(STRICT_MODE_KEY);
-    } catch { /* empty */ }
-  }, [strict]);
-
-  return [strict, setStrict];
+  return useStoredValue(STRICT_MODE_KEY, decode, encode);
 }
