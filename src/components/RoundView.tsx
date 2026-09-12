@@ -13,8 +13,8 @@ type Tab = 'practice' | 'browse' | 'design-prompt';
 const TAB_LABEL: Record<Tab, string> = { practice: 'Practice', browse: 'Browse', 'design-prompt': '45-min prompt' };
 
 export function RoundView({
-  roundId, state, dispatch, strictMode,
-}: { roundId: RoundId; state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean }) {
+  roundId, state, dispatch, strictMode, shortcuts = true,
+}: { roundId: RoundId; state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean; shortcuts?: boolean }) {
   const round = rounds.find((r) => r.id === roundId);
   const all = useMemo(() => questionsByRound(roundId), [roundId]);
   const categories = useMemo(() => [...new Set(all.map((q) => q.category))], [all]);
@@ -105,7 +105,7 @@ export function RoundView({
       </div>
 
       <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>
-        {tab === 'practice' && <Practice key={`${roundId}:${selected ?? ''}`} questions={filtered} state={state} dispatch={dispatch} strictMode={strictMode} />}
+        {tab === 'practice' && <Practice key={`${roundId}:${selected ?? ''}`} questions={filtered} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} />}
         {tab === 'browse' && <Browse questions={filtered} state={state} dispatch={dispatch} />}
         {tab === 'design-prompt' && <DesignSession state={state} dispatch={dispatch} />}
       </div>

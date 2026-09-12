@@ -4,6 +4,7 @@ import type { Route, RoundId } from './types';
 import { useAppState } from './hooks/useAppState';
 import { useHashRoute } from './hooks/useHashRoute';
 import { useStrictMode } from './hooks/useStrictMode';
+import { useShortcuts } from './hooks/useShortcuts';
 import { Home } from './components/Home';
 import { RoundView } from './components/RoundView';
 import { WeakDrill } from './components/WeakDrill';
@@ -38,6 +39,7 @@ export default function App() {
   const { state, dispatch, saveFailed, staleTab, dismissStaleTab } = useAppState();
   const route = useHashRoute();
   const [strictMode, setStrictMode] = useStrictMode();
+  const [shortcuts, setShortcuts] = useShortcuts();
 
   // Move focus to the new view's heading after a route change — but not on first
   // load, where the page itself already has the user's attention and stealing
@@ -92,17 +94,30 @@ export default function App() {
         >
           Strict mode
         </button>
+        <button
+          type="button"
+          onClick={() => setShortcuts(!shortcuts)}
+          aria-pressed={shortcuts}
+          title="Single-key shortcuts in drills: Space, N, B and 1/2/3"
+          className={`rounded border px-2 py-1 text-xs ${
+            shortcuts
+              ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
+              : 'border-zinc-300 text-zinc-500 hover:border-emerald-500 dark:border-zinc-700 dark:text-zinc-400'
+          }`}
+        >
+          Shortcuts
+        </button>
         <ThemeToggle />
       </header>
       {route === null && <Home state={state} dispatch={dispatch} />}
-      {route === 'weak' && <WeakDrill state={state} dispatch={dispatch} strictMode={strictMode} />}
+      {route === 'weak' && <WeakDrill state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} />}
       {route === 'notes' && <NotesView state={state} />}
       {route === 'stories' && <StoriesView state={state} dispatch={dispatch} />}
-      {route === 'mock' && <MockSession state={state} dispatch={dispatch} strictMode={strictMode} />}
+      {route === 'mock' && <MockSession state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} />}
       {route === 'search' && <SearchView state={state} dispatch={dispatch} />}
       {route === 'print' && <PrintView state={state} />}
       {route !== null && isRoundId(route) && (
-        <RoundView key={route} roundId={route} state={state} dispatch={dispatch} strictMode={strictMode} />
+        <RoundView key={route} roundId={route} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} />
       )}
     </>
   );

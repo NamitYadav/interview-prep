@@ -29,10 +29,11 @@ const withPlaceholders = (text: string) =>
   );
 
 export function QuestionCard({
-  question, revealed, note, rating, strictMode = false, checked, onCheckedChange, focusOnMount = true,
+  question, revealed, note, rating, strictMode = false, shortcuts = false, checked, onCheckedChange, focusOnMount = true,
   yourAnswer, onYourAnswerChange, stories, onRehearse, onReveal, onNote, onRate,
 }: {
   question: Question; revealed: boolean; note: string; rating?: Rating; strictMode?: boolean;
+  shortcuts?: boolean;
   checked?: Set<number>; onCheckedChange?: (next: Set<number>) => void; focusOnMount?: boolean;
   yourAnswer?: string; onYourAnswerChange?: (next: string) => void;
   stories?: Stories; onRehearse?: (id: string) => void;
@@ -252,7 +253,7 @@ export function QuestionCard({
             onClick={handleReveal}
             className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
           >
-            Reveal <kbd className="ml-2 text-xs opacity-70 [@media(hover:none)]:hidden">Space</kbd>
+            Reveal {shortcuts && <kbd className="ml-2 text-xs opacity-70 [@media(hover:none)]:hidden">Space</kbd>}
           </button>
         </div>
       ) : (
@@ -336,7 +337,7 @@ export function QuestionCard({
               className="w-full rounded border border-zinc-300 bg-transparent p-2 dark:border-zinc-700"
             />
           </section>
-          <RatingRadios rating={rating} onRate={onRate} showKeys />
+          <RatingRadios rating={rating} onRate={onRate} showKeys={shortcuts} />
         </div>
       )}
     </article>

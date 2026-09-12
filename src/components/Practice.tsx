@@ -27,9 +27,10 @@ const REQUEUE_GAP = 8;
 interface RequeueEntry { id: string; at: number }
 
 export function Practice({
-  questions, state, dispatch, strictMode, ordered = false, onLapComplete,
+  questions, state, dispatch, strictMode, shortcuts = true, ordered = false, onLapComplete,
 }: {
   questions: Question[]; state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean;
+  shortcuts?: boolean;
   ordered?: boolean; onLapComplete?: () => void;
 }) {
   // In `ordered` mode (a curated, round-shaped set) the array's own order is the
@@ -244,6 +245,10 @@ export function Practice({
   });
 
   useEffect(() => {
+    // Nothing is registered when shortcuts are off, rather than a listener that returns
+    // early — WCAG 2.2 SC 2.1.4 wants the shortcut gone, and it means Space goes back to
+    // scrolling the page instead of being swallowed.
+    if (!shortcuts) return;
     const onKey = (e: KeyboardEvent) => {
       if (ownsKeys(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
       const isButton = e.target instanceof HTMLElement && e.target.tagName === 'BUTTON';
@@ -260,7 +265,7 @@ export function Practice({
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [shortcuts]);
 
   if (lapDone) {
     const stats = roundStats(questions, state.progress);
@@ -297,6 +302,7 @@ export function Practice({
         note={state.notes[current.id] ?? ''}
         rating={state.progress[current.id]?.rating}
         strictMode={strictMode}
+        shortcuts={shortcuts}
         checked={checkedByQuestion[current.id]}
         onCheckedChange={(next) => setCheckedByQuestion((prev) => ({ ...prev, [current.id]: next }))}
         yourAnswer={answerByQuestion[current.id] ?? ''}
@@ -314,10 +320,10 @@ export function Practice({
           disabled={historyPos === 0}
           className="text-sm text-zinc-500 disabled:opacity-40 dark:text-zinc-400 hover:enabled:underline"
         >
-          <kbd className="mr-1 text-xs">B</kbd> Back
+          {shortcuts && <kbd className="mr-1 text-xs [@media(hover:none)]:hidden">B</kbd>} Back
         </button>
         <button type="button" onClick={skip} className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">
-          Skip <kbd className="ml-1 text-xs">N</kbd>
+          Skip {shortcuts && <kbd className="ml-1 text-xs [@media(hover:none)]:hidden">N</kbd>}
         </button>
       </div>
     </div>

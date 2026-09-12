@@ -550,3 +550,57 @@ describe('P1 regressions', () => {
     expect(JSON.parse(localStorage.getItem('interview-prep:laps') ?? '{}')).toEqual({});
   });
 });
+
+describe('keyboard shortcuts can be turned off — WCAG 2.2 SC 2.1.4', () => {
+  function Off() {
+    const [state, dispatch] = useReducer(reducer, EMPTY);
+    return <Practice questions={qs3} state={state} dispatch={dispatch} strictMode={false} shortcuts={false} />;
+  }
+
+  // Someone using speech input, or with a tremor, can fire `n` with nothing focused and
+  // skip a question. The criterion wants the shortcut gone, not merely guarded.
+  test('n does not skip when shortcuts are off', async () => {
+    render(<Off />);
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+    await userEvent.keyboard('n');
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+  });
+
+  test('space does not reveal when shortcuts are off', async () => {
+    render(<Off />);
+    await userEvent.keyboard(' ');
+    expect(screen.getByRole('button', { name: /reveal/i })).toBeInTheDocument();
+  });
+
+  test('number keys do not rate when shortcuts are off', async () => {
+    render(<Off />);
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    await userEvent.keyboard('3');
+    // Still on the same question, and nothing was rated.
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /solid/i })).not.toBeChecked();
+  });
+
+  test('the keyboard hints disappear with the shortcuts they describe', async () => {
+    const { unmount } = render(<Off />);
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    expect(document.querySelectorAll('kbd')).toHaveLength(0);
+    unmount();
+
+    render(<Harness3 />);
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    expect(document.querySelectorAll('kbd').length).toBeGreaterThan(0);
+  });
+
+  // Turning shortcuts off must never remove someone's only way to do something — the
+  // radios stay operable through the APG pattern.
+  test('the rating radios stay keyboard-operable with shortcuts off', async () => {
+    render(<Off />);
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    screen.getByRole('radio', { name: /weak/i }).focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(screen.getByRole('radio', { name: /ok/i })).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    expect(screen.getByText('Second question?')).toBeInTheDocument();
+  });
+});

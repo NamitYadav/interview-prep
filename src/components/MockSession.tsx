@@ -34,8 +34,8 @@ function buildSet(composition: Preset['composition']): Question[] {
 }
 
 export function MockSession({
-  state, dispatch, strictMode,
-}: { state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean }) {
+  state, dispatch, strictMode, shortcuts = true,
+}: { state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean; shortcuts?: boolean }) {
   const [session, setSession] = useState<{ preset: Preset; drill: Question[]; baseline: Baseline } | null>(null);
   const [finished, setFinished] = useState(false);
 
@@ -150,7 +150,7 @@ export function MockSession({
       <BackLink />
       <h1 tabIndex={-1} className="text-2xl font-semibold">{preset.title}</h1>
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{drill.length} questions. Rate as you go, finish whenever.</p>
-      <Practice questions={drill} state={state} dispatch={dispatch} strictMode={strictMode} ordered onLapComplete={finishSession} />
+      <Practice questions={drill} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} ordered onLapComplete={finishSession} />
       <div className="mt-3 flex justify-end">
         <button type="button" onClick={finishSession} className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">
           Finish session
