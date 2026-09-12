@@ -102,6 +102,18 @@ describe('ExportImport', () => {
     expect(screen.getByTestId('notes')).toHaveTextContent('my story');
   });
 
+  // reset() returns emptyState(), which clears stories as well — but the confirm used
+  // to mention only ratings and notes, so clearing ratings to start a fresh drilling
+  // cycle silently destroyed every STAR story the user had written.
+  test('the reset confirm names stories, which it also deletes', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const withStories: Persisted = { ...seeded, stories: { s1: { title: 'Migration', body: '...' } } };
+    render(<Harness initial={withStories} />);
+    await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
+    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/stories/i);
+    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/1 ratings, 1 notes and 1 stories/);
+  });
+
   test('reset dispatches only after the confirm dialog is accepted', async () => {
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
     render(<Harness initial={seeded} />);

@@ -316,3 +316,45 @@ describe('QuestionCard scratch editor', () => {
     expect(screen.getByLabelText(/scratch editor/i)).toHaveValue('other()');
   });
 });
+
+describe('QuestionCard recording is not stranded by a reveal', () => {
+  // The toggle renders only pre-reveal, so revealing mid-recording unmounted the only
+  // Stop control: the mic stayed live for the session and the take was discarded on
+  // advance, because unmount detaches onstop before stopping the tracks.
+  test('revealing while recording stops the recorder', async () => {
+    const stop = vi.fn();
+    const tracks = [{ stop: vi.fn() }];
+    class Rec {
+      state: 'inactive' | 'recording' = 'inactive';
+      mimeType = 'audio/webm';
+      ondataavailable: ((e: { data: Blob }) => void) | null = null;
+      onstop: (() => void) | null = null;
+      constructor(public stream: MediaStream) {}
+      start() { this.state = 'recording'; }
+      stop() { this.state = 'inactive'; stop(); queueMicrotask(() => { this.ondataavailable?.({ data: new Blob(['c']) }); this.onstop?.(); }); }
+    }
+    vi.stubGlobal('MediaRecorder', Rec);
+    vi.stubGlobal('navigator', { mediaDevices: { getUserMedia: () => Promise.resolve({ getTracks: () => tracks } as unknown as MediaStream) } });
+    vi.stubGlobal('URL', { createObjectURL: () => 'blob:x', revokeObjectURL: vi.fn() });
+
+    function Toggle() {
+      const [revealed, setRevealed] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setRevealed(true)}>force reveal</button>
+          <QuestionCard
+            question={base} revealed={revealed} note="" onReveal={noop} onNote={noop} onRate={noop}
+          />
+        </>
+      );
+    }
+    render(<Toggle />);
+    await userEvent.click(screen.getByRole('button', { name: /^record$/i }));
+    expect(screen.getByRole('button', { name: /stop recording/i })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /force reveal/i }));
+    expect(stop).toHaveBeenCalled();
+    for (const t of tracks) expect(t.stop).toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+});

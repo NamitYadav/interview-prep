@@ -45,14 +45,20 @@ export function Practice({
     const known = new Set(questions.map((q) => q.id));
     const history = stored.history.filter((id) => known.has(id));
     if (history.length === 0) return undefined;
+    // Count surviving entries BEFORE the stored position rather than searching by id:
+    // a requeued question appears twice in history, so indexOf would find its first
+    // appearance and rewind the lap to near the start.
+    const survivingBefore = stored.history
+      .slice(0, stored.historyPos)
+      .filter((id) => known.has(id)).length;
     const currentId = stored.history[stored.historyPos];
     const historyPos = currentId !== undefined && known.has(currentId)
-      ? history.indexOf(currentId)
-      : history.length - 1;
+      ? survivingBefore
+      : Math.min(survivingBefore, history.length - 1);
     return {
       ...stored,
       history,
-      historyPos: historyPos < 0 ? history.length - 1 : historyPos,
+      historyPos,
       requeued: stored.requeued.filter((r) => known.has(r.id)),
     };
   });
@@ -151,11 +157,19 @@ export function Practice({
     if (requeued.length > 0) {
       // Nothing left in the regular queue — drain whatever's pending, in the order
       // it was scheduled, rather than making the lap wait out the rest of the gap.
-      const [first, ...rest] = requeued;
-      setRequeued(rest);
-      serveNext(first!.id);
+      const first = requeued[0]!;
+      // Functional, like the due-index branch above: rate() has already queued an
+      // append for a weak rating on THIS question, and `requeued` in this closure
+      // predates it. Overwriting with a pre-computed tail silently dropped it.
+      setRequeued((r) => r.slice(1));
+      serveNext(first.id);
       return;
     }
+    // Cleared here, not only from the lapDone effect: a parent that unmounts Practice
+    // on this callback (MockSession swapping in its recap) means no render with
+    // lapDone === true ever commits, so the effect would never fire and the finished
+    // lap would restore at its last question.
+    clearLap(key);
     setLapDone(true);
     onLapComplete?.();
   };

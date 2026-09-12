@@ -105,7 +105,7 @@ export function RoundView({
       </div>
 
       <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>
-        {tab === 'practice' && <Practice key={selected ?? ''} questions={filtered} state={state} dispatch={dispatch} strictMode={strictMode} />}
+        {tab === 'practice' && <Practice key={`${roundId}:${selected ?? ''}`} questions={filtered} state={state} dispatch={dispatch} strictMode={strictMode} />}
         {tab === 'browse' && <Browse questions={filtered} state={state} dispatch={dispatch} />}
         {tab === 'design-prompt' && <DesignSession state={state} dispatch={dispatch} />}
       </div>
