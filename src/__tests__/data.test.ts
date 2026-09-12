@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { ROUND_IDS, STORY_CATEGORIES, questions, rounds } from '../data';
+import { MAX_DRAFTS } from '../lib/drafts';
 import type { RoundId } from '../types';
 
 const ID_RE = /^(hr|hm|coding|design|case|debrief|hoe)-\d{3}$/;
@@ -82,6 +83,15 @@ describe('question bank', () => {
     for (const q of ds) {
       expect(q.keyPoints.join(' '), `${q.id} key points name no complexity`).toMatch(/O\(/);
     }
+  });
+
+  // The drafts store evicts oldest-first. If the cap ever sat near the number of
+  // scratch questions, working through a round in one sitting would silently throw away
+  // the code written at the start of it.
+  test('the draft cap comfortably exceeds the number of scratch questions', () => {
+    const scratch = questions.filter((q) => q.scratch).length;
+    expect(scratch).toBeGreaterThan(0);
+    expect(MAX_DRAFTS).toBeGreaterThan(scratch * 2);
   });
 
   test('every STORY_CATEGORIES entry matches at least one real question category', () => {

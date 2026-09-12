@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { clearAllDrafts, clearDraft, draftKey, readDraft, writeDraft } from '../lib/drafts';
+import { MAX_DRAFTS, clearAllDrafts, clearDraft, draftKey, readDraft, writeDraft } from '../lib/drafts';
 
 beforeEach(() => localStorage.clear());
 
@@ -63,16 +63,17 @@ describe('drafts do not grow without limit', () => {
   // progress, so an uncapped store eventually stops RATINGS from saving. The oldest
   // scratch goes; the one just typed into stays.
   test('evicts the oldest draft past the cap', () => {
-    for (let i = 0; i < 25; i++) writeDraft(`q${i}:scratch`, `draft ${i}`, 1000 + i);
-    const stored = JSON.parse(localStorage.getItem('interview-prep:drafts') ?? '{}');
-    expect(Object.keys(stored)).toHaveLength(20);
-    expect(readDraft('q24:scratch')).toBe('draft 24');
-    expect(readDraft('q5:scratch')).toBe('draft 5');
-    expect(readDraft('q4:scratch')).toBeUndefined();
+    const over = MAX_DRAFTS + 5;
+    for (let i = 0; i < over; i++) writeDraft(`q${i}:scratch`, `draft ${i}`, 1000 + i);
+    const stored: unknown = JSON.parse(localStorage.getItem('interview-prep:drafts') ?? '{}');
+    expect(Object.keys(stored as object)).toHaveLength(MAX_DRAFTS);
+    expect(readDraft(`q${over - 1}:scratch`)).toBe(`draft ${over - 1}`);
+    expect(readDraft(`q${over - MAX_DRAFTS}:scratch`)).toBe(`draft ${over - MAX_DRAFTS}`);
+    expect(readDraft(`q${over - MAX_DRAFTS - 1}:scratch`)).toBeUndefined();
   });
 
   test('touching an old draft keeps it and evicts a staler one instead', () => {
-    for (let i = 0; i < 20; i++) writeDraft(`q${i}:scratch`, `draft ${i}`, 1000 + i);
+    for (let i = 0; i < MAX_DRAFTS; i++) writeDraft(`q${i}:scratch`, `draft ${i}`, 1000 + i);
     writeDraft('q0:scratch', 'still working on this', 5000);
     writeDraft('fresh:scratch', 'new', 6000);
     expect(readDraft('q0:scratch')).toBe('still working on this');
