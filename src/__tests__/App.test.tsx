@@ -196,7 +196,7 @@ describe('shortcuts toggle', () => {
     expect(shown(), 'n should skip while shortcuts are on').not.toBe(before);
 
     await openSettings();
-    await userEvent.click(screen.getByRole('button', { name: /^shortcuts$/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /^shortcuts$/i }));
     const after = shown();
     await userEvent.keyboard('n');
     expect(shown(), 'n must do nothing once shortcuts are off').toBe(after);
@@ -209,22 +209,22 @@ describe('shortcuts toggle', () => {
     expect(revealBtn().querySelector('kbd')).not.toBeNull();
 
     await openSettings();
-    await userEvent.click(screen.getByRole('button', { name: /^shortcuts$/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /^shortcuts$/i }));
     expect(revealBtn().querySelector('kbd')).toBeNull();
   });
 
   test('is on by default and persists being turned off', async () => {
     const { unmount } = render(<App />);
-    const toggle = () => screen.getByRole('button', { name: /shortcuts/i });
+    const toggle = () => screen.getByRole('checkbox', { name: /shortcuts/i });
     await openSettings();
-    expect(toggle()).toHaveAttribute('aria-pressed', 'true');
+    expect(toggle()).toBeChecked();
 
     await userEvent.click(toggle());
-    expect(toggle()).toHaveAttribute('aria-pressed', 'false');
+    expect(toggle()).not.toBeChecked();
     unmount();
 
     render(<App />);
     await openSettings();
-    expect(screen.getByRole('button', { name: /shortcuts/i })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('checkbox', { name: /shortcuts/i })).not.toBeChecked();
   });
 });

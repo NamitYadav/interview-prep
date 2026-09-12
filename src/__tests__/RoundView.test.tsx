@@ -25,43 +25,42 @@ describe('RoundView', () => {
     expect(screen.getByRole('link', { name: /all rounds/i })).toHaveAttribute('href', '#');
   });
 
+  const category = () => screen.getByRole('combobox', { name: /category/i });
+
   test('category filter narrows the Browse list to that category only', async () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('tab', { name: /browse/i }));
     const targetCategory = firstHrCategory;
 
-    await userEvent.click(screen.getByRole('button', { name: targetCategory }));
-    expect(screen.getByRole('button', { name: targetCategory })).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.selectOptions(category(), targetCategory);
+    expect(category()).toHaveValue(targetCategory);
 
-    for (const row of screen.getAllByRole('button', { name: new RegExp(targetCategory) })) {
-      if (row.textContent?.includes('?')) expect(within(row).getByText(targetCategory)).toBeInTheDocument();
+    for (const row of screen.getAllByRole('button', { name: /\?/ })) {
+      expect(within(row).getByText(targetCategory)).toBeInTheDocument();
     }
   });
 
-  test('the All chip is pressed by default and restores the full list', async () => {
+  test('all categories is the default and restores the full list', async () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('tab', { name: /browse/i }));
-    expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
+    expect(category()).toHaveValue('');
 
-    await userEvent.click(screen.getByRole('button', { name: firstHrCategory }));
-    expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'false');
+    await userEvent.selectOptions(category(), firstHrCategory);
+    expect(category()).toHaveValue(firstHrCategory);
 
-    await userEvent.click(screen.getByRole('button', { name: 'All' }));
-    expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.selectOptions(category(), '');
     expect(screen.getByText(new RegExp(`of ${questionsByRound('hr').length}$`))).toBeInTheDocument();
   });
 
-  test('categories are single-select: choosing a second one deselects the first', async () => {
+  test('choosing a second category replaces the first', async () => {
     const [first, second] = hrCategories;
     if (!first || !second) throw new Error('HR round needs at least two categories');
     render(<Harness />);
     await userEvent.click(screen.getByRole('tab', { name: /browse/i }));
 
-    await userEvent.click(screen.getByRole('button', { name: first }));
-    await userEvent.click(screen.getByRole('button', { name: second }));
-    expect(screen.getByRole('button', { name: second })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: first })).toHaveAttribute('aria-pressed', 'false');
-    expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'false');
+    await userEvent.selectOptions(category(), first);
+    await userEvent.selectOptions(category(), second);
+    expect(category()).toHaveValue(second);
 
     const expected = questionsByRound('hr').filter((q) => q.category === second).length;
     expect(screen.getByText(new RegExp(`^${expected} of `))).toBeInTheDocument();

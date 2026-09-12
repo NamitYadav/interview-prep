@@ -4,5 +4,5 @@
 // hover preview all keep working).
 export function BackLink({ className = 'mb-4 inline-block text-sm text-zinc-500 dark:text-zinc-400 hover:underline' }: { className?: string }) {
   // eslint-disable-next-line jsx-a11y/anchor-is-valid -- home is the empty hash route, this is real in-app navigation
-  return <a href="#" className={className}>← All rounds</a>;
+  return <a href="#" className={className}>All rounds</a>;
 }

@@ -6,7 +6,7 @@ import { questionsByRound, rounds } from '../data';
 import { roundStats } from '../lib/queue';
 import { Browse } from './Browse';
 import { Practice } from './Practice';
-import { ProgressBar } from './ProgressBar';
+import { ProgressBar, statsCaption } from './ProgressBar';
 import { DesignSession } from './DesignSession';
 
 type Tab = 'practice' | 'browse' | 'design-prompt';
@@ -44,8 +44,6 @@ export function RoundView({
   );
   const stats = roundStats(filtered, state.progress);
 
-  const chip = (active: boolean) =>
-    `rounded-full border px-3 py-1 text-xs ${active ? 'border-emerald-500 bg-emerald-50 font-medium dark:bg-emerald-950' : 'border-zinc-300 dark:border-zinc-700'}`;
   const tabBtn = (active: boolean) =>
     `border-b-2 px-3 py-2 text-sm ${active ? 'border-emerald-500 font-medium' : 'border-transparent text-zinc-500 dark:text-zinc-400'}`;
 
@@ -63,17 +61,13 @@ export function RoundView({
       <BackLink />
       <h1 tabIndex={-1} className="text-2xl font-semibold">{round.title}</h1>
       <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">{round.blurb}</p>
-      <ProgressBar value={stats.solid} max={stats.total} label={`${round.title} progress`} />
-      <p className="mb-4 mt-1 text-xs text-zinc-500 dark:text-zinc-400">{stats.solid}/{stats.total} solid · {stats.ok} ok · {stats.weak} weak · {stats.unrated} unrated</p>
+      <ProgressBar stats={stats} label={`${round.title} progress`} />
+      <p className="mb-4 mt-1 text-xs text-zinc-500 dark:text-zinc-400">{statsCaption(stats)}</p>
 
-      <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filter by category">
-        <button type="button" className={chip(selected === null)} aria-pressed={selected === null} onClick={() => setSelected(null)}>All</button>
-        {categories.map((c) => (
-          <button key={c} type="button" className={chip(selected === c)} aria-pressed={selected === c} onClick={() => setSelected(c)}>{c}</button>
-        ))}
-      </div>
-
-      <div role="tablist" aria-label="View" className="mb-4 flex border-b border-zinc-200 dark:border-zinc-800">
+      {/* A native select in place of a 17-chip cloud: the filter used to push the
+          question itself below the fold on a laptop and most of a screen down on a phone. */}
+      <div className="mb-4 flex items-end justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800">
+      <div role="tablist" aria-label="View" className="flex">
         {TABS.map((t) => (
           <button
             key={t}
@@ -102,6 +96,16 @@ export function RoundView({
             {TAB_LABEL[t]}
           </button>
         ))}
+      </div>
+      <select
+        aria-label="Category"
+        value={selected ?? ''}
+        onChange={(e) => setSelected(e.target.value || null)}
+        className="mb-2 min-w-0 max-w-[55%] rounded border border-zinc-300 bg-transparent px-2 py-1 text-sm dark:border-zinc-700"
+      >
+        <option value="">All categories</option>
+        {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+      </select>
       </div>
 
       <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>

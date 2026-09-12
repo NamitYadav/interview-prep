@@ -12,6 +12,9 @@ import { RATINGS, RatingRadios } from './RatingRadios';
 const suggestedRating = (hits: number, total: number): Rating | undefined =>
   total === 0 ? undefined : hits === total ? 3 : hits === 0 ? 1 : 2;
 
+// Sized to sit beside Reveal; the red recording state layers its colors on top.
+const secondaryButton = 'rounded border border-zinc-300 px-3 py-2 text-sm hover:border-emerald-500 dark:border-zinc-700';
+
 const PLACEHOLDER_SPLIT = /(\[[^\]]+\])/;
 const isPlaceholder = (s: string) => /^\[[^\]]+\]$/.test(s);
 
@@ -30,9 +33,11 @@ const withPlaceholders = (text: string) =>
 
 export function QuestionCard({
   question, revealed, note, rating, strictMode = false, shortcuts = false, checked, onCheckedChange, focusOnMount = true,
-  yourAnswer, onYourAnswerChange, stories, onRehearse, onReveal, onNote, onRate,
+  yourAnswer, onYourAnswerChange, stories, onRehearse, onReveal, onNote, onRate, meta,
 }: {
   question: Question; revealed: boolean; note: string; rating?: Rating; strictMode?: boolean;
+  /** Where you are in the lap ("12 of 99"); the raw question id meant nothing to a reader. */
+  meta?: string;
   shortcuts?: boolean;
   checked?: Set<number>; onCheckedChange?: (next: Set<number>) => void; focusOnMount?: boolean;
   yourAnswer?: string; onYourAnswerChange?: (next: string) => void;
@@ -131,9 +136,9 @@ export function QuestionCard({
     <article className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="mb-2 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
         <span className="rounded bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">{question.category}</span>
-        <span>{question.id}</span>
+        {meta && <span className="shrink-0">{meta}</span>}
       </div>
-      <h2 ref={headingRef} tabIndex={-1} className="mb-4 text-lg font-medium outline-none">{question.question}</h2>
+      <h2 ref={headingRef} tabIndex={-1} className="mb-4 max-w-prose text-lg font-medium outline-none">{question.question}</h2>
 
       {/* Mounted with the card and empty until there is something to say: a live region
           that appears with its text already inside is routinely missed, and a strict-mode
@@ -199,27 +204,16 @@ export function QuestionCard({
             </section>
           )}
 
-          {question.followUps && question.followUps.length > 0 && (
+          {question.followUps && followUpsProbed > 0 && (
             <section>
               <h3 className="mb-1 font-semibold">Likely follow-ups</h3>
-              {followUpsProbed > 0 && (
-                <ul className="mb-2 space-y-1">
-                  {question.followUps.slice(0, followUpsProbed).map((f, i) => (
-                    <li key={i}>
-                      {f} <span className="text-xs text-zinc-500 dark:text-zinc-400">({formatTime(now - probeTimes[i]!)})</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {followUpsProbed < question.followUps.length && (
-                <button
-                  type="button"
-                  onClick={probeFollowUp}
-                  className="rounded border border-zinc-300 px-3 py-1.5 text-xs hover:border-emerald-500 dark:border-zinc-700"
-                >
-                  Probe me ({followUpsProbed + 1}/{question.followUps.length})
-                </button>
-              )}
+              <ul className="space-y-1">
+                {question.followUps.slice(0, followUpsProbed).map((f, i) => (
+                  <li key={i}>
+                    {f} <span className="text-xs text-zinc-500 dark:text-zinc-400">({formatTime(now - probeTimes[i]!)})</span>
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
 
@@ -236,29 +230,35 @@ export function QuestionCard({
             />
           </section>
 
-          {recorder.supported && (
-            <div>
+          {/* One row, one primary: Probe and Record used to sit under their own bold
+              headings at a third size, so the card read as three half-empty sections. */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handleReveal}
+              className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            >
+              Reveal {shortcuts && <kbd className="ml-2 text-xs opacity-70 [@media(hover:none)]:hidden">Space</kbd>}
+            </button>
+            {question.followUps && followUpsProbed < question.followUps.length && (
+              <button type="button" onClick={probeFollowUp} className={secondaryButton}>
+                Probe me ({followUpsProbed + 1}/{question.followUps.length})
+              </button>
+            )}
+            {recorder.supported && (
               <button
                 type="button"
                 onClick={recorder.toggle}
                 aria-pressed={recorder.recording}
-                className={`rounded border px-3 py-1.5 text-xs ${recorder.recording ? 'border-red-500 text-red-600 dark:text-red-400' : 'border-zinc-300 hover:border-emerald-500 dark:border-zinc-700'}`}
+                className={recorder.recording ? `${secondaryButton} border-red-500 text-red-600 dark:text-red-400` : secondaryButton}
               >
                 {recorder.recording ? 'Stop recording' : 'Record'}
               </button>
-            </div>
-          )}
-
-          <button
-            type="button"
-            onClick={handleReveal}
-            className="rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-          >
-            Reveal {shortcuts && <kbd className="ml-2 text-xs opacity-70 [@media(hover:none)]:hidden">Space</kbd>}
-          </button>
+            )}
+          </div>
         </div>
       ) : (
-        <div ref={answerRef} tabIndex={-1} className="animate-fade-in space-y-4 text-sm outline-none">
+        <div ref={answerRef} tabIndex={-1} className="max-w-prose animate-fade-in space-y-4 text-sm outline-none">
           {elapsedMs !== null && (
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
               {autoRevealed ? 'Out of time' : `Answered in ${formatTime(elapsedMs)}`}

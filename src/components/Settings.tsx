@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, type Dispatch } from 'react';
 import type { Persisted } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { ImportReset } from './ExportImport';
-import { panelButton, panelToggle } from './controlStyles';
+import { pageButton } from './controlStyles';
 import { ThemeToggle } from './ThemeToggle';
 
 // One disclosure in place of five permanent controls. The header sits outside the route
@@ -50,34 +50,33 @@ export function Settings({
 
   return (
     <details ref={ref} className="relative">
-      <summary className={`${panelButton} inline-block cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
+      <summary className={`${pageButton} inline-block cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
         Settings
       </summary>
       <div className="absolute right-0 z-10 mt-2 w-72 space-y-4 rounded-lg border border-zinc-200 bg-white p-4 text-left shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
         <section>
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Theme</p>
+          <p className="mb-2 text-sm font-medium">Theme</p>
           <ThemeToggle />
         </section>
 
         <section className="space-y-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Drilling</p>
+          <p className="text-sm font-medium">Drilling</p>
           <Toggle
             label="Strict mode"
             description="Reveals the answer on its own once the round's target time runs out."
-            pressed={strictMode}
+            checked={strictMode}
             onToggle={setStrictMode}
           />
           <Toggle
             label="Shortcuts"
             description="Single keys while drilling: Space to reveal, N to skip, B for back, 1/2/3 to rate."
-            pressed={shortcuts}
+            checked={shortcuts}
             onToggle={setShortcuts}
           />
         </section>
 
         <section className="space-y-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Your data</p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">Export lives on the home screen, next to the backup reminder.</p>
+          <p className="text-sm font-medium">Your data</p>
           <ImportReset state={state} dispatch={dispatch} />
         </section>
       </div>
@@ -85,22 +84,27 @@ export function Settings({
   );
 }
 
+// A native checkbox: on/off is legible from the control itself, not from whether a
+// border happens to be emerald.
 function Toggle({
-  label, description, pressed, onToggle,
-}: { label: string; description: string; pressed: boolean; onToggle: (v: boolean) => void }) {
-  const descriptionId = useId();
+  label, description, checked, onToggle,
+}: { label: string; description: string; checked: boolean; onToggle: (v: boolean) => void }) {
+  const id = useId();
+  const descriptionId = `${id}-description`;
   return (
-    <div>
-      <button
-        type="button"
-        onClick={() => onToggle(!pressed)}
-        aria-pressed={pressed}
+    <div className="flex items-start gap-2">
+      <input
+        id={id}
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onToggle(e.target.checked)}
         aria-describedby={descriptionId}
-        className={panelToggle(pressed)}
-      >
-        {label}
-      </button>
-      <p id={descriptionId} className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{description}</p>
+        className="mt-1"
+      />
+      <div>
+        <label htmlFor={id} className="text-sm">{label}</label>
+        <p id={descriptionId} className="text-xs text-zinc-500 dark:text-zinc-400">{description}</p>
+      </div>
     </div>
   );
 }
