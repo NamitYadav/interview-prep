@@ -68,7 +68,7 @@ describe('Settings disclosure', () => {
   test('clicking inside it does not close it', async () => {
     const { container } = render(<Harness />);
     await userEvent.click(screen.getByText(/^settings$/i));
-    await userEvent.click(screen.getByRole('button', { name: /^strict mode$/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /^strict mode$/i }));
     expect(panel(container).open).toBe(true);
   });
 
@@ -76,8 +76,9 @@ describe('Settings disclosure', () => {
     render(<Harness />);
     await userEvent.click(screen.getByText(/^settings$/i));
     expect(screen.getByRole('group', { name: /theme/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^strict mode$/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^shortcuts$/i })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /^strict mode$/i })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /^shortcuts$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^export$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^import$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /reset progress/i })).toBeInTheDocument();
   });
@@ -87,8 +88,8 @@ describe('Settings disclosure', () => {
   test('each drilling toggle describes what it does', async () => {
     render(<Harness />);
     await userEvent.click(screen.getByText(/^settings$/i));
-    expect(screen.getByRole('button', { name: /^shortcuts$/i })).toHaveAccessibleDescription(/space to reveal/i);
-    expect(screen.getByRole('button', { name: /^strict mode$/i })).toHaveAccessibleDescription(/target time/i);
+    expect(screen.getByRole('checkbox', { name: /^shortcuts$/i })).toHaveAccessibleDescription(/space to reveal/i);
+    expect(screen.getByRole('checkbox', { name: /^strict mode$/i })).toHaveAccessibleDescription(/target time/i);
   });
 });
 
@@ -103,13 +104,15 @@ describe('what the header and home screen carry now', () => {
     expect(screen.getByText(/^settings$/i)).toBeInTheDocument();
   });
 
-  test('home keeps Export and no longer carries Import or Reset', () => {
+  // Export moved into the panel with Import and Reset; Home only offers it inside the
+  // backup nudge, which needs progress to show — so a fresh Home carries no data controls.
+  test('home carries no data controls of its own', () => {
     function HomeHarness() {
       const [state] = useReducer(reducer, EMPTY);
       return <Home state={state} />;
     }
     render(<HomeHarness />);
-    expect(screen.getByRole('button', { name: /^export$/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^export$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^import$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /reset progress/i })).not.toBeInTheDocument();
   });
@@ -126,7 +129,7 @@ describe('settings reach the drill', () => {
     expect(screen.queryByRole('timer')).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByText(/^settings$/i));
-    await userEvent.click(screen.getByRole('button', { name: /^strict mode$/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /^strict mode$/i }));
 
     // The countdown fills in on the timer's own 250ms tick; real timers here rather than
     // fake ones, which userEvent would need to be wired through to advance.

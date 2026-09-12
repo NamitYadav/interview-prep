@@ -107,8 +107,8 @@ npm run build      # tsc + vite build
 ```
 
 ## Stack
-Vite · React 19 · TypeScript · Tailwind CSS 4 · Geist / Geist Mono (self-hosted via
-@fontsource) · Vitest · GitHub Pages
+Vite · React 19 · TypeScript · Tailwind CSS 4 · GeistMono Nerd Font (self-hosted from
+public/fonts) · Vitest · GitHub Pages
 
 One JS bundle, ~280KB gzipped — most of it is the question bank's own text, not
 code. Measured, not optimized: code-splitting would trim the initial load, but this

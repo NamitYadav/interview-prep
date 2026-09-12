@@ -3,8 +3,10 @@
 // page scale. Left alone they rendered at two different sizes with two different hover
 // treatments inside one small popover. One scale for everything in the panel.
 //
-// Page-level buttons (Export, next to Home's heading) deliberately do NOT use these —
-// they are not in the panel and read at the size of the page around them.
+// Page-level buttons (Export beside Home's heading, the Settings trigger in the header)
+// deliberately do NOT use the panel scale — they read at the size of the page around them.
+export const pageButton = 'rounded border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800';
+
 export const panelControl = 'rounded border px-2 py-1 text-xs';
 
 const idle = 'border-zinc-300 text-zinc-500 hover:border-emerald-500 dark:border-zinc-700 dark:text-zinc-400';

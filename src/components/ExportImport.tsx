@@ -1,20 +1,34 @@
-import { useRef, useState, type Dispatch } from 'react';
+import { useRef, useState, useSyncExternalStore, type Dispatch } from 'react';
 import type { Persisted } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { backupFilename, parseBackup } from '../lib/storage';
 import { clearAllLaps } from '../lib/lap';
 import { clearAllDrafts } from '../lib/drafts';
-import { panelButton, panelDangerButton } from './controlStyles';
+import { pageButton, panelButton, panelDangerButton } from './controlStyles';
 
 export const LAST_EXPORT_KEY = 'interview-prep:last-export';
 
-// Page scale: Export sits beside Home's heading, not inside the settings panel.
-const pageButton = 'rounded border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800';
+// Export can be pressed from the settings panel or from Home's backup nudge; Home's
+// nudge has to clear either way, so the timestamp is a tiny shared store rather than
+// state one component reads once at mount.
+const listeners = new Set<() => void>();
+const subscribe = (l: () => void) => {
+  listeners.add(l);
+  return () => { listeners.delete(l); };
+};
+const readLastExport = (): string | null => {
+  try {
+    return localStorage.getItem(LAST_EXPORT_KEY);
+  } catch {
+    return null;
+  }
+};
+export const useLastExport = () => useSyncExternalStore(subscribe, readLastExport);
 
 // Split from its Import/Reset siblings by how often each is reached for: this one has a
 // weekly nudge pointing at it, so it stays on the home screen. The other two are
 // recovery and destruction, and live in Settings.
-export function ExportButton({ state, onExport }: { state: Persisted; onExport?: () => void }) {
+export function ExportButton({ state, className = pageButton }: { state: Persisted; className?: string }) {
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -27,10 +41,10 @@ export function ExportButton({ state, onExport }: { state: Persisted; onExport?:
     try {
       localStorage.setItem(LAST_EXPORT_KEY, String(Date.now()));
     } catch { /* storage unavailable — the export nudge just won't clear */ }
-    onExport?.();
+    listeners.forEach((l) => l());
   };
 
-  return <button type="button" className={pageButton} onClick={exportJson}>Export</button>;
+  return <button type="button" className={className} onClick={exportJson}>Export</button>;
 }
 
 export function ImportReset({ state, dispatch }: { state: Persisted; dispatch: Dispatch<Action> }) {
@@ -91,6 +105,7 @@ export function ImportReset({ state, dispatch }: { state: Persisted; dispatch: D
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      <ExportButton state={state} className={panelButton} />
       <button type="button" className={panelButton} onClick={() => fileRef.current?.click()}>Import</button>
       <input
         ref={fileRef}

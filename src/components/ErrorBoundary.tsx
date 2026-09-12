@@ -42,7 +42,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { hasError
               onClick={goHome}
               className="rounded border border-zinc-300 px-4 py-2 text-sm hover:border-emerald-500 dark:border-zinc-700"
             >
-              ← All rounds
+              All rounds
             </button>
           </div>
           {/* If the throw came from saved state, reloading just throws again: without

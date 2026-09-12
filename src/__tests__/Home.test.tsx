@@ -30,10 +30,10 @@ describe('Home', () => {
     const inThreeDays = new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10);
     fireEvent.change(input, { target: { value: inThreeDays } });
     expect(screen.getByText(/3 days left/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/unseen · .* weak · 3 days/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/unseen · 3 days/i).length).toBeGreaterThan(0);
   });
 
-  test('with a loop date, cards reorder by urgency but keep their original Round N label', () => {
+  test('with a loop date, cards reorder by urgency and drop the Round N label', () => {
     // Every question in every round rated solid (urgency 0 everywhere) except two
     // hoe questions left weak — hoe (naturally last, Round 7) is now the only round
     // with nonzero urgency, so it must bubble to the very top of the sorted list.
@@ -53,11 +53,8 @@ describe('Home', () => {
     // in data order among the ties — right behind hoe, not at the very end.
     expect(order[1]).toBe('HR screen');
 
-    // hr is still labeled Round 1 despite being sorted second, and hoe still Round 7.
-    const hrCard = screen.getByText('HR screen').closest('a')!;
-    expect(within(hrCard).getByText('Round 1')).toBeInTheDocument();
-    const hoeCard = screen.getByText('Head of engineering').closest('a')!;
-    expect(within(hoeCard).getByText('Round 7')).toBeInTheDocument();
+    // Sorted by urgency, "Round 7" on the first card would contradict its position.
+    expect(screen.queryByText(/^Round \d$/)).not.toBeInTheDocument();
   });
 
   test('export nudge is hidden with no progress', () => {

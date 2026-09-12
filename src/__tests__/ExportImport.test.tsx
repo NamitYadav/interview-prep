@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
 import type { Persisted } from '../types';
 import { reducer } from '../hooks/useAppState';
-import { ExportButton, ImportReset, LAST_EXPORT_KEY } from '../components/ExportImport';
+import { ImportReset, LAST_EXPORT_KEY } from '../components/ExportImport';
 
 const seeded: Persisted = {
   version: 2,
@@ -18,7 +18,6 @@ function Harness({ initial }: { initial: Persisted }) {
   return (
     <>
       <p data-testid="notes">{JSON.stringify(state.notes)}</p>
-      <ExportButton state={state} />
       <ImportReset state={state} dispatch={dispatch} />
     </>
   );

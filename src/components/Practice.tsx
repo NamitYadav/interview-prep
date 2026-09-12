@@ -298,6 +298,7 @@ export function Practice({
       <QuestionCard
         key={current.id}
         question={current}
+        meta={`${new Set(history.slice(0, historyPos + 1)).size} of ${questions.length}`}
         revealed={revealed}
         note={state.notes[current.id] ?? ''}
         rating={state.progress[current.id]?.rating}
