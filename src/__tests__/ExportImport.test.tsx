@@ -107,11 +107,27 @@ describe('ExportImport', () => {
   // cycle silently destroyed every STAR story the user had written.
   test('the reset confirm names stories, which it also deletes', async () => {
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
-    const withStories: Persisted = { ...seeded, stories: { s1: { title: 'Migration', body: '...' } } };
+    const withStories: Persisted = {
+      ...seeded,
+      stories: { s1: { title: 'Migration', body: '...' }, s2: { title: 'Mentoring', body: '...' } },
+    };
     render(<Harness initial={withStories} />);
     await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
     expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/stories/i);
-    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/1 ratings, 1 notes and 1 stories/);
+    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/1 rating, 1 note and 2 stories/);
+  });
+
+  test('the reset confirm reads naturally at one and at none', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const one: Persisted = { ...seeded, stories: { s1: { title: 'Migration', body: '...' } } };
+    const { unmount } = render(<Harness initial={one} />);
+    await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
+    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/1 rating, 1 note and 1 story\b/);
+    unmount();
+
+    render(<Harness initial={{ version: 2, progress: {}, notes: {}, stories: {} }} />);
+    await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
+    expect(confirmSpy.mock.calls[1]?.[0]).toMatch(/0 ratings, 0 notes and 0 stories/);
   });
 
   test('reset dispatches only after the confirm dialog is accepted', async () => {

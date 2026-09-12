@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
@@ -59,5 +59,31 @@ describe('MockSession', () => {
     await userEvent.click(screen.getByRole('button', { name: /finish session/i }));
     await userEvent.click(screen.getByRole('button', { name: /back to presets/i }));
     expect(screen.getByRole('button', { name: /full loop/i })).toBeInTheDocument();
+  });
+});
+
+describe('a mock session never resumes an abandoned lap', () => {
+  beforeEach(() => localStorage.clear());
+
+  // Practice clears the stored lap only on genuine completion, but "Finish session"
+  // and "Back to presets" unmount it directly — so the lap survived and re-picking the
+  // same preset dropped the user back on the question they had walked away from.
+  test('ending early via Finish session clears the lap', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /technical rounds/i }));
+    await userEvent.click(screen.getByRole('button', { name: /skip/i }));
+    expect(Object.keys(JSON.parse(localStorage.getItem('interview-prep:laps') ?? '{}'))).toHaveLength(1);
+
+    await userEvent.click(screen.getByRole('button', { name: /finish session/i }));
+    expect(JSON.parse(localStorage.getItem('interview-prep:laps') ?? '{}')).toEqual({});
+  });
+
+  // Leaving mid-session by navigating away is an interruption, not an ending — that
+  // lap should survive, so the user can pick the preset back up where they left it.
+  test('navigating away mid-session keeps the lap', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /technical rounds/i }));
+    await userEvent.click(screen.getByRole('button', { name: /skip/i }));
+    expect(Object.keys(JSON.parse(localStorage.getItem('interview-prep:laps') ?? '{}'))).toHaveLength(1);
   });
 });

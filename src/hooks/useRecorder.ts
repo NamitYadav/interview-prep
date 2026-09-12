@@ -109,5 +109,5 @@ export function useRecorder() {
     else void start();
   };
 
-  return { supported, recording, url, toggle };
+  return { supported, recording, url, toggle, stop };
 }

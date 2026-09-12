@@ -4,6 +4,7 @@ import type { Persisted, Question, RoundId } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { questionsByRound } from '../data';
 import { Practice } from './Practice';
+import { clearLap, lapKey } from '../lib/lap';
 
 interface Preset { id: string; title: string; blurb: string; composition: Partial<Record<RoundId, number>> }
 
@@ -45,7 +46,21 @@ export function MockSession({
     setFinished(false);
   };
 
-  const backToPresets = () => setSession(null);
+  // Ending a session any way other than completing the lap — the Finish link, or
+  // walking back to the presets — still has to clear the stored lap. Practice only
+  // clears it on genuine completion, so without this, re-picking the same preset
+  // resumed at the question the user abandoned.
+  const endSession = () => {
+    if (session) clearLap(lapKey(session.drill));
+  };
+  const finishSession = () => {
+    endSession();
+    setFinished(true);
+  };
+  const backToPresets = () => {
+    endSession();
+    setSession(null);
+  };
 
   if (!session) {
     return (
@@ -113,7 +128,7 @@ export function MockSession({
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{drill.length} questions. Rate as you go, finish whenever.</p>
       <Practice questions={drill} state={state} dispatch={dispatch} strictMode={strictMode} ordered onLapComplete={() => setFinished(true)} />
       <div className="mt-3 flex justify-end">
-        <button type="button" onClick={() => setFinished(true)} className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">
+        <button type="button" onClick={finishSession} className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">
           Finish session
         </button>
       </div>

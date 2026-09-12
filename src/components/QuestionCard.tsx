@@ -112,9 +112,13 @@ export function QuestionCard({
   // Revealing is exactly when you stop talking, so stop here: the audio is captured and
   // the mic released at the same moment.
   const recorderRecording = recorder.recording;
-  const stopRecording = recorder.toggle;
+  const stopRecording = recorder.stop;
   useEffect(() => {
     if (revealed && recorderRecording) stopRecording();
+    // stopRecording is a fresh closure each render, so this runs often; the
+    // `recorderRecording` guard makes repeat runs a no-op. It calls stop() rather than
+    // toggle(), which branches on intent and would START a recording if the two ever
+    // disagreed.
   }, [revealed, recorderRecording, stopRecording]);
 
   useEffect(() => {
