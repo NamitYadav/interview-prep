@@ -7,15 +7,13 @@ import { clearAllDrafts } from '../lib/drafts';
 
 export const LAST_EXPORT_KEY = 'interview-prep:last-export';
 
-export function ExportImport({
-  state, dispatch, onExport,
-}: { state: Persisted; dispatch: Dispatch<Action>; onExport?: () => void }) {
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [imported, setImported] = useState<string | null>(null);
+const btn = 'rounded border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800';
 
+// Split from its Import/Reset siblings by how often each is reached for: this one has a
+// weekly nudge pointing at it, so it stays on the home screen. The other two are
+// recovery and destruction, and live in Settings.
+export function ExportButton({ state, onExport }: { state: Persisted; onExport?: () => void }) {
   const exportJson = () => {
-    setError(null);
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -29,6 +27,14 @@ export function ExportImport({
     } catch { /* storage unavailable — the export nudge just won't clear */ }
     onExport?.();
   };
+
+  return <button type="button" className={btn} onClick={exportJson}>Export</button>;
+}
+
+export function ImportReset({ state, dispatch }: { state: Persisted; dispatch: Dispatch<Action> }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [imported, setImported] = useState<string | null>(null);
 
   // Import replaces everything. It used to do that the instant a file was picked —
   // no confirm, no summary, no undo — while Reset, which destroys strictly less,
@@ -81,11 +87,8 @@ export function ExportImport({
     }
   };
 
-  const btn = 'rounded border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800';
-
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button type="button" className={btn} onClick={exportJson}>Export</button>
       <button type="button" className={btn} onClick={() => fileRef.current?.click()}>Import</button>
       <input
         ref={fileRef}

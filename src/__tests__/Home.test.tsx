@@ -9,8 +9,8 @@ import { LAST_EXPORT_KEY } from '../components/ExportImport';
 import { Home } from '../components/Home';
 
 function Harness({ initial }: { initial: Persisted }) {
-  const [state, dispatch] = useReducer(reducer, initial);
-  return <Home state={state} dispatch={dispatch} />;
+  const [state] = useReducer(reducer, initial);
+  return <Home state={state} />;
 }
 
 const roundOrder = () => within(screen.getByRole('list')).getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
