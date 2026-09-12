@@ -91,9 +91,17 @@ export function useRecorder() {
       setRecording(true);
     } catch {
       // Mic permission denied or unavailable — fail silently, same as "not supported".
-      // Only clear intent if this run is still the current one: an abandoned prompt
-      // rejecting later must not cancel a recording the user has since started.
-      if (runId === runIdRef.current) wantRecordingRef.current = false;
+      // Only act if this run is still the current one: an abandoned prompt rejecting
+      // later must not cancel a recording the user has since started.
+      if (runId !== runIdRef.current) return;
+      wantRecordingRef.current = false;
+      // getUserMedia may well have succeeded and the MediaRecorder constructor or
+      // start() be what threw — an unsupported mime type, an already-ended track — in
+      // which case the mic is open. Clearing intent alone left it live, recording light
+      // and all, until the component unmounted. streamRef holds this run's stream or
+      // nothing: the runId check above rules out anyone else's.
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
     }
   };
 

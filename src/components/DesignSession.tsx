@@ -4,7 +4,7 @@ import type { Action } from '../hooks/useAppState';
 import { questionsByRound } from '../data';
 import { nextQuestion } from '../lib/queue';
 import { useQuestionTimer } from '../hooks/useQuestionTimer';
-import { useDraft } from '../hooks/useDraft';
+import { DRAFT_SAVE_FAILED, useDraft } from '../hooks/useDraft';
 import { draftKey } from '../lib/drafts';
 import { formatTime } from '../lib/format';
 import { RATINGS } from './QuestionCard';
@@ -115,6 +115,9 @@ function DesignPrompt({
               placeholder="Sketch your design out loud as you go — requirements, API shape, components, trade-offs."
               className="w-full rounded border border-zinc-300 bg-transparent p-2 text-sm dark:border-zinc-700"
             />
+            {scratch.saveFailed && (
+              <p role="alert" className="mt-1 text-xs text-amber-700 dark:text-amber-400">{DRAFT_SAVE_FAILED}</p>
+            )}
           </section>
           <button
             type="button"

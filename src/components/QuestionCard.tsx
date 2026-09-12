@@ -3,7 +3,7 @@ import type { Question, Rating, Stories } from '../types';
 import { rounds, isStoryPrompt } from '../data';
 import { useQuestionTimer } from '../hooks/useQuestionTimer';
 import { useDebouncedField } from '../hooks/useDebouncedField';
-import { useDraft } from '../hooks/useDraft';
+import { DRAFT_SAVE_FAILED, useDraft } from '../hooks/useDraft';
 import { draftKey } from '../lib/drafts';
 import { useRecorder } from '../hooks/useRecorder';
 import { formatTime } from '../lib/format';
@@ -137,17 +137,22 @@ export function QuestionCard({
 
       {question.code && (
         question.scratch ? (
-          <textarea
-            key={question.id}
-            value={scratch.draft}
-            onChange={(e) => scratch.onChange(e.target.value)}
-            onBlur={scratch.onBlur}
-            spellCheck={false}
-            wrap="off"
-            rows={Math.max(question.code.split('\n').length + 2, scratch.draft.split('\n').length + 2)}
-            aria-label="Scratch editor"
-            className="mb-4 w-full overflow-x-auto rounded bg-zinc-100 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-800"
-          />
+          <>
+            <textarea
+              key={question.id}
+              value={scratch.draft}
+              onChange={(e) => scratch.onChange(e.target.value)}
+              onBlur={scratch.onBlur}
+              spellCheck={false}
+              wrap="off"
+              rows={Math.max(question.code.split('\n').length + 2, scratch.draft.split('\n').length + 2)}
+              aria-label="Scratch editor"
+              className="mb-4 w-full overflow-x-auto rounded bg-zinc-100 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-800"
+            />
+            {scratch.saveFailed && (
+              <p role="alert" className="-mt-2 mb-4 text-xs text-amber-700 dark:text-amber-400">{DRAFT_SAVE_FAILED}</p>
+            )}
+          </>
         ) : (
           <pre className="mb-4 overflow-x-auto rounded bg-zinc-100 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-800">
             <code>{question.code}</code>

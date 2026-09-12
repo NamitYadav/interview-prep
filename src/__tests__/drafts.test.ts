@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, test } from 'vitest';
-import { clearDraft, draftKey, readDraft, writeDraft } from '../lib/drafts';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { clearAllDrafts, clearDraft, draftKey, readDraft, writeDraft } from '../lib/drafts';
 
 beforeEach(() => localStorage.clear());
 
@@ -53,5 +53,44 @@ describe('drafts', () => {
     expect(readDraft('a')).toBe('keep');
     expect(readDraft('b')).toBeUndefined();
     expect(readDraft('c')).toBeUndefined();
+  });
+});
+
+describe('drafts do not grow without limit', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  // Drafts are the biggest thing this app stores and they share the origin quota with
+  // progress, so an uncapped store eventually stops RATINGS from saving. The oldest
+  // scratch goes; the one just typed into stays.
+  test('evicts the oldest draft past the cap', () => {
+    for (let i = 0; i < 25; i++) writeDraft(`q${i}:scratch`, `draft ${i}`, 1000 + i);
+    const stored = JSON.parse(localStorage.getItem('interview-prep:drafts') ?? '{}');
+    expect(Object.keys(stored)).toHaveLength(20);
+    expect(readDraft('q24:scratch')).toBe('draft 24');
+    expect(readDraft('q5:scratch')).toBe('draft 5');
+    expect(readDraft('q4:scratch')).toBeUndefined();
+  });
+
+  test('touching an old draft keeps it and evicts a staler one instead', () => {
+    for (let i = 0; i < 20; i++) writeDraft(`q${i}:scratch`, `draft ${i}`, 1000 + i);
+    writeDraft('q0:scratch', 'still working on this', 5000);
+    writeDraft('fresh:scratch', 'new', 6000);
+    expect(readDraft('q0:scratch')).toBe('still working on this');
+    expect(readDraft('q1:scratch')).toBeUndefined();
+  });
+
+  // Swallowed, a full quota lost a 45-minute design write-up on reload with no signal.
+  test('reports a failed write instead of swallowing it', () => {
+    expect(writeDraft('q:scratch', 'kept')).toBe(true);
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('QuotaExceededError');
+    });
+    expect(writeDraft('q:scratch', 'lost')).toBe(false);
+  });
+
+  test('clearAllDrafts empties the store', () => {
+    writeDraft('a:scratch', 'x');
+    clearAllDrafts();
+    expect(readDraft('a:scratch')).toBeUndefined();
   });
 });
