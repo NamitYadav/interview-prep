@@ -175,6 +175,36 @@ describe('what the printed sheet drops', () => {
 });
 
 describe('shortcuts toggle', () => {
+  // The Practice-level tests pass `shortcuts={false}` straight into the component, so
+  // none of them exercises the threading through App -> RoundView -> Practice ->
+  // QuestionCard. A review proved that: dropping the prop at RoundView and hardcoding
+  // the Space hint back on left all 290 tests green while every round drill ignored the
+  // toggle. This drives the real header control against a real round.
+  test('the header toggle actually reaches a round drill', async () => {
+    window.location.hash = '#hm';
+    render(<App />);
+    const shown = () => screen.getAllByRole('heading', { level: 2 })[0]?.textContent;
+
+    const before = shown();
+    await userEvent.keyboard('n');
+    expect(shown(), 'n should skip while shortcuts are on').not.toBe(before);
+
+    await userEvent.click(screen.getByRole('button', { name: /^shortcuts$/i }));
+    const after = shown();
+    await userEvent.keyboard('n');
+    expect(shown(), 'n must do nothing once shortcuts are off').toBe(after);
+  });
+
+  test('the Space hint on Reveal follows the toggle', async () => {
+    window.location.hash = '#hm';
+    render(<App />);
+    const revealBtn = () => screen.getByRole('button', { name: /reveal/i });
+    expect(revealBtn().querySelector('kbd')).not.toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: /^shortcuts$/i }));
+    expect(revealBtn().querySelector('kbd')).toBeNull();
+  });
+
   test('is on by default and persists being turned off', async () => {
     const { unmount } = render(<App />);
     const toggle = () => screen.getByRole('button', { name: /shortcuts/i });

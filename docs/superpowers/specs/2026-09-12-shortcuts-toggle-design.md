@@ -40,9 +40,10 @@ it to `WeakDrill`, `RoundView` and `MockSession`, each of which passes it to `Pr
 `Practice` passes it to `QuestionCard` as `shortcuts`, which gates the Space hint and
 `RatingRadios`' `showKeys`.
 
-`QuestionCard` currently hardcodes `showKeys` on `RatingRadios`, so Browse and `#search`
-advertise `1`/`2`/`3` shortcuts that do not exist there — those views never mount
-`Practice`. Gating on the new prop fixes that too, since the default is off.
+`QuestionCard` currently hardcodes `showKeys` on `RatingRadios`, so **Browse** advertises
+`1`/`2`/`3` shortcuts that do not exist there — it never mounts `Practice`. Gating on the
+new prop fixes that too, since the default is off. (`#search` is unaffected:
+`SearchView` does not render `QuestionCard` at all.)
 
 ## Out of scope
 
