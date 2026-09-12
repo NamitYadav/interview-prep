@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, type Dispatch } from 'react';
 import type { Persisted } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { ImportReset } from './ExportImport';
+import { panelButton, panelToggle } from './controlStyles';
 import { ThemeToggle } from './ThemeToggle';
 
 // One disclosure in place of five permanent controls. The header sits outside the route
@@ -49,7 +50,7 @@ export function Settings({
 
   return (
     <details ref={ref} className="relative">
-      <summary className="inline-block cursor-pointer list-none rounded border border-zinc-300 px-2 py-1 text-xs text-zinc-500 hover:border-emerald-500 dark:border-zinc-700 dark:text-zinc-400 [&::-webkit-details-marker]:hidden">
+      <summary className={`${panelButton} inline-block cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
         Settings
       </summary>
       <div className="absolute right-0 z-10 mt-2 w-72 space-y-4 rounded-lg border border-zinc-200 bg-white p-4 text-left shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
@@ -95,11 +96,7 @@ function Toggle({
         onClick={() => onToggle(!pressed)}
         aria-pressed={pressed}
         aria-describedby={descriptionId}
-        className={`rounded border px-2 py-1 text-xs ${
-          pressed
-            ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
-            : 'border-zinc-300 text-zinc-500 hover:border-emerald-500 dark:border-zinc-700 dark:text-zinc-400'
-        }`}
+        className={panelToggle(pressed)}
       >
         {label}
       </button>

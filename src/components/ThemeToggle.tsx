@@ -1,4 +1,5 @@
 import { THEMES, useTheme, type Theme } from '../hooks/useTheme';
+import { panelToggle } from './controlStyles';
 
 const LABELS: Record<Theme, string> = { dark: 'Dark', gruvbox: 'Gruvbox', light: 'Light' };
 
@@ -13,11 +14,7 @@ export function ThemeToggle() {
           type="button"
           onClick={() => setTheme(t)}
           aria-pressed={theme === t}
-          className={`rounded border px-2 py-1 text-xs ${
-            theme === t
-              ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
-              : 'border-zinc-300 text-zinc-500 hover:border-emerald-500 dark:border-zinc-700 dark:text-zinc-400'
-          }`}
+          className={panelToggle(theme === t)}
         >
           {LABELS[t]}
         </button>
