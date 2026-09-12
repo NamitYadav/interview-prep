@@ -124,6 +124,21 @@ describe('QuestionCard strict mode', () => {
     }
   });
 
+  // A role="status" mounted with its text already inside is routinely missed. The
+  // region has to be watched first and filled after — which for a strict-mode
+  // auto-reveal is the one thing here that happens with no user action at all.
+  test('the time-up region is mounted and empty before the target elapses', () => {
+    vi.useFakeTimers();
+    try {
+      render(<StrictHarness question={base} />);
+      expect(screen.getByRole('status')).toBeEmptyDOMElement();
+      act(() => vi.advanceTimersByTime(180_000));
+      expect(screen.getByRole('status')).toHaveTextContent(/time.s up/i);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test('shows a live countdown before reveal, so the answer never pops with no warning', () => {
     vi.useFakeTimers();
     try {

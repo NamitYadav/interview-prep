@@ -25,6 +25,17 @@ describe('Browse', () => {
     expect(screen.getByRole('button', { name: /debounce/i })).toHaveAttribute('aria-expanded', 'false');
   });
 
+  // The card mounts already revealed here, and its reveal effect fired on that mount —
+  // dragging focus off the disclosure button the user just pressed into a container
+  // with no visible focus indicator, with no way to tell where it had gone.
+  test('expanding a question leaves focus on the disclosure button', async () => {
+    render(<Harness />);
+    const disclosure = screen.getByRole('button', { name: /debounce/i });
+    await userEvent.click(disclosure);
+    expect(screen.getByText('Answer one.')).toBeInTheDocument();
+    expect(disclosure).toHaveFocus();
+  });
+
   test('search matches deeper material, not just the answer', async () => {
     const withDeeper: Question[] = [
       ...qs,

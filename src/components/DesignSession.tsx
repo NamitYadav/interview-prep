@@ -1,4 +1,4 @@
-import { useState, type Dispatch } from 'react';
+import { useEffect, useRef, useState, type Dispatch } from 'react';
 import type { Persisted, Question } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { questionsByRound } from '../data';
@@ -7,7 +7,7 @@ import { useQuestionTimer } from '../hooks/useQuestionTimer';
 import { DRAFT_SAVE_FAILED, useDraft } from '../hooks/useDraft';
 import { draftKey } from '../lib/drafts';
 import { formatTime } from '../lib/format';
-import { RATINGS } from './QuestionCard';
+import { RatingRadios } from './RatingRadios';
 
 // The phases from design-013's answer skeleton — requirements through rollout.
 const PHASES = [
@@ -58,6 +58,13 @@ function DesignPrompt({
   const [finished, setFinished] = useState(false);
   const [checkedPhases, setCheckedPhases] = useState<Set<number>>(new Set());
   const scratch = useDraft(draftKey(question.id, `design-scratch-${attempt}`));
+
+  // Finish unmounts the button under the user, dropping focus to <body> with nothing
+  // announced. Send it to the heading of the answer that replaced the working area.
+  const answerHeadingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (finished) answerHeadingRef.current?.focus();
+  }, [finished]);
 
   // Visible 45-minute countdown that never forces anything — a real loop doesn't
   // cut you off, it just tells you the clock is running.
@@ -130,6 +137,7 @@ function DesignPrompt({
       ) : (
         <div className="animate-fade-in space-y-4 text-sm">
           <section className="space-y-2">
+            <h3 ref={answerHeadingRef} tabIndex={-1} className="mb-1 font-semibold">Model answer</h3>
             {question.answer.map((p, i) => <p key={i}>{p}</p>)}
           </section>
           {question.deeper && question.deeper.length > 0 && (
@@ -146,20 +154,10 @@ function DesignPrompt({
               {question.keyPoints.map((k, i) => <li key={i}>{k}</li>)}
             </ul>
           </section>
-          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Rate yourself">
-            {RATINGS.map((r) => (
-              <button
-                key={r.value}
-                type="button"
-                role="radio"
-                onClick={() => dispatch({ type: 'rate', id: question.id, rating: r.value, now: Date.now() })}
-                aria-checked={rating === r.value}
-                className={`rounded border px-4 py-2 ${r.className} ${rating === r.value ? 'bg-zinc-100 dark:bg-zinc-800' : ''}`}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
+          <RatingRadios
+            rating={rating}
+            onRate={(r) => dispatch({ type: 'rate', id: question.id, rating: r, now: Date.now() })}
+          />
           <button
             type="button"
             onClick={onRestart}

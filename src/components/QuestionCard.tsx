@@ -7,12 +7,7 @@ import { DRAFT_SAVE_FAILED, useDraft } from '../hooks/useDraft';
 import { draftKey } from '../lib/drafts';
 import { useRecorder } from '../hooks/useRecorder';
 import { formatTime } from '../lib/format';
-
-export const RATINGS: { value: Rating; label: string; className: string }[] = [
-  { value: 1, label: 'Weak', className: 'border-red-500 text-red-600 dark:text-red-400' },
-  { value: 2, label: 'OK', className: 'border-amber-500 text-amber-600 dark:text-amber-400' },
-  { value: 3, label: 'Solid', className: 'border-emerald-500 text-emerald-600 dark:text-emerald-400' },
-];
+import { RATINGS, RatingRadios } from './RatingRadios';
 
 const suggestedRating = (hits: number, total: number): Rating | undefined =>
   total === 0 ? undefined : hits === total ? 3 : hits === 0 ? 1 : 2;
@@ -99,11 +94,14 @@ export function QuestionCard({
 
   const [expandedStoryId, setExpandedStoryId] = useState<string | null>(null);
 
-  // Declared before the heading effect so that on mount (Browse renders revealed) the
-  // heading wins; on a Practice reveal only this one re-runs and focus lands on the answer
-  // instead of falling to <body> when the Reveal button unmounts.
+  // Only on the false→true transition. Firing on a mount that starts revealed — which
+  // is exactly Browse and #search, where the card appears under a disclosure button —
+  // silently pulled focus off that button into this container. On a real Practice
+  // reveal it still runs, so focus doesn't fall to <body> when Reveal unmounts.
+  const wasRevealed = useRef(revealed);
   useEffect(() => {
-    if (revealed) answerRef.current?.focus();
+    if (revealed && !wasRevealed.current) answerRef.current?.focus();
+    wasRevealed.current = revealed;
   }, [revealed]);
 
   // The toggle only renders before the reveal, so revealing mid-recording used to
@@ -134,6 +132,11 @@ export function QuestionCard({
         <span>{question.id}</span>
       </div>
       <h2 ref={headingRef} tabIndex={-1} className="mb-4 text-lg font-medium outline-none">{question.question}</h2>
+
+      {/* Mounted with the card and empty until there is something to say: a live region
+          that appears with its text already inside is routinely missed, and a strict-mode
+          auto-reveal is the one thing here that happens without the user doing anything. */}
+      <p role="status" className="sr-only">{autoRevealed ? "Time's up — answer revealed" : ''}</p>
 
       {question.code && (
         question.scratch ? (
@@ -254,9 +257,6 @@ export function QuestionCard({
         </div>
       ) : (
         <div ref={answerRef} tabIndex={-1} className="animate-fade-in space-y-4 text-sm outline-none">
-          {autoRevealed && (
-            <p role="status" className="sr-only">Time&apos;s up — answer revealed</p>
-          )}
           {elapsedMs !== null && (
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
               {autoRevealed ? 'Out of time' : `Answered in ${formatTime(elapsedMs)}`}
@@ -336,20 +336,7 @@ export function QuestionCard({
               className="w-full rounded border border-zinc-300 bg-transparent p-2 dark:border-zinc-700"
             />
           </section>
-          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Rate yourself">
-            {RATINGS.map((r) => (
-              <button
-                key={r.value}
-                type="button"
-                role="radio"
-                onClick={() => onRate(r.value)}
-                aria-checked={rating === r.value}
-                className={`rounded border px-4 py-2 ${r.className} ${rating === r.value ? 'bg-zinc-100 dark:bg-zinc-800' : ''}`}
-              >
-                {r.label} <kbd className="ml-1 text-xs opacity-70 [@media(hover:none)]:hidden">{r.value}</kbd>
-              </button>
-            ))}
-          </div>
+          <RatingRadios rating={rating} onRate={onRate} showKeys />
         </div>
       )}
     </article>

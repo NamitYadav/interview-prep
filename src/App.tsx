@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { ROUND_IDS } from './data';
+import { ROUND_IDS, rounds } from './data';
 import type { Route, RoundId } from './types';
 import { useAppState } from './hooks/useAppState';
 import { useHashRoute } from './hooks/useHashRoute';
@@ -15,6 +15,24 @@ import { PrintView } from './components/PrintView';
 import { ThemeToggle } from './components/ThemeToggle';
 
 const isRoundId = (r: Route): r is RoundId => (ROUND_IDS as readonly string[]).includes(r);
+
+export const APP_NAME = 'Interview Prep';
+
+const SAVE_FAILED_MESSAGE = 'Progress is not being saved (storage unavailable). Export before closing the tab.';
+const STALE_TAB_MESSAGE = 'Another tab changed your progress. Reload to see it — saving from here will overwrite that change.';
+
+const VIEW_TITLES: Record<Exclude<Route, RoundId>, string> = {
+  weak: 'Weak drill', notes: 'Notes', stories: 'Stories',
+  mock: 'Mock session', search: 'Search', print: 'Print',
+};
+
+// The tab, the history entry and the screen reader's announcement on navigation all
+// read this — all thirteen routes used to call themselves "Interview Prep".
+export const titleFor = (route: Route | null): string => {
+  if (route === null) return APP_NAME;
+  const view = isRoundId(route) ? rounds.find((r) => r.id === route)?.title : VIEW_TITLES[route];
+  return view ? `${view} · ${APP_NAME}` : APP_NAME;
+};
 
 export default function App() {
   const { state, dispatch, saveFailed, staleTab, dismissStaleTab } = useAppState();
@@ -33,16 +51,26 @@ export default function App() {
     document.querySelector<HTMLElement>('main h1')?.focus();
   }, [route]);
 
+  useEffect(() => {
+    document.title = titleFor(route);
+  }, [route]);
+
+  // One region, mounted for the life of the app and empty until there is something to
+  // say. A role="status" that appears with its text already inside is routinely missed:
+  // the announcement depends on the text arriving after the region is being watched.
+  const announcement = saveFailed ? SAVE_FAILED_MESSAGE : staleTab ? STALE_TAB_MESSAGE : '';
+
   return (
     <>
+      <p role="status" className="sr-only">{announcement}</p>
       {saveFailed && (
-        <div role="status" className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-900 dark:bg-amber-900 dark:text-amber-100">
-          Progress is not being saved (storage unavailable). Export before closing the tab.
+        <div className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-900 dark:bg-amber-900 dark:text-amber-100">
+          {SAVE_FAILED_MESSAGE}
         </div>
       )}
       {staleTab && !saveFailed && (
-        <div role="status" className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-900 dark:bg-amber-900 dark:text-amber-100">
-          Another tab changed your progress. Reload to see it — saving from here will overwrite that change.{' '}
+        <div className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-900 dark:bg-amber-900 dark:text-amber-100">
+          {STALE_TAB_MESSAGE}{' '}
           <button type="button" onClick={() => window.location.reload()} className="underline underline-offset-2">
             Reload
           </button>{' '}
