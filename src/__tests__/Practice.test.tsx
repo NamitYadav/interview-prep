@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useReducer } from 'react';
+import { useReducer, useState } from 'react';
 import type { Question } from '../types';
 import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
@@ -23,6 +23,17 @@ const qs3: Question[] = [
 function Harness() {
   const [state, dispatch] = useReducer(reducer, EMPTY);
   return <Practice questions={qs} state={state} dispatch={dispatch} strictMode={false} />;
+}
+
+const qs5: Question[] = [
+  ...qs3,
+  { id: 'hm-004', round: 'hm', category: 'A', question: 'Fourth question?', answer: ['Answer four.'], keyPoints: ['Point four'] },
+  { id: 'hm-005', round: 'hm', category: 'A', question: 'Fifth question?', answer: ['Answer five.'], keyPoints: ['Point five'] },
+];
+
+function Harness5() {
+  const [state, dispatch] = useReducer(reducer, EMPTY);
+  return <Practice questions={qs5} state={state} dispatch={dispatch} strictMode={false} />;
 }
 
 function Harness3() {
@@ -431,5 +442,73 @@ describe('your-answer draft survives Back', () => {
     await userEvent.click(screen.getByRole('button', { name: /skip/i }));
     expect(screen.getByLabelText(/your answer/i)).toHaveValue('');
     expect(screen.queryByText('only mine')).not.toBeInTheDocument();
+  });
+});
+
+describe('P1 regressions', () => {
+  // The drain branch used a non-functional setRequeued, computed from the closure
+  // BEFORE rate()'s append landed — so rating the last question Weak discarded its
+  // requeue and ended the lap. The user rates something Weak and never sees it again.
+  test('a weak rating on the last question is not discarded by the drain branch', async () => {
+    const rate = async (label: RegExp) => {
+      await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+      await userEvent.click(screen.getByRole('radio', { name: label }));
+    };
+    render(<Harness5 />);
+    await rate(/weak/i);    // Q1 weak — requeued 8 steps out, not due for the rest of the lap
+    await rate(/solid/i);   // Q2
+    await rate(/solid/i);   // Q3
+    await rate(/solid/i);   // Q4
+    expect(screen.getByText('Fifth question?')).toBeInTheDocument();
+    // Q5 weak appends a requeue, then advance() takes the drain branch for Q1. The
+    // drain must not clobber the append that rate() just queued.
+    await rate(/weak/i);
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+    // Clearing Q1 must now serve Q5 — if its requeue was dropped, the lap ends here.
+    await rate(/solid/i);
+    expect(screen.queryByText(/lap done/i)).not.toBeInTheDocument();
+    expect(screen.getByText('Fifth question?')).toBeInTheDocument();
+  });
+
+  // A requeued id appears TWICE in history, so indexOf found its first occurrence and
+  // the restore rewound the lap to near the start.
+  test('restoring onto a repeated question keeps the later position', () => {
+    localStorage.setItem(
+      'interview-prep:laps',
+      JSON.stringify({
+        '3:hm-001:hm-003': {
+          history: ['hm-001', 'hm-002', 'hm-003', 'hm-001'],
+          historyPos: 3,
+          requeued: [],
+          step: 3,
+        },
+      }),
+    );
+    render(<Harness3 />);
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+    // Position 3, not position 0 — so Back goes to the third question, not the first.
+    return userEvent.click(screen.getByRole('button', { name: /back/i })).then(() => {
+      expect(screen.getByText('Third question?')).toBeInTheDocument();
+    });
+  });
+
+  // advance() sets lapDone and calls onLapComplete in one batch; MockSession unmounts
+  // Practice on that callback, so a render with lapDone === true never commits and the
+  // clearLap effect never ran. The finished lap then restored at its last question.
+  test('a lap that ends is cleared even when the parent unmounts on completion', async () => {
+    function UnmountOnComplete() {
+      const [done, setDone] = useState(false);
+      const [state, dispatch] = useReducer(reducer, EMPTY);
+      if (done) return <p>finished</p>;
+      return (
+        <Practice questions={qs} state={state} dispatch={dispatch} strictMode={false} ordered
+          onLapComplete={() => setDone(true)} />
+      );
+    }
+    render(<UnmountOnComplete />);
+    await userEvent.click(screen.getByRole('button', { name: /skip/i }));
+    await userEvent.click(screen.getByRole('button', { name: /skip/i }));
+    expect(screen.getByText('finished')).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem('interview-prep:laps') ?? '{}')).toEqual({});
   });
 });

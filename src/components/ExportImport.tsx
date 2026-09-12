@@ -54,7 +54,11 @@ export function ExportImport({
   };
 
   const reset = () => {
-    if (window.confirm('Delete all ratings and notes? Export first if you want a backup.')) {
+    // Name everything this destroys. It wipes stories too — emptyState() clears all
+    // three — and the old copy mentioned only ratings and notes, so someone clearing
+    // ratings to start a fresh cycle lost every STAR story they had written.
+    const counts = `${Object.keys(state.progress).length} ratings, ${Object.keys(state.notes).length} notes and ${Object.keys(state.stories).length} stories`;
+    if (window.confirm(`Delete all ${counts}? This cannot be undone — export first if you want a backup.`)) {
       dispatch({ type: 'reset' });
     }
   };

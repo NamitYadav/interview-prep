@@ -74,7 +74,7 @@ export default function App() {
       {route === 'search' && <SearchView state={state} dispatch={dispatch} />}
       {route === 'print' && <PrintView state={state} />}
       {route !== null && isRoundId(route) && (
-        <RoundView roundId={route} state={state} dispatch={dispatch} strictMode={strictMode} />
+        <RoundView key={route} roundId={route} state={state} dispatch={dispatch} strictMode={strictMode} />
       )}
     </>
   );

@@ -106,6 +106,17 @@ export function QuestionCard({
     if (revealed) answerRef.current?.focus();
   }, [revealed]);
 
+  // The toggle only renders before the reveal, so revealing mid-recording used to
+  // unmount the one Stop control while the mic stayed live — and the take was then
+  // discarded on advance, because unmount detaches onstop before stopping the tracks.
+  // Revealing is exactly when you stop talking, so stop here: the audio is captured and
+  // the mic released at the same moment.
+  const recorderRecording = recorder.recording;
+  const stopRecording = recorder.toggle;
+  useEffect(() => {
+    if (revealed && recorderRecording) stopRecording();
+  }, [revealed, recorderRecording, stopRecording]);
+
   useEffect(() => {
     if (focusOnMount) headingRef.current?.focus();
   }, [question.id, focusOnMount]);
