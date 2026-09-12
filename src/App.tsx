@@ -13,7 +13,7 @@ import { StoriesView } from './components/StoriesView';
 import { MockSession } from './components/MockSession';
 import { SearchView } from './components/SearchView';
 import { PrintView } from './components/PrintView';
-import { ThemeToggle } from './components/ThemeToggle';
+import { Settings } from './components/Settings';
 
 const isRoundId = (r: Route): r is RoundId => (ROUND_IDS as readonly string[]).includes(r);
 
@@ -81,37 +81,17 @@ export default function App() {
           </button>
         </div>
       )}
-      <header className="mx-auto flex max-w-3xl items-center justify-end gap-3 px-4 pt-4 print:hidden sm:px-6">
-        <div role="group" aria-label="Drill preferences" className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setStrictMode(!strictMode)}
-            aria-pressed={strictMode}
-            className={`rounded border px-2 py-1 text-xs ${
-              strictMode
-                ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
-                : 'border-zinc-300 text-zinc-500 hover:border-emerald-500 dark:border-zinc-700 dark:text-zinc-400'
-            }`}
-          >
-            Strict mode
-          </button>
-          <button
-            type="button"
-            onClick={() => setShortcuts(!shortcuts)}
-            aria-pressed={shortcuts}
-            title="Single-key shortcuts in drills: Space, N, B and 1/2/3"
-            className={`rounded border px-2 py-1 text-xs ${
-              shortcuts
-                ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
-                : 'border-zinc-300 text-zinc-500 hover:border-emerald-500 dark:border-zinc-700 dark:text-zinc-400'
-            }`}
-          >
-            Shortcuts
-          </button>
-        </div>
-        <ThemeToggle />
+      <header className="mx-auto flex max-w-3xl items-center justify-end px-4 pt-4 print:hidden sm:px-6">
+        <Settings
+          state={state}
+          dispatch={dispatch}
+          strictMode={strictMode}
+          setStrictMode={setStrictMode}
+          shortcuts={shortcuts}
+          setShortcuts={setShortcuts}
+        />
       </header>
-      {route === null && <Home state={state} dispatch={dispatch} />}
+      {route === null && <Home state={state} />}
       {route === 'weak' && <WeakDrill state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} />}
       {route === 'notes' && <NotesView state={state} />}
       {route === 'stories' && <StoriesView state={state} dispatch={dispatch} />}

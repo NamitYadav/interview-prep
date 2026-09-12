@@ -174,6 +174,12 @@ describe('what the printed sheet drops', () => {
   });
 });
 
+// The five header controls now live behind one Settings disclosure, so every one of
+// these has to open it first, the same way a user does.
+const openSettings = async () => {
+  await userEvent.click(screen.getByText(/^settings$/i));
+};
+
 describe('shortcuts toggle', () => {
   // The Practice-level tests pass `shortcuts={false}` straight into the component, so
   // none of them exercises the threading through App -> RoundView -> Practice ->
@@ -189,6 +195,7 @@ describe('shortcuts toggle', () => {
     await userEvent.keyboard('n');
     expect(shown(), 'n should skip while shortcuts are on').not.toBe(before);
 
+    await openSettings();
     await userEvent.click(screen.getByRole('button', { name: /^shortcuts$/i }));
     const after = shown();
     await userEvent.keyboard('n');
@@ -201,6 +208,7 @@ describe('shortcuts toggle', () => {
     const revealBtn = () => screen.getByRole('button', { name: /reveal/i });
     expect(revealBtn().querySelector('kbd')).not.toBeNull();
 
+    await openSettings();
     await userEvent.click(screen.getByRole('button', { name: /^shortcuts$/i }));
     expect(revealBtn().querySelector('kbd')).toBeNull();
   });
@@ -208,6 +216,7 @@ describe('shortcuts toggle', () => {
   test('is on by default and persists being turned off', async () => {
     const { unmount } = render(<App />);
     const toggle = () => screen.getByRole('button', { name: /shortcuts/i });
+    await openSettings();
     expect(toggle()).toHaveAttribute('aria-pressed', 'true');
 
     await userEvent.click(toggle());
@@ -215,6 +224,7 @@ describe('shortcuts toggle', () => {
     unmount();
 
     render(<App />);
+    await openSettings();
     expect(screen.getByRole('button', { name: /shortcuts/i })).toHaveAttribute('aria-pressed', 'false');
   });
 });

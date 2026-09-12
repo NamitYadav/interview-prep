@@ -1,10 +1,9 @@
-import { useState, type Dispatch } from 'react';
+import { useState } from 'react';
 import type { Persisted } from '../types';
-import type { Action } from '../hooks/useAppState';
 import { questions, questionsByRound, rounds } from '../data';
 import { roundStats } from '../lib/queue';
 import { useLoopDate } from '../hooks/useLoopDate';
-import { ExportImport, LAST_EXPORT_KEY } from './ExportImport';
+import { ExportButton, LAST_EXPORT_KEY } from './ExportImport';
 import { ProgressBar } from './ProgressBar';
 
 // Every card in a grid shares this shape so a short blurb never leaves the card
@@ -22,7 +21,7 @@ const daysUntil = (dateStr: string): number => {
 
 const EXPORT_STALE_MS = 7 * 86_400_000;
 
-export function Home({ state, dispatch }: { state: Persisted; dispatch: Dispatch<Action> }) {
+export function Home({ state }: { state: Persisted }) {
   const weak = questions.filter((q) => state.progress[q.id]?.rating === 1).length;
   const noted = questions.filter((q) => (state.notes[q.id] ?? '').trim().length > 0).length;
   const stories = Object.values(state.stories);
@@ -63,7 +62,7 @@ export function Home({ state, dispatch }: { state: Persisted; dispatch: Dispatch
           <h1 tabIndex={-1} className="text-2xl font-semibold">Interview Prep</h1>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">Staff frontend · Berlin / EU loop</p>
         </div>
-        <ExportImport state={state} dispatch={dispatch} onExport={() => setLastExport(String(Date.now()))} />
+        <ExportButton state={state} onExport={() => setLastExport(String(Date.now()))} />
       </header>
 
       <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
