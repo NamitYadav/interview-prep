@@ -114,6 +114,44 @@ describe('Practice', () => {
     expect(screen.getByText('First question?')).toBeInTheDocument();
   });
 
+  // The guard covered inputs and textareas only. A recording's <audio> player owns the
+  // arrow keys and Space while focused, and `n` on it skipped the question out from
+  // under someone scrubbing back through their own answer.
+  test('keyboard shortcuts are ignored while an audio player has focus', () => {
+    render(<Harness />);
+    const player = document.createElement('audio');
+    player.controls = true;
+    document.body.appendChild(player);
+    try {
+      fireEvent.keyDown(player, { key: 'n' });
+      expect(screen.getByText('First question?')).toBeInTheDocument();
+    } finally {
+      player.remove();
+    }
+  });
+
+  test('keyboard shortcuts are ignored inside a contenteditable', () => {
+    render(<Harness />);
+    const editable = document.createElement('div');
+    editable.setAttribute('contenteditable', 'true');
+    document.body.appendChild(editable);
+    try {
+      fireEvent.keyDown(editable, { key: 'n' });
+      expect(screen.getByText('First question?')).toBeInTheDocument();
+    } finally {
+      editable.remove();
+    }
+  });
+
+  // Rating the last question of a lap unmounts the radio that was just activated. Focus
+  // fell to <body>: nothing announced, and Tab restarted from the top of the document.
+  test('finishing a lap moves focus to the lap-done heading', async () => {
+    render(<Harness />);
+    await rateVisible();
+    await rateVisible();
+    expect(screen.getByRole('heading', { name: /lap done/i })).toHaveFocus();
+  });
+
   test('space on a revealed card does not preventDefault, so it can still scroll the page', async () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('button', { name: /reveal/i }));

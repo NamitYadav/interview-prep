@@ -54,6 +54,16 @@ describe('MockSession', () => {
     expect(screen.getByText(/hr screen/i)).toBeInTheDocument();
   });
 
+  // Finish unmounts the link that was just activated and swaps the whole view. Focus
+  // landed on <body>, so a screen reader user got no signal that the session had ended
+  // and the recap they asked for was never announced.
+  test('finishing moves focus to the recap heading', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /full loop/i }));
+    await userEvent.click(screen.getByRole('button', { name: /finish session/i }));
+    expect(screen.getByRole('heading', { name: /session recap/i })).toHaveFocus();
+  });
+
   test('back to presets returns to the preset list', async () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('button', { name: /full loop/i }));

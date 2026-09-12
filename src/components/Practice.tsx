@@ -7,8 +7,17 @@ import { formatTime } from '../lib/format';
 import { clearLap, lapKey, readLap, writeLap } from '../lib/lap';
 import { QuestionCard } from './QuestionCard';
 
-const isTyping = (target: EventTarget | null) =>
-  target instanceof HTMLElement && (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT');
+// Single-character shortcuts on `window` are only safe while nothing else on the page
+// wants that key. A focused <audio> is the one that bit: the recording player owns the
+// arrow keys AND Space, and `n` while scrubbing your own take skipped the question.
+// contenteditable is here for the same reason a textarea is.
+const ownsKeys = (target: EventTarget | null) =>
+  target instanceof HTMLElement &&
+  (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT' ||
+    target.tagName === 'AUDIO' || target.tagName === 'VIDEO' ||
+    // closest, not isContentEditable: it covers a focused descendant of an editable
+    // host the same way, and unlike the property it is implemented in jsdom.
+    target.closest('[contenteditable]:not([contenteditable="false"])') !== null);
 
 // A weak rating requeues instead of ending the question's turn on the spot — it
 // comes back around after roughly this many further questions, not immediately
@@ -219,6 +228,14 @@ export function Practice({
     setLapDone(false);
   };
 
+  // Rating the last question of a lap unmounts the button that was just activated, and
+  // focus falls to <body>: nothing is announced and a keyboard user is back at the top
+  // of the document. Move it to the heading of what replaced the card instead.
+  const lapDoneRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (lapDone) lapDoneRef.current?.focus();
+  }, [lapDone]);
+
   // Keydown handler is registered once; latest closures are read through this ref
   // so skip/rate/revealed never go stale without re-subscribing on every render.
   const latest = useRef({ skip, rate, back, revealed });
@@ -228,7 +245,7 @@ export function Practice({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (ownsKeys(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
       const isButton = e.target instanceof HTMLElement && e.target.tagName === 'BUTTON';
       if (e.key === ' ') {
         if (isButton) return;
@@ -249,7 +266,7 @@ export function Practice({
     const stats = roundStats(questions, state.progress);
     return (
       <div className="rounded border border-dashed p-6 text-center text-sm">
-        <p className="mb-1 font-medium">Lap done</p>
+        <h2 ref={lapDoneRef} tabIndex={-1} className="mb-1 font-medium">Lap done</h2>
         <p className="mb-4 text-zinc-600 dark:text-zinc-400">{stats.weak} weak · {stats.ok} ok · {stats.solid} solid</p>
         <button
           type="button"

@@ -59,6 +59,24 @@ describe('DesignSession', () => {
     expect(solid).toHaveAttribute('aria-checked', 'true');
   });
 
+  // Finish unmounts the button that was just pressed. Focus then sits on <body>:
+  // a screen reader announces nothing, and the next Tab starts from the top of the
+  // document rather than from the answer that just appeared.
+  test('Finish moves focus to the heading of the answer that replaced it', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /finish/i }));
+    expect(screen.getByRole('heading', { name: /model answer/i })).toHaveFocus();
+  });
+
+  test('the rating radios are arrow-key operable here too', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /finish/i }));
+    screen.getByRole('radio', { name: /weak/i }).focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(screen.getByRole('radio', { name: /ok/i })).toBeChecked();
+    expect(screen.getByRole('radio', { name: /ok/i })).toHaveFocus();
+  });
+
   test('another prompt restarts with a fresh checklist and scratch pad', async () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('checkbox', { name: /requirements/i }));

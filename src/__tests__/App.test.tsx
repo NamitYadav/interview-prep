@@ -12,7 +12,9 @@ afterEach(() => {
 describe('App', () => {
   test('renders Home with no save-failed banner when storage works', () => {
     render(<App />);
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    // The live region is always mounted now (see "app-level announcements"); what a
+    // working save means is that it has nothing to say.
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
     expect(screen.getByRole('heading', { name: /interview prep/i })).toBeInTheDocument();
   });
 
@@ -48,6 +50,56 @@ describe('App', () => {
   });
 });
 
+describe('document title', () => {
+  // The tab, the back-history entry and what a screen reader reads out on navigation
+  // are all this string — every one of the thirteen routes used to say "Interview Prep".
+  test('home keeps the plain app name', () => {
+    render(<App />);
+    expect(document.title).toBe('Interview Prep');
+  });
+
+  test('a round route names the round', () => {
+    window.location.hash = '#coding';
+    render(<App />);
+    expect(document.title).toBe('Live coding · Interview Prep');
+  });
+
+  test('a non-round route names the view', () => {
+    window.location.hash = '#weak';
+    render(<App />);
+    expect(document.title).toBe('Weak drill · Interview Prep');
+  });
+
+  test('navigating updates it', async () => {
+    render(<App />);
+    await act(async () => {
+      window.location.hash = '#mock';
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+    expect(document.title).toBe('Mock session · Interview Prep');
+  });
+});
+
+describe('app-level announcements', () => {
+  // A role="status" that is mounted with its text already inside is routinely missed
+  // by screen readers — the region has to be there first and fill afterwards.
+  test('the live region is mounted and empty before anything goes wrong', () => {
+    render(<App />);
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+  });
+
+  test('a stale-tab warning fills the already-mounted region', () => {
+    render(<App />);
+    const region = screen.getByRole('status');
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY, newValue: '{}' }));
+    });
+    // Same node as before the event: filled in place, not mounted with its text.
+    expect(screen.getByRole('status')).toBe(region);
+    expect(region).toHaveTextContent(/another tab changed your progress/i);
+  });
+});
+
 describe('cross-tab overwrite warning', () => {
   // Each tab writes the whole blob on a debounce, so without this the last write
   // silently wipes the other tab's ratings, notes and stories.
@@ -57,7 +109,8 @@ describe('cross-tab overwrite warning', () => {
     act(() => {
       window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY, newValue: '{}' }));
     });
-    expect(screen.getByText(/another tab changed your progress/i)).toBeInTheDocument();
+    // Twice on purpose: the visible banner, and the sr-only live region.
+    expect(screen.getAllByText(/another tab changed your progress/i)).toHaveLength(2);
   });
 
   // Every tab re-writes the state it just loaded ~500ms after mount, and Chrome fires

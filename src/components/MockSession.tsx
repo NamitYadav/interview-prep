@@ -1,4 +1,4 @@
-import { useState, type Dispatch } from 'react';
+import { useEffect, useRef, useState, type Dispatch } from 'react';
 import { BackLink } from './BackLink';
 import type { Persisted, Question, RoundId } from '../types';
 import type { Action } from '../hooks/useAppState';
@@ -38,6 +38,13 @@ export function MockSession({
 }: { state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean }) {
   const [session, setSession] = useState<{ preset: Preset; drill: Question[]; baseline: Baseline } | null>(null);
   const [finished, setFinished] = useState(false);
+
+  // Both ways into the recap — the Finish link and rating the last question — unmount
+  // the control that was just used, leaving focus on <body> and the recap unannounced.
+  const recapRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (finished) recapRef.current?.focus();
+  }, [finished]);
 
   const start = (preset: Preset) => {
     const drill = buildSet(preset.composition);
@@ -124,7 +131,7 @@ export function MockSession({
     return (
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
         <BackLink />
-        <h1 tabIndex={-1} className="text-2xl font-semibold">Session recap</h1>
+        <h1 ref={recapRef} tabIndex={-1} className="text-2xl font-semibold">Session recap</h1>
         <p className="mb-1 text-sm text-zinc-600 dark:text-zinc-400">{preset.title} · {rated.length} of {drill.length} rated</p>
         <p className="mb-4 text-sm">{counts.solid} solid · {counts.ok} ok · {counts.weak} weak</p>
         <button
