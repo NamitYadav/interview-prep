@@ -4,7 +4,7 @@ import type { Persisted, Question, RoundId } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { questionsByRound } from '../data';
 import { Practice } from './Practice';
-import { clearBaseline, clearLap, lapKey, readBaseline, writeBaseline, type Baseline } from '../lib/lap';
+import { clearBaseline, clearLap, lapKey, readBaseline, readLap, writeBaseline, type Baseline } from '../lib/lap';
 
 interface Preset { id: string; title: string; blurb: string; composition: Partial<Record<RoundId, number>> }
 
@@ -55,7 +55,14 @@ export function MockSession({
     // this list: re-picking the preset restores the lap, and re-freezing the baseline
     // here against progress that already contains the session's ratings made every one
     // of them look pre-existing — a 28-question session recapping as "3 of 28 rated".
-    const baseline = readBaseline(key) ?? Object.fromEntries(
+    //
+    // A stored baseline is only reused when a lap is ALSO stored for this key: Practice
+    // only writes a lap once something actually happens, so leaving before that (a
+    // reload, or navigating home right away) left a baseline on disk with no lap to
+    // match it. Reusing that orphaned baseline next time this preset opened made any
+    // rating made in between — outside this mock session entirely — look like it
+    // happened during the new session.
+    const baseline = (readLap(key) && readBaseline(key)) || Object.fromEntries(
       drill.flatMap((q) => { const e = state.progress[q.id]; return e ? [[q.id, e.seen] as const] : []; }),
     );
     writeBaseline(key, baseline);
