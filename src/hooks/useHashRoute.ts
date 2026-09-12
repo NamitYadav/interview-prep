@@ -13,8 +13,17 @@ const fromHash = (): Route | null => {
 // flushSync forces the state update to land before the transition snapshots the DOM —
 // without it the callback returns before React re-renders, and nothing animates.
 const withViewTransition = (update: () => void) => {
-  if (typeof document.startViewTransition === 'function') document.startViewTransition(() => flushSync(update));
-  else update();
+  if (typeof document.startViewTransition !== 'function') {
+    update();
+    return;
+  }
+  const transition = document.startViewTransition(() => flushSync(update));
+  // `ready` rejects whenever the transition is aborted — a second navigation starting
+  // before this one settles, or a document that cannot transition — and every hash
+  // navigation was logging that rejection as uncaught. Only the animation is lost:
+  // the update callback still runs, so the route change and the scroll are not at
+  // stake, and there is nothing here to report to the user.
+  transition.ready.catch(() => {});
 };
 
 export function useHashRoute(): Route | null {
