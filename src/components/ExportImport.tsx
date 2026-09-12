@@ -4,10 +4,12 @@ import type { Action } from '../hooks/useAppState';
 import { backupFilename, parseBackup } from '../lib/storage';
 import { clearAllLaps } from '../lib/lap';
 import { clearAllDrafts } from '../lib/drafts';
+import { panelButton, panelDangerButton } from './controlStyles';
 
 export const LAST_EXPORT_KEY = 'interview-prep:last-export';
 
-const btn = 'rounded border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800';
+// Page scale: Export sits beside Home's heading, not inside the settings panel.
+const pageButton = 'rounded border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800';
 
 // Split from its Import/Reset siblings by how often each is reached for: this one has a
 // weekly nudge pointing at it, so it stays on the home screen. The other two are
@@ -28,7 +30,7 @@ export function ExportButton({ state, onExport }: { state: Persisted; onExport?:
     onExport?.();
   };
 
-  return <button type="button" className={btn} onClick={exportJson}>Export</button>;
+  return <button type="button" className={pageButton} onClick={exportJson}>Export</button>;
 }
 
 export function ImportReset({ state, dispatch }: { state: Persisted; dispatch: Dispatch<Action> }) {
@@ -89,7 +91,7 @@ export function ImportReset({ state, dispatch }: { state: Persisted; dispatch: D
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button type="button" className={btn} onClick={() => fileRef.current?.click()}>Import</button>
+      <button type="button" className={panelButton} onClick={() => fileRef.current?.click()}>Import</button>
       <input
         ref={fileRef}
         type="file"
@@ -98,7 +100,7 @@ export function ImportReset({ state, dispatch }: { state: Persisted; dispatch: D
         aria-label="Import backup file"
         onChange={(e) => void importJson(e.target.files?.[0])}
       />
-      <button type="button" className={`${btn} text-red-600 dark:text-red-400`} onClick={reset}>Reset progress</button>
+      <button type="button" className={panelDangerButton} onClick={reset}>Reset progress</button>
       {imported && <p role="status" className="text-sm text-emerald-700 dark:text-emerald-400">Imported {imported}.</p>}
       {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
     </div>
