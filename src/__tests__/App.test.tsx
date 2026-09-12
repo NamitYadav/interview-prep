@@ -133,3 +133,42 @@ describe('cross-tab overwrite warning', () => {
     expect(screen.queryByText(/another tab changed your progress/i)).not.toBeInTheDocument();
   });
 });
+
+// jsdom does not evaluate `@media print`, so these assert the hook rather than the
+// rendered result: the print variant has to be on the chrome and the banners and
+// nowhere else. The old rule was `header { display: none }` in index.css, which also
+// ate Home's own <header> — so the sheet printed with no heading at all.
+describe('what the printed sheet drops', () => {
+  test('the app chrome hides itself, and only itself', () => {
+    const { container } = render(<App />);
+    const [chrome, homeHeading] = Array.from(container.querySelectorAll('header'));
+    expect(chrome).toHaveClass('print:hidden');
+    expect(homeHeading).toBeDefined();
+    expect(homeHeading).not.toHaveClass('print:hidden');
+  });
+
+  test('the stale-tab banner does not print', () => {
+    render(<App />);
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY, newValue: '{}' }));
+    });
+    const banner = screen.getAllByText(/another tab changed your progress/i)
+      .find((el) => !el.classList.contains('sr-only'));
+    expect(banner).toHaveClass('print:hidden');
+  });
+
+  test('the save-failed banner does not print', async () => {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('quota exceeded');
+    });
+    vi.useFakeTimers();
+    try {
+      render(<App />);
+      await act(() => vi.advanceTimersByTimeAsync(500));
+      const banner = screen.getAllByText(/not being saved/i).find((el) => !el.classList.contains('sr-only'));
+      expect(banner).toHaveClass('print:hidden');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

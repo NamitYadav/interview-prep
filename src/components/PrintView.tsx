@@ -37,6 +37,16 @@ export function PrintView({ state }: { state: Persisted }) {
                 return (
                   <li key={q.id} className="break-inside-avoid-page">
                     <p className="font-medium">{q.question}</p>
+                    {/* `scratch` questions use `code` as starter text for the editor, not a
+                        snippet to read — printing an empty stub wastes paper. Snippets the
+                        question is *about* are the whole point, so those print. The border
+                        does the work the background can't: browsers drop background colors
+                        when printing, so without it the snippet reads as prose. */}
+                    {q.code && !q.scratch && (
+                      <pre className="my-1 whitespace-pre-wrap break-words rounded border border-zinc-300 bg-zinc-100 p-2 font-mono text-xs leading-relaxed dark:border-zinc-700 dark:bg-zinc-800">
+                        <code>{q.code}</code>
+                      </pre>
+                    )}
                     {note && <p className="text-sm italic">{note}</p>}
                     <ul className="list-disc pl-5 text-sm text-zinc-600 dark:text-zinc-400">
                       {q.keyPoints.map((k, i) => <li key={i}>{k}</li>)}

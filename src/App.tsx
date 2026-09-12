@@ -64,12 +64,12 @@ export default function App() {
     <>
       <p role="status" className="sr-only">{announcement}</p>
       {saveFailed && (
-        <div className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-900 dark:bg-amber-900 dark:text-amber-100">
+        <div className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-900 print:hidden dark:bg-amber-900 dark:text-amber-100">
           {SAVE_FAILED_MESSAGE}
         </div>
       )}
       {staleTab && !saveFailed && (
-        <div className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-900 dark:bg-amber-900 dark:text-amber-100">
+        <div className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-900 print:hidden dark:bg-amber-900 dark:text-amber-100">
           {STALE_TAB_MESSAGE}{' '}
           <button type="button" onClick={() => window.location.reload()} className="underline underline-offset-2">
             Reload
@@ -79,7 +79,7 @@ export default function App() {
           </button>
         </div>
       )}
-      <header className="mx-auto flex max-w-3xl items-center justify-end gap-2 px-4 pt-4 sm:px-6">
+      <header className="mx-auto flex max-w-3xl items-center justify-end gap-2 px-4 pt-4 print:hidden sm:px-6">
         <button
           type="button"
           onClick={() => setStrictMode(!strictMode)}
