@@ -4,26 +4,26 @@
    the LICENSE file beside them). One face for the whole app, so --font-sans and
    --font-mono resolve to the same family: Tailwind's preflight sets the document
    font from --font-sans, and `font-mono` on code blocks resolves to --font-mono.
-   Only the three weights the utilities use (400/500/600) ship; anything else would
-   be synthesised. ponytail: raw OTF at ~2.3 MB a weight — subset to woff2 with
-   fonttools if load time ever matters. */
+   Only the three weights the utilities use (400/500/600) ship, subset with
+   fonttools to Latin, general punctuation, currency, arrows and math (the Nerd Font
+   icon glyphs are dropped — nothing here renders them) and packed as woff2. */
 @font-face {
   font-family: 'GeistMono Nerd Font';
   font-weight: 400;
   font-display: swap;
-  src: url('/fonts/GeistMonoNerdFont-Regular.otf') format('opentype');
+  src: url('/fonts/GeistMonoNerdFont-Regular.woff2') format('woff2');
 }
 @font-face {
   font-family: 'GeistMono Nerd Font';
   font-weight: 500;
   font-display: swap;
-  src: url('/fonts/GeistMonoNerdFont-Medium.otf') format('opentype');
+  src: url('/fonts/GeistMonoNerdFont-Medium.woff2') format('woff2');
 }
 @font-face {
   font-family: 'GeistMono Nerd Font';
   font-weight: 600;
   font-display: swap;
-  src: url('/fonts/GeistMonoNerdFont-SemiBold.otf') format('opentype');
+  src: url('/fonts/GeistMonoNerdFont-SemiBold.woff2') format('woff2');
 }
 
 @theme {
@@ -73,11 +73,6 @@
   --color-amber-600: #d79921;
   --color-amber-900: #5c4a11;
 }
-
-/* Bumps every rem-based Tailwind size utility (text-xs..text-2xl, spacing, etc.)
-   proportionally in one place — a percentage, not a fixed px, so it still scales
-   on top of a user's own browser font-size setting instead of overriding it. */
-html { font-size: 112.5%; }
 
 :root { color-scheme: dark; }
 [data-theme='light'] { color-scheme: light; }
