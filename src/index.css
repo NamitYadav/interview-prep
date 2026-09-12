@@ -100,9 +100,12 @@ a, button, [role='button'], input, textarea, select {
 
 /* Dark and gruvbox are dark-on-dark, and browsers drop background colors when
    printing by default — without this, the cheat sheet prints light text on white
-   paper. Force plain black-on-white instead of trying to preserve any theme's palette. */
+   paper. Force plain black-on-white instead of trying to preserve any theme's palette.
+   Borders keep a visible gray because printing drops background colors, so a border is
+   all that separates a code block from the prose around it.
+   App chrome and the save/stale banners hide themselves with `print:hidden` at the call
+   site — a bare `header { display: none }` here also ate Home's own heading. */
 @media print {
   html, body { background: #fff !important; }
   body, body * { color: #000 !important; border-color: #999 !important; }
-  header { display: none !important; }
 }
