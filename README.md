@@ -21,7 +21,8 @@ follow-ups. Reveal, rate yourself, and weak questions come back first.
   then unseen, then ok, then solid. Rating a question Weak doesn't just leave it —
   it comes back around roughly 8 questions later, in the same lap, instead of
   waiting for a whole different lap. Filter by category, or switch to the
-  **Browse** tab to search every question, answer and key point at once. A lap
+  **Browse** tab to search every question, answer and key point at once (a Top
+  button appears once you have scrolled a way down it). A lap
   ends once every question (and every requeued one) has been shown, with a
   summary and a way to start another.
 - **By category** — a collapsed panel on every round showing where you stand in each
@@ -103,7 +104,8 @@ progress and haven't backed it up in the last week.
 - **Focus sound**: white, pink or brown noise synthesized in the browser (Web Audio)
   and looped while you drill, with a volume slider, in Settings. No audio files are
   downloaded. The chosen sound and volume are stored per device, outside the backup;
-  playback never starts on its own, so press Play after a reload.
+  playback never starts on its own, so press Play after a reload. While it plays, the
+  Settings button shows a ♪.
 - **Scratch pads** (Build-prompt code, 45-minute design write-ups), lap positions and
   the running design session are working state, stored per device and outside the
   backup: a new machine starts them fresh. Anything worth keeping goes in a note.

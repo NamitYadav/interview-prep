@@ -81,10 +81,12 @@ export function Home({ state }: { state: Persisted }) {
         </p>
       )}
 
-      {/* Seven cards in two columns: the odd one out spans the row rather than sitting alone. */}
+      {/* Seven cards in two columns: the odd one out spans the row rather than sitting alone.
+          In data order that is the last card; sorted by urgency it is the first, so the
+          widest card is the round that needs the most work, not the least. */}
       <ol className="grid gap-3 sm:grid-cols-2">
         {orderedCards.map(({ round, index, stats: s }) => (
-          <li key={round.id} className="flex sm:last:col-span-2">
+          <li key={round.id} className={`flex ${loopDate ? 'sm:first:col-span-2' : 'sm:last:col-span-2'}`}>
             <a href={`#${round.id}`} className={`w-full text-left ${cardLink}`}>
               {!loopDate && <div className="mb-1 text-xs text-zinc-500 dark:text-zinc-400">Round {index + 1}</div>}
               <h2 className="font-medium">{round.title}</h2>

@@ -74,7 +74,9 @@
   --color-amber-900: #5c4a11;
 }
 
-html { font-size: 18px; }
+/* 18px on a default browser, but as a percentage so a reader who raised their own
+   default font size gets it scaled up rather than pinned back to 18. */
+html { font-size: 112.5%; }
 :root { color-scheme: dark; }
 [data-theme='light'] { color-scheme: light; }
 body { @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 antialiased; }
