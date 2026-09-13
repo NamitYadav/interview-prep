@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
@@ -90,6 +90,44 @@ describe('Settings disclosure', () => {
     await userEvent.click(screen.getByText(/^settings$/i));
     expect(screen.getByRole('checkbox', { name: /^shortcuts$/i })).toHaveAccessibleDescription(/space to reveal/i);
     expect(screen.getByRole('checkbox', { name: /^strict mode$/i })).toHaveAccessibleDescription(/target time/i);
+  });
+});
+
+describe('focus sound section', () => {
+  // jsdom has no Web Audio; the section only checks that the constructor exists until Play.
+  beforeEach(() => {
+    localStorage.clear();
+    vi.stubGlobal('AudioContext', class {});
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  test('offers the noise choices and a volume slider disabled while off', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByText(/^settings$/i));
+    const group = screen.getByRole('group', { name: /focus sound/i });
+    expect(group).toBeInTheDocument();
+    for (const name of ['Off', 'White', 'Pink', 'Brown']) {
+      expect(screen.getByRole('button', { name })).toBeInTheDocument();
+    }
+    expect(screen.getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('slider', { name: /volume/i })).toBeDisabled();
+  });
+
+  test('a remembered sound shows selected but silent, with a Play control', async () => {
+    localStorage.setItem('interview-prep:focus-sound', 'pink');
+    render(<Harness />);
+    await userEvent.click(screen.getByText(/^settings$/i));
+    expect(screen.getByRole('button', { name: 'Pink' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /^play$/i })).toBeInTheDocument();
+    expect(screen.getByRole('slider', { name: /volume/i })).toBeEnabled();
+  });
+
+  test('without Web Audio it says so and renders no controls', async () => {
+    vi.stubGlobal('AudioContext', undefined);
+    render(<Harness />);
+    await userEvent.click(screen.getByText(/^settings$/i));
+    expect(screen.getByText(/not supported/i)).toBeInTheDocument();
+    expect(screen.queryByRole('slider', { name: /volume/i })).not.toBeInTheDocument();
   });
 });
 

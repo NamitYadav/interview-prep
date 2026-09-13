@@ -2,8 +2,9 @@ import { useEffect, useId, useRef, type Dispatch } from 'react';
 import type { Persisted } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { ImportReset } from './ExportImport';
-import { pageButton } from './controlStyles';
+import { pageButton, panelButton, panelToggle } from './controlStyles';
 import { ThemeToggle } from './ThemeToggle';
+import { SOUNDS, useFocusSound, type SoundChoice } from '../hooks/useFocusSound';
 
 // One disclosure in place of five permanent controls. The header sits outside the route
 // switch, so everything in it followed the user into every drill; theme alone took three
@@ -76,6 +77,11 @@ export function Settings({
         </section>
 
         <section className="space-y-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+          <p className="text-sm font-medium">Focus sound</p>
+          <FocusSound />
+        </section>
+
+        <section className="space-y-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
           <p className="text-sm font-medium">Your data</p>
           <ImportReset state={state} dispatch={dispatch} />
         </section>
@@ -106,5 +112,62 @@ function Toggle({
         <p id={descriptionId} className="text-xs text-zinc-500 dark:text-zinc-400">{description}</p>
       </div>
     </div>
+  );
+}
+
+const SOUND_LABELS: Record<SoundChoice, string> = { off: 'Off', white: 'White', pink: 'Pink', brown: 'Brown' };
+const CHOICES: readonly SoundChoice[] = ['off', ...SOUNDS];
+
+// Same segmented shape as the theme picker. The remembered sound reads as selected on a
+// fresh load but is silent until Play — browsers block audio before a gesture anyway.
+function FocusSound() {
+  const { supported, sound, volume, playing, setSound, setVolume, play, pause } = useFocusSound();
+  const volumeId = useId();
+
+  if (!supported) {
+    return <p className="text-xs text-zinc-500 dark:text-zinc-400">Not supported in this browser.</p>;
+  }
+
+  return (
+    <>
+      <div role="group" aria-label="Focus sound" className="flex gap-1">
+        {CHOICES.map((c) => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => setSound(c)}
+            aria-pressed={sound === c}
+            className={panelToggle(sound === c)}
+          >
+            {SOUND_LABELS[c]}
+          </button>
+        ))}
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={playing ? pause : play}
+          disabled={sound === 'off'}
+          className={`${panelButton} disabled:opacity-50`}
+        >
+          {playing ? 'Pause' : 'Play'}
+        </button>
+        <label htmlFor={volumeId} className="sr-only">Volume</label>
+        <input
+          id={volumeId}
+          type="range"
+          min={0}
+          max={1}
+          step={0.05}
+          value={volume}
+          disabled={sound === 'off'}
+          onChange={(e) => setVolume(Number(e.target.value))}
+          className="w-full accent-emerald-500"
+        />
+      </div>
+      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+        Steady noise generated in the browser, looped while you drill. Nothing is downloaded.
+      </p>
+    </>
   );
 }
