@@ -22,7 +22,7 @@ export function Browse({ questions, state, dispatch }: { questions: Question[]; 
   );
 
   return (
-    <div className="space-y-3">
+    <div id="browse-top" className="space-y-3">
       <input
         type="search"
         value={search}
@@ -66,6 +66,11 @@ export function Browse({ questions, state, dispatch }: { questions: Question[]; 
           );
         })}
       </ul>
+      {visible.length > 10 && (
+        <a href="#browse-top" className="block text-center text-xs text-zinc-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400">
+          ↑ Back to top
+        </a>
+      )}
     </div>
   );
 }

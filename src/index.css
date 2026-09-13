@@ -74,6 +74,7 @@
   --color-amber-900: #5c4a11;
 }
 
+html { font-size: 18px; }
 :root { color-scheme: dark; }
 [data-theme='light'] { color-scheme: light; }
 body { @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 antialiased; }
@@ -81,7 +82,7 @@ body { @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 antia
 /* Pointer cursor on every clickable control, plus smooth color/border transitions on
    the hover states already defined per-component — one global rule instead of adding
    `cursor-pointer`/`transition-colors` to every button, link, and card individually. */
-button, a, label, select, [role='button'], input[type='checkbox'], input[type='radio'] {
+button, a, label, select, summary, [role='button'], input[type='checkbox'], input[type='radio'] {
   cursor: pointer;
 }
 button:disabled, [role='button'][aria-disabled='true'] {
@@ -101,6 +102,10 @@ a, button, [role='button'], input, textarea, select {
     outline: 2px solid var(--color-emerald-500);
     outline-offset: 2px;
   }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
 }
 
 @keyframes fade-in {
