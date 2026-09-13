@@ -1,6 +1,7 @@
 
 # SDD scratch
 .superpowers/
+graphify-out/
 
 # Build artifacts
 node_modules
