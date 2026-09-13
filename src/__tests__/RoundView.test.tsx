@@ -87,6 +87,18 @@ describe('RoundView', () => {
     expect(within(panel).getAllByRole('listitem')).toHaveLength(hrCategories.length);
   });
 
+  test('clicking a category row filters the drill and moves the select with it', async () => {
+    render(<Harness />);
+    const panel = screen.getByText('By category').closest('details')!;
+    await userEvent.click(within(panel).getByRole('button', { name: new RegExp(`^${firstHrCategory}:`) }));
+
+    expect(category()).toHaveValue(firstHrCategory);
+
+    await userEvent.click(screen.getByRole('tab', { name: /browse/i }));
+    const expected = questionsByRound('hr').filter((q) => q.category === firstHrCategory).length;
+    expect(screen.getByText(new RegExp(`^${expected} of `))).toBeInTheDocument();
+  });
+
   test('switching tabs swaps Practice for Browse', async () => {
     render(<Harness />);
     expect(screen.getByRole('button', { name: /reveal/i })).toBeInTheDocument();
