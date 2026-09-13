@@ -185,6 +185,18 @@ describe('Practice', () => {
     expect(screen.getByRole('button', { name: /back/i })).toBeDisabled();
   });
 
+  // Back used to reveal unconditionally — right for re-rating, wrong after a Skip:
+  // the answer to a question never attempted was suddenly on screen.
+  test('back after a skip returns to the question unrevealed', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /skip/i }));
+    expect(screen.getByText('Second question?')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /back/i }));
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+    expect(screen.queryByText('Answer one.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /reveal/i })).toBeInTheDocument();
+  });
+
   test('keyboard: b goes back', async () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
@@ -449,16 +461,17 @@ describe('lap position survives a reload', () => {
 
 describe('your-answer draft survives Back', () => {
   // The card remounts per question (key={current.id}), so without Practice owning this,
-  // going Back discarded what you had drafted before revealing. Back returns the
-  // question already revealed, so the draft shows in the read-only comparison view
-  // rather than the textarea.
-  test('going back shows what you wrote against the model answer', async () => {
+  // going Back discarded what you had drafted before revealing. A skipped question
+  // comes back unrevealed, so the draft is back in the textarea, still editable.
+  test('going back keeps what you wrote', async () => {
     render(<Harness3 />);
     fireEvent.change(screen.getByLabelText(/your answer/i), { target: { value: 'my first draft' } });
     await userEvent.click(screen.getByRole('button', { name: /skip/i }));
     expect(screen.getByLabelText(/your answer/i)).toHaveValue('');
 
     await userEvent.click(screen.getByRole('button', { name: /back/i }));
+    expect(screen.getByLabelText(/your answer/i)).toHaveValue('my first draft');
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
     expect(screen.getByRole('heading', { name: /your answer/i })).toBeInTheDocument();
     expect(screen.getByText('my first draft')).toBeInTheDocument();
   });
@@ -470,7 +483,7 @@ describe('your-answer draft survives Back', () => {
     fireEvent.change(screen.getByLabelText(/your answer/i), { target: { value: 'draft two' } });
 
     await userEvent.click(screen.getByRole('button', { name: /back/i }));
-    expect(screen.getByText('draft one')).toBeInTheDocument();
+    expect(screen.getByLabelText(/your answer/i)).toHaveValue('draft one');
     expect(screen.queryByText('draft two')).not.toBeInTheDocument();
   });
 

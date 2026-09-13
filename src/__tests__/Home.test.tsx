@@ -85,4 +85,20 @@ describe('Home', () => {
     expect(screen.getByRole('status')).toBeInTheDocument();
     localStorage.removeItem(LAST_EXPORT_KEY);
   });
+
+  // Round 2 and 3's blurbs clipped mid-word on a laptop under line-clamp-2; the grid
+  // row already stretches to its tallest card, so the clamp bought nothing.
+  test('round blurbs are not clamped', () => {
+    render(<Harness initial={EMPTY} />);
+    const blurb = screen.getByText(/staff-scope/);
+    expect(blurb.className).not.toMatch(/line-clamp/);
+  });
+
+  // Seven cards in two columns left the last one alone on its row.
+  test('the last round card spans the full row', () => {
+    render(<Harness initial={EMPTY} />);
+    const cards = within(screen.getByRole('list')).getAllByRole('listitem');
+    expect(cards.length % 2).toBe(1);
+    expect(cards[cards.length - 1]).toHaveClass('sm:last:col-span-2');
+  });
 });

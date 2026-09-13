@@ -93,10 +93,14 @@ a, button, [role='button'], input, textarea, select {
 
 /* The two `outline-none` spots (QuestionCard's heading and revealed-answer
    containers) are programmatic-focus targets, not tab stops, and keep their
-   outline suppressed on purpose; everything else gets a visible ring. */
-:focus-visible {
-  outline: 2px solid var(--color-emerald-500);
-  outline-offset: 2px;
+   outline suppressed on purpose; everything else gets a visible ring. In
+   `@layer base` so those utilities can win: Tailwind emits utilities in a layer,
+   and an unlayered rule beats any layered one regardless of specificity. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-emerald-500);
+    outline-offset: 2px;
+  }
 }
 
 @keyframes fade-in {

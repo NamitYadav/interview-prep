@@ -7,10 +7,11 @@ import { ExportButton, useLastExport } from './ExportImport';
 import { ProgressBar, statsCaption } from './ProgressBar';
 
 // Every card in a grid shares this shape so a short blurb never leaves the card
-// shorter than its neighbors: min-h reserves two lines' worth of space up front,
-// line-clamp caps it there if a future blurb runs longer.
+// shorter than its neighbors: min-h reserves two lines' worth of space up front, and
+// the grid row stretches to its tallest card if one runs longer (no clamp — it cut
+// two blurbs mid-word on a laptop).
 const cardLink = 'flex flex-col rounded-lg border border-zinc-200 bg-white p-4 hover:border-emerald-500 dark:border-zinc-800 dark:bg-zinc-900';
-const cardBlurb = 'line-clamp-2 min-h-10 text-sm text-zinc-600 dark:text-zinc-400';
+const cardBlurb = 'min-h-10 text-sm text-zinc-600 dark:text-zinc-400';
 
 // Drills are utilities, not the sequence: a quiet list beside the round cards rather
 // than six more cards that look like rounds.
@@ -80,9 +81,10 @@ export function Home({ state }: { state: Persisted }) {
         </p>
       )}
 
+      {/* Seven cards in two columns: the odd one out spans the row rather than sitting alone. */}
       <ol className="grid gap-3 sm:grid-cols-2">
         {orderedCards.map(({ round, index, stats: s }) => (
-          <li key={round.id} className="flex">
+          <li key={round.id} className="flex sm:last:col-span-2">
             <a href={`#${round.id}`} className={`w-full text-left ${cardLink}`}>
               {!loopDate && <div className="mb-1 text-xs text-zinc-500 dark:text-zinc-400">Round {index + 1}</div>}
               <h2 className="font-medium">{round.title}</h2>

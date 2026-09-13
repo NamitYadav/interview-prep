@@ -1,7 +1,7 @@
 # Interview Prep
 
 Interactive mock-interview drill for staff frontend engineer loops in Berlin / EU.
-Seven rounds, 303 curated questions with model answers, key points and likely
+Seven rounds, 295 curated questions with model answers, key points and likely
 follow-ups. Reveal, rate yourself, and weak questions come back first.
 
 **Live:** https://namityadav.github.io/interview-prep/
@@ -94,6 +94,9 @@ progress and haven't backed it up in the last week.
 - **Strict mode**: switchable from the top of any page. When on, running out of a
   round's target time auto-reveals the answer instead of waiting for you to click
   Reveal. Stored per device, outside the backup.
+- **Scratch pads** (Build-prompt code, 45-minute design write-ups), lap positions and
+  the running design session are working state, stored per device and outside the
+  backup: a new machine starts them fresh. Anything worth keeping goes in a note.
 
 ## Adding questions
 Edit `src/data/<round>.ts`. Ids are `<round>-<nnn>`. `npm test` validates shape and uniqueness.
@@ -110,7 +113,7 @@ npm run build      # tsc + vite build
 Vite · React 19 · TypeScript · Tailwind CSS 4 · GeistMono Nerd Font (self-hosted from
 public/fonts) · Vitest · GitHub Pages
 
-One JS bundle, ~280KB gzipped — most of it is the question bank's own text, not
+One JS bundle, ~300KB gzipped — most of it is the question bank's own text, not
 code. Measured, not optimized: code-splitting would trim the initial load, but this
 is a single-user app run from a laptop, so it isn't worth the added complexity.
 Skipped for the same reason: a CSP `<meta>` tag (the inline pre-paint theme script
