@@ -94,6 +94,10 @@ progress and haven't backed it up in the last week.
 - **Strict mode**: switchable from the top of any page. When on, running out of a
   round's target time auto-reveals the answer instead of waiting for you to click
   Reveal. Stored per device, outside the backup.
+- **Focus sound**: white, pink or brown noise synthesized in the browser (Web Audio)
+  and looped while you drill, with a volume slider, in Settings. No audio files are
+  downloaded. The chosen sound and volume are stored per device, outside the backup;
+  playback never starts on its own, so press Play after a reload.
 - **Scratch pads** (Build-prompt code, 45-minute design write-ups), lap positions and
   the running design session are working state, stored per device and outside the
   backup: a new machine starts them fresh. Anything worth keeping goes in a note.
