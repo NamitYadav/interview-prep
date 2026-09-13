@@ -1,4 +1,4 @@
-import { useMemo, useState, type Dispatch } from 'react';
+import { useEffect, useMemo, useState, type Dispatch } from 'react';
 import type { Persisted, Question } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { QuestionCard } from './QuestionCard';
@@ -8,6 +8,17 @@ const RATING_LABEL = { 1: 'Weak', 2: 'OK', 3: 'Solid' } as const;
 export function Browse({ questions, state, dispatch }: { questions: Question[]; state: Persisted; dispatch: Dispatch<Action> }) {
   const [search, setSearch] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
+  const [showTop, setShowTop] = useState(false);
+
+  // Fixed button, not a `#hash` link: this app routes on location.hash
+  // (useHashRoute), so a same-page anchor would fire a hashchange and navigate
+  // away from Browse instead of just scrolling.
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 400);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   // Recomputed only when the question set itself changes (a round or category
   // switch), not per keystroke — the filter below is then a plain lookup.
@@ -22,7 +33,7 @@ export function Browse({ questions, state, dispatch }: { questions: Question[]; 
   );
 
   return (
-    <div id="browse-top" className="space-y-3">
+    <div className="space-y-3">
       <input
         type="search"
         value={search}
@@ -66,10 +77,18 @@ export function Browse({ questions, state, dispatch }: { questions: Question[]; 
           );
         })}
       </ul>
-      {visible.length > 10 && (
-        <a href="#browse-top" className="block text-center text-xs text-zinc-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400">
-          ↑ Back to top
-        </a>
+      {showTop && (
+        <button
+          type="button"
+          onClick={() => {
+            const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+          }}
+          aria-label="Back to top"
+          className="fixed right-4 bottom-4 rounded-full border border-zinc-300 bg-white px-3 py-2 text-xs shadow-lg hover:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900"
+        >
+          ↑ Top
+        </button>
       )}
     </div>
   );
