@@ -27,6 +27,16 @@ describe('RoundView', () => {
 
   const category = () => screen.getByRole('combobox', { name: /category/i });
 
+  // At 375px the third tab of the design round wrapped to two lines and the select
+  // was squeezed to "All ca". jsdom has no layout, so this pins the classes that let
+  // the select drop to its own line instead of sharing the tabs' row.
+  test('the tabs and the category filter can wrap onto two lines', () => {
+    render(<Harness />);
+    const row = screen.getByRole('tablist').parentElement!;
+    expect(row).toHaveClass('flex-wrap');
+    expect(category().className).not.toMatch(/max-w-/);
+  });
+
   test('category filter narrows the Browse list to that category only', async () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('tab', { name: /browse/i }));

@@ -8,9 +8,11 @@ import { useEffect, useRef, useState } from 'react';
 // timeout from time-remaining-until-that-same-deadline, never a fresh full
 // duration.
 export function useQuestionTimer({
-  targetSeconds, strictMode, revealed, onAutoReveal, autoReveal = true,
+  targetSeconds, strictMode, revealed, onAutoReveal, autoReveal = true, startedAt,
 }: {
   targetSeconds: number | undefined; strictMode: boolean; revealed: boolean; onAutoReveal: () => void;
+  // When the clock began, if it did not begin at mount — a resumed design session.
+  startedAt?: number;
   // Set false for a visible countdown that never forces anything (DesignSession's
   // 45-minute clock) — the interval still ticks `remainingMs`, the timeout just
   // never gets scheduled.
@@ -21,8 +23,8 @@ export function useQuestionTimer({
   // timing is equivalent in practice.
   const mountedAt = useRef<number | null>(null);
   useEffect(() => {
-    mountedAt.current = Date.now();
-  }, []);
+    mountedAt.current = startedAt ?? Date.now();
+  }, [startedAt]);
 
   const [elapsedMs, setElapsedMs] = useState<number | null>(null);
   const [autoRevealed, setAutoRevealed] = useState(false);

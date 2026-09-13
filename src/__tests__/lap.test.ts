@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 import type { Question } from '../types';
-import { clearLap, lapKey, readLap, writeLap } from '../lib/lap';
+import { MAX_LAPS, clearLap, lapKey, readLap, writeLap } from '../lib/lap';
 
 beforeEach(() => localStorage.clear());
 
@@ -70,12 +70,12 @@ describe('lap', () => {
   });
 
   test('evicts the oldest laps past the cap', () => {
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < MAX_LAPS + 8; i++) {
       writeLap({ key: `k${i}`, history: ['a'], historyPos: 0, requeued: [], step: 0 }, i);
     }
-    expect(readLap('k19')).toBeDefined();
+    expect(readLap(`k${MAX_LAPS + 7}`)).toBeDefined();
     expect(readLap('k0')).toBeUndefined();
     const stored: unknown = JSON.parse(localStorage.getItem('interview-prep:laps')!);
-    expect(Object.keys(stored as object).length).toBe(12);
+    expect(Object.keys(stored as object).length).toBe(MAX_LAPS);
   });
 });
