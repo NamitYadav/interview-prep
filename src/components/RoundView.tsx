@@ -66,7 +66,7 @@ export function RoundView({
       <ProgressBar stats={stats} label={`${round.title} progress`} />
       <p className="mb-4 mt-1 text-xs text-zinc-500 dark:text-zinc-400">{statsCaption(stats)}</p>
 
-      <CategoryStrength questions={all} progress={state.progress} />
+      <CategoryStrength questions={all} progress={state.progress} selected={selected} onSelect={setSelected} />
 
       {/* A native select in place of a 17-chip cloud: the filter used to push the
           question itself below the fold on a laptop and most of a screen down on a phone. */}
