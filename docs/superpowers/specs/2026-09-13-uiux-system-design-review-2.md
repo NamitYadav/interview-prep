@@ -8,7 +8,11 @@ pointer cursor / back-to-top (48), back-to-top fix (49). Plus a re-sweep of the 
 UI half driven live in the browser: desktop, 375×812 and 375×667, dark / Gruvbox /
 Light, keyboard shortcuts. System-design half judged against the same constraints as
 before: single-user, static, localStorage only, one bundle, GitHub Pages.
-**Deliverable:** Report only. Nothing below has been changed.
+**Deliverable:** Report, then fixes in the same PR. **Status:** everything below is
+fixed in this branch except U10 (needs a real iPhone to confirm). Re-measured after
+the fixes at 375×667: the Settings panel scrolls inside itself and Reset is reachable
+(627px of 667); Reveal spans the first line, Probe and Record split the second at
+146px each; the category chip truncates at 22px tall; the summary target is 27px.
 
 ## Verdict
 

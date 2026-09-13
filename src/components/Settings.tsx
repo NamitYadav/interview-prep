@@ -26,6 +26,9 @@ export function Settings({
   setShortcuts: (v: boolean) => void;
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
+  // Owned here, not in FocusSound: the AudioContext must outlive the panel being closed,
+  // and the summary needs `playing` to show that something is still running.
+  const sound = useFocusSound();
 
   // The one thing <details> has no native answer for: it stays open over the page while
   // you click around behind it. Escape hands focus back to the summary rather than
@@ -50,11 +53,15 @@ export function Settings({
   }, []);
 
   return (
+    // max-h + overflow: the header is sticky, so a panel taller than the viewport (it is
+    // ~680px on a phone) could never be scrolled to its bottom — Import and Reset were
+    // unreachable at 375×667. Capped to the viewport, it scrolls inside itself instead.
     <details ref={ref} className="relative">
       <summary className={`${pageButton} inline-block cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
         Settings
+        {sound.playing && <><span aria-hidden="true"> ♪</span><span className="sr-only">, focus sound playing</span></>}
       </summary>
-      <div className="absolute right-0 z-10 mt-2 w-72 space-y-4 rounded-lg border border-zinc-200 bg-white p-4 text-left shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="absolute right-0 z-10 mt-2 max-h-[calc(100dvh-4rem)] w-72 space-y-4 overflow-y-auto rounded-lg border border-zinc-200 bg-white p-4 text-left shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
         <section>
           <p className="mb-2 text-sm font-medium">Theme</p>
           <ThemeToggle />
@@ -78,7 +85,7 @@ export function Settings({
 
         <section className="space-y-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
           <p className="text-sm font-medium">Focus sound</p>
-          <FocusSound />
+          <FocusSound {...sound} />
         </section>
 
         <section className="space-y-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
@@ -120,8 +127,7 @@ const CHOICES: readonly SoundChoice[] = ['off', ...SOUNDS];
 
 // Same segmented shape as the theme picker. The remembered sound reads as selected on a
 // fresh load but is silent until Play — browsers block audio before a gesture anyway.
-function FocusSound() {
-  const { supported, sound, volume, playing, setSound, setVolume, play, pause } = useFocusSound();
+function FocusSound({ supported, sound, volume, playing, setSound, setVolume, play, pause }: ReturnType<typeof useFocusSound>) {
   const volumeId = useId();
 
   if (!supported) {

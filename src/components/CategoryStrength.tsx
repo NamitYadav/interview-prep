@@ -2,13 +2,14 @@ import { useMemo } from 'react';
 import type { Progress, Question } from '../types';
 import { categoryVerdict, roundStats, type Verdict } from '../lib/queue';
 import { ProgressBar } from './ProgressBar';
+import { ratingText } from './controlStyles';
 
-// The same red/amber/emerald the rating buttons and the stacked bar already use, so the
-// word and the bar beside it read as one statement.
+// The rating buttons' own colours, imported rather than re-typed, so the word and the bar
+// beside it read as one statement and a contrast fix lands in one place.
 const VERDICT: Record<Verdict, { label: string; className: string }> = {
-  weak: { label: 'Weak', className: 'text-red-600 dark:text-red-400' },
-  ok: { label: 'OK', className: 'text-amber-600 dark:text-amber-400' },
-  solid: { label: 'Solid', className: 'text-emerald-600 dark:text-emerald-400' },
+  weak: { label: 'Weak', className: ratingText.weak },
+  ok: { label: 'OK', className: ratingText.ok },
+  solid: { label: 'Solid', className: ratingText.solid },
   unrated: { label: 'Unrated', className: 'text-zinc-500 dark:text-zinc-400' },
 };
 
@@ -50,7 +51,7 @@ export function CategoryStrength({
 
   return (
     <details className="mb-4">
-      <summary className="text-xs text-zinc-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400">
+      <summary className="py-1 text-xs text-zinc-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400">
         By category
       </summary>
       <ul className="mt-2 space-y-1">

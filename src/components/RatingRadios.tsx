@@ -1,10 +1,11 @@
 import { useRef, useState } from 'react';
 import type { Rating } from '../types';
+import { ratingText } from './controlStyles';
 
 export const RATINGS: { value: Rating; label: string; className: string }[] = [
-  { value: 1, label: 'Weak', className: 'border-red-500 text-red-600 dark:text-red-400' },
-  { value: 2, label: 'OK', className: 'border-amber-500 text-amber-600 dark:text-amber-400' },
-  { value: 3, label: 'Solid', className: 'border-emerald-500 text-emerald-600 dark:text-emerald-400' },
+  { value: 1, label: 'Weak', className: `border-red-500 ${ratingText.weak}` },
+  { value: 2, label: 'OK', className: `border-amber-500 ${ratingText.ok}` },
+  { value: 3, label: 'Solid', className: `border-emerald-500 ${ratingText.solid}` },
 ];
 
 // The APG radio pattern with ONE tab stop for the group (the checked radio, or the

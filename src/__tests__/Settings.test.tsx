@@ -122,6 +122,35 @@ describe('focus sound section', () => {
     expect(screen.getByRole('slider', { name: /volume/i })).toBeEnabled();
   });
 
+  // The AudioContext lives in a hook owned by Settings, above the <details> body. If it
+  // ever moves back inside the panel (or the panel starts rendering its body only while
+  // open), closing Settings would silently stop the sound — this pins the contract.
+  test('keeps playing after the panel closes, and the trigger says so', async () => {
+    const gain = { gain: { value: 1 }, connect() {} };
+    const source = { buffer: null, loop: false, connect() {}, start() {}, stop() {}, disconnect() {} };
+    vi.stubGlobal('AudioContext', class {
+      sampleRate = 44_100;
+      destination = {};
+      createGain() { return gain; }
+      createBuffer(_ch: number, length: number) { return { getChannelData: () => new Float32Array(length) }; }
+      createBufferSource() { return source; }
+      resume() { return Promise.resolve(); }
+      suspend() { return Promise.resolve(); }
+      close() { return Promise.resolve(); }
+    });
+    const { container } = render(<Harness />);
+    const summary = container.querySelector('summary')!;
+    await userEvent.click(summary);
+    await userEvent.click(screen.getByRole('button', { name: 'White' }));
+    expect(screen.getByRole('button', { name: /^pause$/i })).toBeInTheDocument();
+
+    await userEvent.keyboard('{Escape}');
+    expect(panel(container).open).toBe(false);
+    expect(screen.getByRole('button', { name: /^pause$/i })).toBeInTheDocument();
+    expect(summary).toHaveTextContent(/♪/);
+    expect(summary).toHaveTextContent(/focus sound playing/i);
+  });
+
   test('without Web Audio it says so and renders no controls', async () => {
     vi.stubGlobal('AudioContext', undefined);
     render(<Harness />);

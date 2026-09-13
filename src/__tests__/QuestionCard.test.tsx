@@ -68,11 +68,14 @@ describe('QuestionCard scratch editor (Build prompts)', () => {
 });
 
 describe('QuestionCard action row', () => {
-  // At 375px Reveal and Probe shared a line and Record wrapped alone, half-width. No
-  // layout in jsdom, so this pins the class that lets the buttons fill their line.
-  test('buttons fill their line on narrow screens', () => {
+  // At 375px three equal thirds broke "Probe me (1/2)" onto three lines. No layout in
+  // jsdom, so this pins the classes: a two-column grid on phones with Reveal spanning
+  // the first line, a plain flex row from sm up.
+  test('Reveal takes the first line on narrow screens, the others split the second', () => {
     renderCard({ ...base, followUps: ['One'] });
-    expect(screen.getByRole('button', { name: /reveal/i }).parentElement).toHaveClass('max-sm:*:flex-1');
+    const reveal = screen.getByRole('button', { name: /reveal/i });
+    expect(reveal.parentElement).toHaveClass('grid', 'grid-cols-2', 'sm:flex');
+    expect(reveal).toHaveClass('max-sm:col-span-2');
   });
 });
 
@@ -262,18 +265,18 @@ describe('QuestionCard follow-ups (pre-reveal, "Probe me")', () => {
     renderCard(withFollowUps, false);
     expect(screen.queryByText('First follow-up?')).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: /probe me \(1\/2\)/i }));
+    await userEvent.click(screen.getByRole('button', { name: /probe \(1\/2\)/i }));
     expect(screen.getByText('First follow-up?')).toBeInTheDocument();
     expect(screen.queryByText('Second follow-up?')).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: /probe me \(2\/2\)/i }));
+    await userEvent.click(screen.getByRole('button', { name: /probe \(2\/2\)/i }));
     expect(screen.getByText('Second follow-up?')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /probe me/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /probe/i })).not.toBeInTheDocument();
   });
 
   test('no probe button pre-reveal when the question has no follow-ups', () => {
     renderCard(base, false);
-    expect(screen.queryByRole('button', { name: /probe me/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /probe/i })).not.toBeInTheDocument();
   });
 });
 

@@ -43,7 +43,7 @@ export function Browse({ questions, state, dispatch }: { questions: Question[]; 
         className="w-full rounded border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
       />
       <p className="text-xs text-zinc-500 dark:text-zinc-400">{visible.length} of {questions.length}</p>
-      <ul className="space-y-2">
+      <ul className="space-y-2 pb-16">
         {visible.map((q) => {
           const rating = state.progress[q.id]?.rating;
           const open = openId === q.id;

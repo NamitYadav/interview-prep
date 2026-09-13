@@ -1,4 +1,6 @@
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
+
+afterEach(() => localStorage.clear());
 import { render, screen, within, fireEvent } from '@testing-library/react';
 import { useReducer } from 'react';
 import type { Persisted, Progress } from '../types';
@@ -6,6 +8,7 @@ import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { questions, questionsByRound } from '../data';
 import { LAST_EXPORT_KEY } from '../components/ExportImport';
+import { LOOP_DATE_KEY } from '../hooks/useLoopDate';
 import { Home } from '../components/Home';
 
 function Harness({ initial }: { initial: Persisted }) {
@@ -100,5 +103,14 @@ describe('Home', () => {
     const cards = within(screen.getByRole('list')).getAllByRole('listitem');
     expect(cards.length % 2).toBe(1);
     expect(cards[cards.length - 1]).toHaveClass('sm:last:col-span-2');
+  });
+
+  // Sorted by urgency the wide card should be the most urgent round, not the least.
+  test('with a loop date the first round card spans the full row instead', () => {
+    localStorage.setItem(LOOP_DATE_KEY, '2030-01-01');
+    render(<Harness initial={EMPTY} />);
+    const cards = within(screen.getByRole('list')).getAllByRole('listitem');
+    expect(cards[0]).toHaveClass('sm:first:col-span-2');
+    expect(cards[cards.length - 1]).not.toHaveClass('sm:last:col-span-2');
   });
 });
