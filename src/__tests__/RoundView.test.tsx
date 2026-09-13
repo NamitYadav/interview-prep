@@ -76,6 +76,17 @@ describe('RoundView', () => {
     expect(screen.getByText(new RegExp(`^${expected} of `))).toBeInTheDocument();
   });
 
+  test('the by-category panel covers every category in the round, filter or not', async () => {
+    render(<Harness />);
+    const panel = screen.getByText('By category').closest('details')!;
+    for (const c of hrCategories) expect(within(panel).getByText(c)).toBeInTheDocument();
+
+    // Filtering the drill must not shrink the overview — it is what you consult to
+    // decide which category to filter to next.
+    await userEvent.selectOptions(category(), firstHrCategory);
+    expect(within(panel).getAllByRole('listitem')).toHaveLength(hrCategories.length);
+  });
+
   test('switching tabs swaps Practice for Browse', async () => {
     render(<Harness />);
     expect(screen.getByRole('button', { name: /reveal/i })).toBeInTheDocument();

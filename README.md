@@ -24,6 +24,11 @@ follow-ups. Reveal, rate yourself, and weak questions come back first.
   **Browse** tab to search every question, answer and key point at once. A lap
   ends once every question (and every requeued one) has been shown, with a
   summary and a way to start another.
+- **By category** — a collapsed panel on every round showing where you stand in each
+  of its categories: a bar of the weak/ok/solid split and a one-word verdict (Weak,
+  OK, Solid, or Unrated), averaged over the questions you have actually rated. A
+  Solid that has gone stale counts as OK here, same as everywhere else — so the panel
+  tells you which category to filter to next.
 - **Weak drill** — everything you rated Weak, across all seven rounds, in one queue.
   The set is frozen on entry; re-enter it to rebuild.
 - **Mock session** — a cross-round set in one sitting, in round order, like a real
