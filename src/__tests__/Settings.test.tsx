@@ -142,6 +142,13 @@ describe('what the header and home screen carry now', () => {
     expect(screen.getByText(/^settings$/i)).toBeInTheDocument();
   });
 
+  // Settings hold the drill toggles; a long question card scrolled the only way to
+  // reach them off the top of the page.
+  test('the header stays on screen while the page scrolls', () => {
+    const { container } = render(<App />);
+    expect(container.querySelector('header')).toHaveClass('sticky', 'top-0');
+  });
+
   // Export moved into the panel with Import and Reset; Home only offers it inside the
   // backup nudge, which needs progress to show — so a fresh Home carries no data controls.
   test('home carries no data controls of its own', () => {
