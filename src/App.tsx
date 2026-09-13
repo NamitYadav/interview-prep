@@ -81,7 +81,7 @@ export default function App() {
           </button>
         </div>
       )}
-      <header className="mx-auto flex max-w-3xl items-center justify-end px-4 pt-4 print:hidden sm:px-6">
+      <header className="sticky top-0 z-20 mx-auto flex max-w-3xl items-center justify-end bg-zinc-50 px-4 py-2 print:hidden sm:px-6 dark:bg-zinc-950">
         <Settings
           state={state}
           dispatch={dispatch}
