@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { Progress, Question } from '../types';
-import { SOLID_DECAY_MS, nextQuestion, orderQueue, roundStats } from '../lib/queue';
+import { SOLID_DECAY_MS, categoryVerdict, nextQuestion, orderQueue, roundStats } from '../lib/queue';
 
 const q = (id: string): Question => ({
   id, round: 'hm', category: 'X', question: id, answer: ['a'], keyPoints: ['k'],
@@ -88,5 +88,34 @@ describe('roundStats', () => {
     const progress: Progress = { a: { rating: 3, seen: 1, lastSeen: 0 } };
     expect(roundStats(qs, progress, 1)).toMatchObject({ solid: 1, ok: 0 });
     expect(roundStats(qs, progress, SOLID_DECAY_MS + 1)).toMatchObject({ solid: 0, ok: 1 });
+  });
+});
+
+describe('categoryVerdict', () => {
+  const stats = (weak: number, ok: number, solid: number, unrated = 0) =>
+    ({ total: weak + ok + solid + unrated, weak, ok, solid, unrated });
+
+  test('nothing rated reads unrated, however many questions are waiting', () => {
+    expect(categoryVerdict(stats(0, 0, 0, 12))).toBe('unrated');
+    expect(categoryVerdict(stats(0, 0, 0, 0))).toBe('unrated');
+  });
+
+  test('unrated questions do not drag the verdict down', () => {
+    // One solid and nineteen untouched is still what you know so far: solid.
+    expect(categoryVerdict(stats(0, 0, 1, 19))).toBe('solid');
+  });
+
+  test('the thresholds sit either side of ok', () => {
+    // mean 1.6 -> weak; 1.8 -> ok; 2.4 -> ok; 2.6 -> solid.
+    expect(categoryVerdict(stats(4, 6, 0))).toBe('weak');
+    expect(categoryVerdict(stats(2, 8, 0))).toBe('ok');
+    expect(categoryVerdict(stats(0, 6, 4))).toBe('ok');
+    expect(categoryVerdict(stats(0, 4, 6))).toBe('solid');
+  });
+
+  test('all of one rating reads as that rating', () => {
+    expect(categoryVerdict(stats(5, 0, 0))).toBe('weak');
+    expect(categoryVerdict(stats(0, 5, 0))).toBe('ok');
+    expect(categoryVerdict(stats(0, 0, 5))).toBe('solid');
   });
 });

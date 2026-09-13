@@ -8,6 +8,8 @@ import { Browse } from './Browse';
 import { Practice } from './Practice';
 import { ProgressBar, statsCaption } from './ProgressBar';
 import { DesignSession } from './DesignSession';
+import { CategoryStrength } from './CategoryStrength';
+import { pageButton } from './controlStyles';
 
 type Tab = 'practice' | 'browse' | 'design-prompt';
 const TAB_LABEL: Record<Tab, string> = { practice: 'Practice', browse: 'Browse', 'design-prompt': '45-min prompt' };
@@ -64,6 +66,8 @@ export function RoundView({
       <ProgressBar stats={stats} label={`${round.title} progress`} />
       <p className="mb-4 mt-1 text-xs text-zinc-500 dark:text-zinc-400">{statsCaption(stats)}</p>
 
+      <CategoryStrength questions={all} progress={state.progress} />
+
       {/* A native select in place of a 17-chip cloud: the filter used to push the
           question itself below the fold on a laptop and most of a screen down on a phone. */}
       <div className="mb-4 flex flex-wrap items-end justify-between gap-x-4 border-b border-zinc-200 dark:border-zinc-800">
@@ -97,15 +101,31 @@ export function RoundView({
           </button>
         ))}
       </div>
-      <select
-        aria-label="Category"
-        value={selected ?? ''}
-        onChange={(e) => setSelected(e.target.value || null)}
-        className="mb-2 rounded border border-zinc-300 bg-transparent px-2 py-1 text-sm dark:border-zinc-700"
-      >
-        <option value="">All categories</option>
-        {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-      </select>
+      {/* The only native-chrome control left in the app: a bare <select> painted its own
+          light box and OS arrow over a dark theme. `appearance-none` plus the same
+          classes the Settings trigger uses puts it back in the app's own scale, and the
+          chevron is drawn here so it inherits the text colour. The element stays a real
+          <select> — the mobile picker and the keyboard behaviour are not worth rebuilding. */}
+      <div className="relative mb-2">
+        <select
+          aria-label="Category"
+          value={selected ?? ''}
+          onChange={(e) => setSelected(e.target.value || null)}
+          className={`${pageButton} appearance-none pr-8`}
+        >
+          {/* The popup list is drawn by the OS, so only the option's own background
+              follows the theme — without this it renders near-white in dark mode. */}
+          <option value="" className="dark:bg-zinc-900">All categories</option>
+          {categories.map((c) => <option key={c} value={c} className="dark:bg-zinc-900">{c}</option>)}
+        </select>
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 10 6"
+          className="pointer-events-none absolute right-3 top-1/2 h-1.5 w-2.5 -translate-y-1/2 fill-none stroke-current stroke-2 opacity-60"
+        >
+          <path d="M1 1l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
       </div>
 
       <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>

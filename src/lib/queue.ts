@@ -62,3 +62,20 @@ export function roundStats(questions: Question[], progress: Progress, now: numbe
   }
   return stats;
 }
+
+export type Verdict = 'weak' | 'ok' | 'solid' | 'unrated';
+
+// One word for a whole category, derived from the same RoundStats the bar draws so the
+// two can never disagree. Mean of the ratings you have actually given (weak 1, ok 2,
+// solid 3); unrated questions are left out rather than counted as zero — a category you
+// have barely touched should report what you know about it so far, not be dragged to
+// Weak by its own unseen half. The thresholds sit either side of OK: a category averaging
+// below halfway between weak and ok reads Weak, one averaging past halfway between ok and
+// solid reads Solid.
+export function categoryVerdict(stats: RoundStats): Verdict {
+  const rated = stats.weak + stats.ok + stats.solid;
+  if (rated === 0) return 'unrated';
+  const mean = (stats.weak + stats.ok * 2 + stats.solid * 3) / rated;
+  if (mean < 1.7) return 'weak';
+  return mean < 2.5 ? 'ok' : 'solid';
+}
