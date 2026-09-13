@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { ROUND_IDS, STORY_CATEGORIES, questions, rounds } from '../data';
 import { MAX_DRAFTS } from '../lib/drafts';
+import { MAX_LAPS } from '../lib/lap';
 import type { RoundId } from '../types';
 
 const ID_RE = /^(hr|hm|coding|design|case|debrief|hoe)-\d{3}$/;
@@ -92,6 +93,15 @@ describe('question bank', () => {
     const scratch = questions.filter((q) => q.scratch).length;
     expect(scratch).toBeGreaterThan(0);
     expect(MAX_DRAFTS).toBeGreaterThan(scratch * 2);
+  });
+
+  // Every round's Practice tab and every category chip is its own lap, plus the Weak
+  // drill and the two mock presets. A cap below that count evicts silently — and a
+  // lap carries the pending weak requeues, so "comes back in ~8" was what got lost.
+  test('the lap cap holds one lap per possible question set', () => {
+    const perRound = rounds.map((r) => 1 + new Set(questions.filter((q) => q.round === r.id).map((q) => q.category)).size);
+    const sets = perRound.reduce((a, b) => a + b, 0) + 1 + 2;
+    expect(MAX_LAPS).toBeGreaterThanOrEqual(sets);
   });
 
   test('every STORY_CATEGORIES entry matches at least one real question category', () => {

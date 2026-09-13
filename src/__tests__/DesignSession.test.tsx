@@ -8,6 +8,10 @@ import { reducer } from '../hooks/useAppState';
 import { questionsByRound } from '../data';
 import { DesignSession } from '../components/DesignSession';
 
+// Sessions and drafts persist in localStorage; without this a phase ticked in one
+// test comes back checked in the next.
+beforeEach(() => localStorage.clear());
+
 function Harness() {
   const [state, dispatch] = useReducer(reducer, EMPTY);
   return <DesignSession state={state} dispatch={dispatch} />;
@@ -175,5 +179,57 @@ describe('design scratch survives a reload across attempts', () => {
     render(<ReloadableHarness />);
     expect(screen.getByText(design1!.question)).toBeInTheDocument(); // back to attempt 0: design-001
     expect(screen.getByLabelText(/scratch/i)).toHaveValue('v2 overwrite');
+  });
+
+  // Clock and phase ticks lived in component state: a look at the Browse tab, or a
+  // reload, remounted the prompt at 45:00 with nothing ticked — and after a reload
+  // the picker fell back to the weakest prompt rather than the one in progress.
+  test('a reload resumes the same prompt with its ticked phases and elapsed clock', () => {
+    persisted = EMPTY;
+    vi.useFakeTimers();
+    try {
+      const first = render(<ReloadableHarness />);
+      const [design1, design2] = questionsByRound('design');
+      expect(screen.getByText(design1!.question)).toBeInTheDocument();
+      // Move to design-002 while design-001 stays the weakest, so a picker that
+      // forgot the session would land back on design-001 after the reload.
+      fireEvent.click(screen.getByRole('button', { name: /finish/i }));
+      fireEvent.click(screen.getByRole('radio', { name: /weak/i }));
+      fireEvent.click(screen.getByRole('button', { name: /another prompt/i }));
+      expect(screen.getByText(design2!.question)).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('checkbox', { name: /requirements/i }));
+      act(() => vi.advanceTimersByTime(10 * 60 * 1000));
+      expect(screen.getByRole('timer')).toHaveTextContent(/time left: 35:00/i);
+      first.unmount();
+
+      render(<ReloadableHarness />);
+      expect(screen.getByText(design2!.question)).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: /requirements/i })).toBeChecked();
+      act(() => vi.advanceTimersByTime(250));
+      expect(screen.getByRole('timer')).toHaveTextContent(/time left: 35:00/i);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('Finish ends the session, so a reload afterwards starts fresh', () => {
+    persisted = EMPTY;
+    vi.useFakeTimers();
+    try {
+      const first = render(<ReloadableHarness />);
+      fireEvent.click(screen.getByRole('checkbox', { name: /requirements/i }));
+      act(() => vi.advanceTimersByTime(10 * 60 * 1000));
+      fireEvent.click(screen.getByRole('button', { name: /finish/i }));
+      first.unmount();
+
+      render(<ReloadableHarness />);
+      expect(screen.getByRole('button', { name: /finish/i })).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: /requirements/i })).not.toBeChecked();
+      act(() => vi.advanceTimersByTime(250));
+      expect(screen.getByRole('timer')).toHaveTextContent(/time left: 45:00/i);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

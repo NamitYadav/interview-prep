@@ -66,7 +66,7 @@ export function RoundView({
 
       {/* A native select in place of a 17-chip cloud: the filter used to push the
           question itself below the fold on a laptop and most of a screen down on a phone. */}
-      <div className="mb-4 flex items-end justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-x-4 border-b border-zinc-200 dark:border-zinc-800">
       <div role="tablist" aria-label="View" className="flex">
         {TABS.map((t) => (
           <button
@@ -101,7 +101,7 @@ export function RoundView({
         aria-label="Category"
         value={selected ?? ''}
         onChange={(e) => setSelected(e.target.value || null)}
-        className="mb-2 min-w-0 max-w-[55%] rounded border border-zinc-300 bg-transparent px-2 py-1 text-sm dark:border-zinc-700"
+        className="mb-2 rounded border border-zinc-300 bg-transparent px-2 py-1 text-sm dark:border-zinc-700"
       >
         <option value="">All categories</option>
         {categories.map((c) => <option key={c} value={c}>{c}</option>)}

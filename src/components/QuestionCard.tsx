@@ -317,6 +317,7 @@ export function QuestionCard({
               </p>
             )}
           </section>
+          <RatingRadios rating={rating} onRate={onRate} showKeys={shortcuts} />
           {question.followUps && question.followUps.length > 0 && (
             <section>
               <h3 className="mb-1 font-semibold">Likely follow-ups</h3>
@@ -335,7 +336,6 @@ export function QuestionCard({
               className="w-full rounded border border-zinc-300 bg-transparent p-2 dark:border-zinc-700"
             />
           </section>
-          <RatingRadios rating={rating} onRate={onRate} showKeys={shortcuts} />
         </div>
       )}
     </article>

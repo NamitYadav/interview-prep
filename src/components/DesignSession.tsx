@@ -6,6 +6,7 @@ import { nextQuestion } from '../lib/queue';
 import { useQuestionTimer } from '../hooks/useQuestionTimer';
 import { DRAFT_SAVE_FAILED, useDraft } from '../hooks/useDraft';
 import { draftKey } from '../lib/drafts';
+import { clearDesignSession, readDesignSession, writeDesignSession } from '../lib/lap';
 import { formatTime } from '../lib/format';
 import { RatingRadios } from './RatingRadios';
 
@@ -29,7 +30,12 @@ export function DesignSession({ state, dispatch }: { state: Persisted; dispatch:
     const exclude = excludeId ? new Set([excludeId]) : undefined;
     return nextQuestion(designQuestions, state.progress, exclude)?.id ?? excludeId;
   };
-  const [questionId, setQuestionId] = useState(() => pickQuestionId());
+  // A session in progress wins over the picker: after a reload the picker lands on the
+  // weakest prompt, which is not necessarily the one whose clock is running.
+  const [questionId, setQuestionId] = useState(() => {
+    const saved = readDesignSession()?.questionId;
+    return saved !== undefined && designQuestions.some((q) => q.id === saved) ? saved : pickQuestionId();
+  });
   // Bumped on every restart so the key below changes even when the next prompt
   // happens to be the very same question (e.g. only one prompt exists at all) —
   // relying on question.id alone wouldn't force a remount in that case.
@@ -62,7 +68,17 @@ function DesignPrompt({
   question, state, dispatch, onRestart,
 }: { question: Question; state: Persisted; dispatch: Dispatch<Action>; onRestart: () => void }) {
   const [finished, setFinished] = useState(false);
-  const [checkedPhases, setCheckedPhases] = useState<Set<number>>(new Set());
+  // Read once at mount, like the scratch draft: a fresh prompt is a full remount.
+  const [saved] = useState(() => {
+    const s = readDesignSession();
+    return s?.questionId === question.id ? s : undefined;
+  });
+  const [startedAt] = useState(() => saved?.startedAt ?? Date.now());
+  const [checkedPhases, setCheckedPhases] = useState<Set<number>>(() => new Set(saved?.phases));
+  useEffect(() => {
+    if (finished) clearDesignSession();
+    else writeDesignSession({ questionId: question.id, startedAt, phases: [...checkedPhases] });
+  }, [question.id, startedAt, checkedPhases, finished]);
   // Keyed by question id alone, not id+attempt: `attempt` is an in-memory counter that
   // restarts at 0 on every fresh mount, so a reload after "Another prompt" (attempt 1+)
   // read back attempt 0's key — which for that question may hold nothing, or an older
@@ -81,7 +97,7 @@ function DesignPrompt({
   // Visible 45-minute countdown that never forces anything — a real loop doesn't
   // cut you off, it just tells you the clock is running.
   const { remainingMs } = useQuestionTimer({
-    targetSeconds: TARGET_SECONDS, strictMode: true, revealed: finished, onAutoReveal: noop, autoReveal: false,
+    targetSeconds: TARGET_SECONDS, strictMode: true, revealed: finished, onAutoReveal: noop, autoReveal: false, startedAt,
   });
 
   const rating = state.progress[question.id]?.rating;

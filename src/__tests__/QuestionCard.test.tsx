@@ -210,6 +210,17 @@ describe('QuestionCard strict mode', () => {
 describe('QuestionCard key points checklist', () => {
   const twoPoints: Question = { ...base, keyPoints: ['Point one', 'Point two'] };
 
+  // On a phone the hint under the key points ("suggested: Weak") sat two viewports
+  // above the radios it was suggesting for, with the optional note in between.
+  test('the rating controls come before the note, right after the key points', () => {
+    renderCard(base, true);
+    const radios = screen.getByRole('radiogroup');
+    const note = screen.getByRole('textbox', { name: /your note/i });
+    const keyPoints = screen.getByRole('heading', { name: /key points/i });
+    expect(keyPoints.compareDocumentPosition(radios) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(radios.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   test('suggests a rating from checked key points', async () => {
     renderCard(twoPoints, true);
     expect(screen.getByText(/0\/2 key points hit · suggested: Weak/i)).toBeInTheDocument();

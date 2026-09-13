@@ -18,9 +18,11 @@ const KEY = 'interview-prep:laps';
 // session recapping as "3 of 28 rated".
 const BASELINE_KEY = 'interview-prep:mock-baseline';
 
-// Enough for the rounds plus a couple of drills. Oldest-saved is evicted rather than
-// letting the store grow for every category chip ever visited.
-const MAX_LAPS = 12;
+// One lap per possible question set — every round's Practice tab and every category
+// chip (53 today), the Weak drill and the mock presets — with headroom. Oldest-saved is
+// evicted past that; data.test.ts asserts the cap stays above the count, since a lap
+// carries the pending weak requeues and eviction is silent.
+export const MAX_LAPS = 64;
 
 export interface SavedLap {
   key: string;
@@ -98,6 +100,34 @@ export function writeBaseline(key: string, baseline: Baseline): void {
 
 export function clearBaseline(key: string): void {
   baselineStore.remove(key);
+}
+
+// The 45-minute design session in progress: which prompt, when its clock started and
+// which phases are ticked. One slot, since only one runs at a time; Finish clears it.
+// Same per-device class as the lap — a position, not prep data — and the reason it
+// exists is the same: held in component state, a glance at the Browse tab or a reload
+// remounted the prompt at 45:00 with nothing ticked.
+const DESIGN_KEY = 'interview-prep:design-session';
+
+export interface DesignSessionState { questionId: string; startedAt: number; phases: number[] }
+
+const parseDesignSession = (_key: string, v: unknown): DesignSessionState | undefined => {
+  if (typeof v !== 'object' || v === null) return undefined;
+  const s = v as Record<string, unknown>;
+  if (typeof s.questionId !== 'string' || typeof s.startedAt !== 'number' || !Array.isArray(s.phases)) return undefined;
+  return { questionId: s.questionId, startedAt: s.startedAt, phases: s.phases.filter((n): n is number => typeof n === 'number') };
+};
+
+const designStore = keyedStore<DesignSessionState>(DESIGN_KEY, parseDesignSession);
+
+export const readDesignSession = (): DesignSessionState | undefined => designStore.read('current');
+
+export function writeDesignSession(session: DesignSessionState): void {
+  designStore.write('current', session);
+}
+
+export function clearDesignSession(): void {
+  designStore.clear();
 }
 
 // Reset and Import replace the whole data set, so a lap pointing into the old one is
