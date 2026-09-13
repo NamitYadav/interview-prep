@@ -215,8 +215,10 @@ export function Practice({
 
   const back = () => {
     if (historyPos === 0) return;
+    const target = history[historyPos - 1]!;
     setHistoryPos((p) => p - 1);
-    setRevealed(true);
+    // Revealed for re-rating; a question skipped without looking stays hidden.
+    setRevealed(state.progress[target]?.rating !== undefined);
   };
 
   const startAnotherLap = () => {

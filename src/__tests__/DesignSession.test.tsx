@@ -34,6 +34,12 @@ describe('DesignSession', () => {
     else expect(heading).not.toBeInTheDocument();
   });
 
+  // Practice shows "1 of 30" in this corner; the design prompt showed its raw id.
+  test('does not show the raw question id', () => {
+    render(<Harness />);
+    expect(screen.queryByText(/^design-\d{3}$/)).not.toBeInTheDocument();
+  });
+
   test('renders a design prompt with the phase checklist and a countdown', () => {
     vi.useFakeTimers();
     try {

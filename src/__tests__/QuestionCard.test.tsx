@@ -67,6 +67,15 @@ describe('QuestionCard scratch editor (Build prompts)', () => {
   });
 });
 
+describe('QuestionCard action row', () => {
+  // At 375px Reveal and Probe shared a line and Record wrapped alone, half-width. No
+  // layout in jsdom, so this pins the class that lets the buttons fill their line.
+  test('buttons fill their line on narrow screens', () => {
+    renderCard({ ...base, followUps: ['One'] });
+    expect(screen.getByRole('button', { name: /reveal/i }).parentElement).toHaveClass('max-sm:*:flex-1');
+  });
+});
+
 describe('QuestionCard reveal', () => {
   test('the reveal button calls onReveal', async () => {
     const onReveal = vi.fn();
@@ -305,10 +314,18 @@ describe('QuestionCard deeper material', () => {
     expect(screen.getByText('A second layer.')).toBeInTheDocument();
   });
 
-  test('renders no heading at all for a question without deeper material', () => {
+  test('renders no deeper heading for a question without deeper material', () => {
     renderCard(base, true);
     expect(screen.getByText('Answer one.')).toBeInTheDocument();
     expect(screen.queryByText(/if they dig deeper/i)).not.toBeInTheDocument();
+  });
+
+  // Every other revealed section is labelled; the model answer — the one thing the
+  // user is there to read — sat as bare paragraphs between the timing line and Key
+  // points, and a screen reader landing on the container heard text with no name.
+  test('labels the model answer like the other sections', () => {
+    renderCard(base, true);
+    expect(screen.getByRole('heading', { name: /model answer/i })).toBeInTheDocument();
   });
 });
 

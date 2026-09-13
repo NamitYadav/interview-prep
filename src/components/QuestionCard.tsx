@@ -232,7 +232,7 @@ export function QuestionCard({
 
           {/* One row, one primary: Probe and Record used to sit under their own bold
               headings at a third size, so the card read as three half-empty sections. */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 max-sm:*:flex-1">
             <button
               type="button"
               onClick={handleReveal}
@@ -279,6 +279,7 @@ export function QuestionCard({
             </section>
           )}
           <section className="space-y-2">
+            <h3 className="mb-1 font-semibold">Model answer</h3>
             {question.answer.map((p, i) => <p key={i}>{withPlaceholders(p)}</p>)}
           </section>
           {question.deeper && question.deeper.length > 0 && (
