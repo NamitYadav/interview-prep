@@ -10,7 +10,10 @@ import type { Progress, Question } from '../types';
 // is the whole benefit of spacing for this use case, without carrying a scheduler.
 export const SOLID_DECAY_MS = 7 * 24 * 60 * 60 * 1000;
 
-const bucket = (progress: Progress, id: string, now: number): number => {
+// Exported so the status filters name the same five states the queue orders by — a
+// Solid that has decayed back into the OK bucket filters as OK, exactly as the progress
+// bar and the category verdicts already report it.
+export const questionBucket = (progress: Progress, id: string, now: number): number => {
   const entry = progress[id];
   if (entry?.rating === 1) return 0;
   if (entry === undefined) return 1;
@@ -23,7 +26,7 @@ const lastSeen = (progress: Progress, id: string): number => progress[id]?.lastS
 export function orderQueue(questions: Question[], progress: Progress, now: number = Date.now()): Question[] {
   return [...questions].sort(
     (a, b) =>
-      bucket(progress, a.id, now) - bucket(progress, b.id, now) ||
+      questionBucket(progress, a.id, now) - questionBucket(progress, b.id, now) ||
       lastSeen(progress, a.id) - lastSeen(progress, b.id),
   );
 }
@@ -47,13 +50,13 @@ export interface RoundStats {
   solid: number;
 }
 
-// Counted through the same bucket() the queue orders by, so a Solid that has decayed
+// Counted through the same questionBucket() the queue orders by, so a Solid that has decayed
 // back into the OK bucket is reported as OK rather than the progress bar claiming
 // "solid" for a question the drill is about to serve you again.
 export function roundStats(questions: Question[], progress: Progress, now: number = Date.now()): RoundStats {
   const stats: RoundStats = { total: questions.length, unrated: 0, weak: 0, ok: 0, solid: 0 };
   for (const q of questions) {
-    switch (bucket(progress, q.id, now)) {
+    switch (questionBucket(progress, q.id, now)) {
       case 0: stats.weak++; break;
       case 1: stats.unrated++; break;
       case 2: stats.ok++; break;
@@ -78,4 +81,20 @@ export function categoryVerdict(stats: RoundStats): Verdict {
   const mean = (stats.weak + stats.ok * 2 + stats.solid * 3) / rated;
   if (mean < 1.7) return 'weak';
   return mean < 2.5 ? 'ok' : 'solid';
+}
+
+export type QuestionStatus = 'all' | 'unseen' | 'weak' | 'ok' | 'solid';
+
+const STATUS_BUCKET: Record<Exclude<QuestionStatus, 'all'>, number> = { weak: 0, unseen: 1, ok: 2, solid: 3 };
+
+// "Unseen" is unrated: a progress entry only exists once you have rated the question, so
+// there is nothing else for it to mean.
+export function filterByStatus(
+  questions: Question[],
+  status: QuestionStatus,
+  progress: Progress,
+  now: number = Date.now(),
+): Question[] {
+  if (status === 'all') return questions;
+  return questions.filter((q) => questionBucket(progress, q.id, now) === STATUS_BUCKET[status]);
 }

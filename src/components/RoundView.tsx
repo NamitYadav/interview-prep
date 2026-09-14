@@ -3,13 +3,13 @@ import { BackLink } from './BackLink';
 import type { Persisted, RoundId } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { questionsByRound, rounds } from '../data';
-import { roundStats } from '../lib/queue';
+import { filterByStatus, roundStats, type QuestionStatus } from '../lib/queue';
 import { Browse } from './Browse';
 import { Practice } from './Practice';
 import { ProgressBar, statsCaption } from './ProgressBar';
 import { DesignSession } from './DesignSession';
 import { CategoryStrength } from './CategoryStrength';
-import { pageButton } from './controlStyles';
+import { ALL, STATUS_OPTIONS, Select } from './Select';
 
 type Tab = 'practice' | 'browse' | 'design-prompt';
 const TAB_LABEL: Record<Tab, string> = { practice: 'Practice', browse: 'Browse', 'design-prompt': '45-min prompt' };
@@ -21,6 +21,7 @@ export function RoundView({
   const all = useMemo(() => questionsByRound(roundId), [roundId]);
   const categories = useMemo(() => [...new Set(all.map((q) => q.category))], [all]);
   const [selected, setSelected] = useState<string | null>(null);
+  const [status, setStatus] = useState<QuestionStatus>('all');
   const [tab, setTab] = useState<Tab>('practice');
   const TABS: Tab[] = roundId === 'design' ? ['practice', 'browse', 'design-prompt'] : ['practice', 'browse'];
 
@@ -40,11 +41,20 @@ export function RoundView({
     document.getElementById(`tab-${tab}`)?.focus();
   }, [tab]);
 
-  const filtered = useMemo(
+  const byCategory = useMemo(
     () => (selected === null ? all : all.filter((q) => q.category === selected)),
     [all, selected],
   );
-  const stats = roundStats(filtered, state.progress);
+  // Deliberately NOT recomputed when progress changes: rating a question moves it out
+  // of its bucket, and a live status filter would pull the question Practice is showing
+  // out of its own queue mid-lap (`current` is looked up in this array) — the empty
+  // state would flash while unseen questions remained. Frozen when you pick the filter,
+  // rebuilt when you pick another, the same way Weak drill freezes its set on entry.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const filtered = useMemo(() => filterByStatus(byCategory, status, state.progress), [byCategory, status]);
+  // The bar stays on the category set: on the Unseen filter a bar drawn from `filtered`
+  // is 100% unrated by construction, which tells you nothing.
+  const stats = roundStats(byCategory, state.progress);
 
   const tabBtn = (active: boolean) =>
     `border-b-2 px-3 py-2 text-sm ${active ? 'border-emerald-500 font-medium' : 'border-transparent text-zinc-500 dark:text-zinc-400'}`;
@@ -101,35 +111,19 @@ export function RoundView({
           </button>
         ))}
       </div>
-      {/* The only native-chrome control left in the app: a bare <select> painted its own
-          light box and OS arrow over a dark theme. `appearance-none` plus the same
-          classes the Settings trigger uses puts it back in the app's own scale, and the
-          chevron is drawn here so it inherits the text colour. The element stays a real
-          <select> — the mobile picker and the keyboard behaviour are not worth rebuilding. */}
-      <div className="relative mb-2">
-        <select
-          aria-label="Category"
-          value={selected ?? ''}
-          onChange={(e) => setSelected(e.target.value || null)}
-          className={`${pageButton} appearance-none pr-8`}
-        >
-          {/* The popup list is drawn by the OS, so only the option's own background
-              follows the theme — without this it renders near-white in dark mode. */}
-          <option value="" className="dark:bg-zinc-900">All categories</option>
-          {categories.map((c) => <option key={c} value={c} className="dark:bg-zinc-900">{c}</option>)}
-        </select>
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 10 6"
-          className="pointer-events-none absolute right-3 top-1/2 h-1.5 w-2.5 -translate-y-1/2 fill-none stroke-current stroke-2 opacity-60"
-        >
-          <path d="M1 1l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+      <div className="flex flex-wrap gap-2">
+        <Select
+          label="Category"
+          value={selected ?? ALL}
+          onChange={(v) => setSelected(v || null)}
+          options={[{ value: ALL, label: 'All categories' }, ...categories.map((c) => ({ value: c, label: c }))]}
+        />
+        <Select label="Status" value={status} onChange={(v) => setStatus(v as QuestionStatus)} options={STATUS_OPTIONS} />
       </div>
       </div>
 
       <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>
-        {tab === 'practice' && <Practice key={`${roundId}:${selected ?? ''}`} questions={filtered} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} />}
+        {tab === 'practice' && <Practice key={`${roundId}:${selected ?? ''}:${status}`} questions={filtered} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} />}
         {tab === 'browse' && <Browse questions={filtered} state={state} dispatch={dispatch} />}
         {tab === 'design-prompt' && <DesignSession state={state} dispatch={dispatch} />}
       </div>

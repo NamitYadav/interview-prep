@@ -20,9 +20,13 @@ follow-ups. Reveal, rate yourself, and weak questions come back first.
 - **Round practice** — a priority queue for one round: weak questions come first,
   then unseen, then ok, then solid. Rating a question Weak doesn't just leave it —
   it comes back around roughly 8 questions later, in the same lap, instead of
-  waiting for a whole different lap. Filter by category, or switch to the
+  waiting for a whole different lap. Filter by category and by status —
+  *Unseen* (never rated), *Weak*, *OK*, *Solid* — or switch to the
   **Browse** tab to search every question, answer and key point at once (a Top
-  button appears once you have scrolled a way down it). A lap
+  button appears once you have scrolled a way down it). The status filter is frozen
+  when you pick it, so rating a question doesn't pull it out from under the lap; pick
+  it again to rebuild the set. The progress bar keeps describing the whole category
+  either way. A lap
   ends once every question (and every requeued one) has been shown, with a
   summary and a way to start another.
 - **By category** — a collapsed panel on every round showing where you stand in each
@@ -43,7 +47,8 @@ follow-ups. Reveal, rate yourself, and weak questions come back first.
   components → state → performance → a11y/i18n → observability → rollout phase
   checklist to work through out loud, plus a scratch pad. Finish reveals the model
   answer and lets you rate yourself.
-- **Search** — every question, every round, in one search box.
+- **Search** — every question, every round, in one search box, with the same status
+  filter (Unseen / Weak / OK / Solid).
 - **Print cheat sheet** — everything rated Weak plus everything you have a note on,
   grouped by round, laid out for printing before you walk in.
 

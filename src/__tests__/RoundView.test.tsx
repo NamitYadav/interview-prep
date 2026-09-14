@@ -99,6 +99,50 @@ describe('RoundView', () => {
     expect(screen.getByText(new RegExp(`^${expected} of `))).toBeInTheDocument();
   });
 
+  const statusFilter = () => screen.getByRole('combobox', { name: /status/i });
+
+  test('the Unseen filter leaves only questions you have not rated', async () => {
+    render(<Harness />);
+    // Rate the first question in the practice queue, then filter to Unseen.
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    const rated = screen.getByRole('heading', { level: 2 }).textContent;
+    await userEvent.click(screen.getByRole('radio', { name: /solid/i }));
+
+    await userEvent.selectOptions(statusFilter(), 'unseen');
+    await userEvent.click(screen.getByRole('tab', { name: /browse/i }));
+
+    const total = questionsByRound('hr').length;
+    expect(screen.getByText(`${total - 1} of ${total - 1}`)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: rated! })).not.toBeInTheDocument();
+  });
+
+  // The set is frozen when you pick the filter: recomputing it per rating would drop the
+  // question Practice is showing out of its own queue and flash the empty state.
+  test('rating inside the Unseen drill advances instead of emptying the filter', async () => {
+    render(<Harness />);
+    await userEvent.selectOptions(statusFilter(), 'unseen');
+
+    const first = screen.getByRole('heading', { level: 2 }).textContent;
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    await userEvent.click(screen.getByRole('radio', { name: /solid/i }));
+
+    expect(screen.queryByText(/no questions match/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2 }).textContent).not.toBe(first);
+  });
+
+  test('a status with nothing in it shows the empty state', async () => {
+    render(<Harness />);
+    await userEvent.selectOptions(statusFilter(), 'weak');
+    expect(screen.getByText(/no questions match/i)).toBeInTheDocument();
+  });
+
+  test('the progress bar keeps describing the whole category, not the status slice', async () => {
+    render(<Harness />);
+    const total = questionsByRound('hr').length;
+    await userEvent.selectOptions(statusFilter(), 'unseen');
+    expect(screen.getByText(`${total} unseen`)).toBeInTheDocument();
+  });
+
   test('switching tabs swaps Practice for Browse', async () => {
     render(<Harness />);
     expect(screen.getByRole('button', { name: /reveal/i })).toBeInTheDocument();
