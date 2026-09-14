@@ -57,18 +57,23 @@ export default function App() {
     document.querySelector<HTMLElement>('main h1')?.focus();
   }, [route]);
 
+  const activeRoundId = route !== null && isActiveRoundId(route) ? route : null;
+  const isNamedView = route !== null && route in VIEW_TITLES;
+  const showHome = route === null || (activeRoundId === null && !isNamedView);
+  // What's actually on screen, role guard included — an out-of-loop round hash (e.g.
+  // #hoe while Senior is active) renders Home, but titleFor(route) doesn't know that
+  // and would still name the hidden round in the tab, history entry, and the
+  // post-navigation screen-reader announcement below.
+  const displayedRoute = showHome ? null : route;
+
   useEffect(() => {
-    document.title = titleFor(route);
-  }, [route]);
+    document.title = titleFor(displayedRoute);
+  }, [displayedRoute]);
 
   // One region, mounted for the life of the app and empty until there is something to
   // say. A role="status" that appears with its text already inside is routinely missed:
   // the announcement depends on the text arriving after the region is being watched.
   const announcement = saveFailed ? SAVE_FAILED_MESSAGE : staleTab ? STALE_TAB_MESSAGE : '';
-
-  const activeRoundId = route !== null && isActiveRoundId(route) ? route : null;
-  const isNamedView = route !== null && (['weak', 'notes', 'stories', 'mock', 'search', 'print'] as const).includes(route as never);
-  const showHome = route === null || (activeRoundId === null && !isNamedView);
 
   return (
     <>

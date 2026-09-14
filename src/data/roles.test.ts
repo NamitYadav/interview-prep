@@ -58,11 +58,10 @@ describe('forRole', () => {
   // Exercised by Task 9's real `roles`-tagged questions (hm.ts, design.ts).
   test('a tagged question appears only for the roles listed', () => {
     const tagged = forRole('staff').questions.find((q) => q.roles !== undefined);
-    if (!tagged) return;
-    expect(tagged.id).toBeDefined();
+    expect(tagged).toBeDefined();
     for (const id of ['senior', 'staff', 'lead', 'architect'] as const) {
-      const present = forRole(id).questions.some((q) => q.id === tagged.id);
-      expect(present, id).toBe((tagged.roles as string[]).includes(id));
+      const present = forRole(id).questions.some((q) => q.id === tagged!.id);
+      expect(present, id).toBe((tagged!.roles as string[]).includes(id));
     }
   });
 

@@ -80,6 +80,17 @@ describe('document title', () => {
     });
     expect(document.title).toBe('Mock session · Interview Prep');
   });
+
+  // Same setup as the round-guard test below: Senior's loop has no hoe round, so #hoe
+  // renders Home — but titleFor(route) used to resolve through the global round list
+  // regardless, so the tab, history entry and screen-reader announcement still named
+  // the hidden round.
+  test('a round hash outside the active role\'s loop keeps the Home title', () => {
+    localStorage.setItem(ROLE_KEY, 'senior');
+    window.location.hash = '#hoe';
+    render(<App />);
+    expect(document.title).toBe('Interview Prep');
+  });
 });
 
 describe('app-level announcements', () => {

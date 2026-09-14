@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type Dispatch } from 'react';
 import { BackLink } from './BackLink';
-import type { Persisted, Question, RoleId, RoundId } from '../types';
+import type { Persisted, Question, RoleId, Round, RoundId } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { forRole } from '../data';
 import { Practice } from './Practice';
@@ -18,17 +18,21 @@ const PRESETS: Preset[] = [
   {
     id: 'technical',
     title: 'Technical rounds',
-    blurb: 'Hiring manager, live coding, and system design only — no HR or case study.',
-    composition: { hm: 8, coding: 6, design: 6 },
+    blurb: 'Hiring manager, live coding or architecture, and system design only — no HR or case study.',
+    composition: { hm: 8, coding: 6, design: 6, arch: 6 },
   },
 ];
 
 // Plain array order, not weak-weighted — a real loop doesn't let you pick your
-// weakest questions in each round, so neither does this preset.
-function buildSet(composition: Preset['composition'], byRound: (r: RoundId) => Question[]): Question[] {
+// weakest questions in each round, so neither does this preset. Order comes from the
+// role's own round sequence, not the composition literal's key order — those only
+// happen to match for Staff/Senior; Lead and Architect reorder rounds relative to it.
+function buildSet(composition: Preset['composition'], roleRounds: Round[], byRound: (r: RoundId) => Question[]): Question[] {
   const picked: Question[] = [];
-  for (const [roundId, count] of Object.entries(composition) as [RoundId, number][]) {
-    picked.push(...byRound(roundId).slice(0, count));
+  for (const round of roleRounds) {
+    const count = composition[round.id];
+    if (count === undefined) continue;
+    picked.push(...byRound(round.id).slice(0, count));
   }
   return picked;
 }
@@ -36,7 +40,7 @@ function buildSet(composition: Preset['composition'], byRound: (r: RoundId) => Q
 export function MockSession({
   state, dispatch, strictMode, shortcuts = true, role,
 }: { state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean; shortcuts?: boolean; role: RoleId }) {
-  const { byRound } = forRole(role);
+  const { rounds: roleRounds, byRound } = forRole(role);
   const [session, setSession] = useState<{ preset: Preset; drill: Question[]; baseline: Baseline } | null>(null);
   const [finished, setFinished] = useState(false);
 
@@ -48,7 +52,7 @@ export function MockSession({
   }, [finished]);
 
   const start = (preset: Preset) => {
-    const drill = buildSet(preset.composition, byRound);
+    const drill = buildSet(preset.composition, roleRounds, byRound);
     const key = lapKey(role, drill);
     // Frozen on entry, like the weak drill: freezing the baseline too, so the recap can
     // tell "rated this session" apart from ratings you already had. Persisted rather
