@@ -46,6 +46,8 @@ export const STORY_CATEGORIES: ReadonlySet<string> = new Set([
   'Org & impact',
   'Questions to ask them',
   'Vision & strategy',
+  'People & growth',
+  'Conflict & stakeholders',
 ]);
 
 export const isStoryPrompt = (q: Question): boolean => STORY_CATEGORIES.has(q.category);
