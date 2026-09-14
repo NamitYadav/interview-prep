@@ -6,6 +6,7 @@ import type { Question } from '../types';
 import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { Practice } from '../components/Practice';
+import { lapKey, readLap } from '../lib/lap';
 
 // Practice now persists lap position, so each test needs a clean slate.
 beforeEach(() => localStorage.clear());
@@ -22,7 +23,7 @@ const qs3: Question[] = [
 
 function Harness() {
   const [state, dispatch] = useReducer(reducer, EMPTY);
-  return <Practice questions={qs} state={state} dispatch={dispatch} strictMode={false} />;
+  return <Practice questions={qs} state={state} dispatch={dispatch} strictMode={false} role="staff" />;
 }
 
 const qs5: Question[] = [
@@ -33,12 +34,12 @@ const qs5: Question[] = [
 
 function Harness5() {
   const [state, dispatch] = useReducer(reducer, EMPTY);
-  return <Practice questions={qs5} state={state} dispatch={dispatch} strictMode={false} />;
+  return <Practice questions={qs5} state={state} dispatch={dispatch} strictMode={false} role="staff" />;
 }
 
 function Harness3() {
   const [state, dispatch] = useReducer(reducer, EMPTY);
-  return <Practice questions={qs3} state={state} dispatch={dispatch} strictMode={false} />;
+  return <Practice questions={qs3} state={state} dispatch={dispatch} strictMode={false} role="staff" />;
 }
 
 const rateVisible = async () => {
@@ -271,7 +272,7 @@ describe('Practice', () => {
   });
 
   test('empty state when no questions', () => {
-    render(<Practice questions={[]} state={EMPTY} dispatch={() => {}} strictMode={false} />);
+    render(<Practice questions={[]} state={EMPTY} dispatch={() => {}} strictMode={false} role="staff" />);
     expect(screen.getByText(/no questions match/i)).toBeInTheDocument();
   });
 });
@@ -283,7 +284,7 @@ const qs10: Question[] = Array.from({ length: 10 }, (_, i) => ({
 
 function Harness10() {
   const [state, dispatch] = useReducer(reducer, EMPTY);
-  return <Practice questions={qs10} state={state} dispatch={dispatch} strictMode={false} />;
+  return <Practice questions={qs10} state={state} dispatch={dispatch} strictMode={false} role="staff" />;
 }
 
 const currentQuestionText = () => screen.getByRole('heading', { level: 2 }).textContent;
@@ -303,7 +304,7 @@ describe('Practice ordered mode and round-boundary banner', () => {
   ];
   function OrderedHarness() {
     const [state, dispatch] = useReducer(reducer, EMPTY);
-    return <Practice questions={mixedRounds} state={state} dispatch={dispatch} strictMode={false} ordered />;
+    return <Practice questions={mixedRounds} state={state} dispatch={dispatch} strictMode={false} role="staff" ordered />;
   }
 
   test('serves questions in array order and banners each round transition', async () => {
@@ -343,7 +344,7 @@ describe('Practice weak-question requeuing', () => {
     const threeQs = qs10.slice(0, 3);
     function Harness3q() {
       const [state, dispatch] = useReducer(reducer, EMPTY);
-      return <Practice questions={threeQs} state={state} dispatch={dispatch} strictMode={false} />;
+      return <Practice questions={threeQs} state={state} dispatch={dispatch} strictMode={false} role="staff" />;
     }
     render(<Harness3q />);
 
@@ -413,7 +414,7 @@ describe('lap position survives a reload', () => {
     localStorage.setItem(
       'interview-prep:laps',
       JSON.stringify({
-        [`3:hm-001:hm-003`]: { history: ['hm-001', 'hm-deleted'], historyPos: 1, requeued: [{ id: 'hm-gone', at: 2 }], step: 2 },
+        [`staff:3:hm-001:hm-003`]: { history: ['hm-001', 'hm-deleted'], historyPos: 1, requeued: [{ id: 'hm-gone', at: 2 }], step: 2 },
       }),
     );
     render(<Harness3 />);
@@ -424,7 +425,7 @@ describe('lap position survives a reload', () => {
   test('falls back to a fresh lap when no restored id survives', () => {
     localStorage.setItem(
       'interview-prep:laps',
-      JSON.stringify({ [`3:hm-001:hm-003`]: { history: ['gone-1', 'gone-2'], historyPos: 1, requeued: [], step: 2 } }),
+      JSON.stringify({ [`staff:3:hm-001:hm-003`]: { history: ['gone-1', 'gone-2'], historyPos: 1, requeued: [], step: 2 } }),
     );
     render(<Harness3 />);
     expect(screen.getByText('First question?')).toBeInTheDocument();
@@ -455,6 +456,26 @@ describe('lap position survives a reload', () => {
       JSON.stringify({ key: `2:hm-001:hm-002`, history: ['hm-001'], historyPos: 7, requeued: [], step: 0 }),
     );
     render(<Harness />);
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+  });
+
+  test('the same question set under two roles produces two independent lap keys', async () => {
+    function HarnessRole({ role }: { role: 'staff' | 'senior' }) {
+      const [state, dispatch] = useReducer(reducer, EMPTY);
+      return <Practice questions={qs} state={state} dispatch={dispatch} strictMode={false} role={role} />;
+    }
+    const { unmount } = render(<HarnessRole role="staff" />);
+    await rateVisible();
+    unmount();
+
+    // Staff's lap actually advanced, and senior's own key has nothing stored yet —
+    // not just two different key strings, but two independently-tracked positions.
+    expect(readLap(lapKey('staff', qs))).toBeDefined();
+    expect(readLap(lapKey('senior', qs))).toBeUndefined();
+
+    render(<HarnessRole role="senior" />);
+    // Senior's lap for this exact question set starts fresh (question 1), rather than
+    // resuming staff's now-advanced position — proving the two keys are independent.
     expect(screen.getByText('First question?')).toBeInTheDocument();
   });
 });
@@ -527,7 +548,7 @@ describe('P1 regressions', () => {
     localStorage.setItem(
       'interview-prep:laps',
       JSON.stringify({
-        '3:hm-001:hm-003': {
+        'staff:3:hm-001:hm-003': {
           history: ['hm-001', 'hm-002', 'hm-003', 'hm-001'],
           historyPos: 3,
           requeued: [],
@@ -552,7 +573,7 @@ describe('P1 regressions', () => {
       const [state, dispatch] = useReducer(reducer, EMPTY);
       if (done) return <p>finished</p>;
       return (
-        <Practice questions={qs} state={state} dispatch={dispatch} strictMode={false} ordered
+        <Practice questions={qs} state={state} dispatch={dispatch} strictMode={false} role="staff" ordered
           onLapComplete={() => setDone(true)} />
       );
     }
@@ -567,7 +588,7 @@ describe('P1 regressions', () => {
 describe('keyboard shortcuts can be turned off — WCAG 2.2 SC 2.1.4', () => {
   function Off() {
     const [state, dispatch] = useReducer(reducer, EMPTY);
-    return <Practice questions={qs3} state={state} dispatch={dispatch} strictMode={false} shortcuts={false} />;
+    return <Practice questions={qs3} state={state} dispatch={dispatch} strictMode={false} role="staff" shortcuts={false} />;
   }
 
   // Someone using speech input, or with a tremor, can fire `n` with nothing focused and

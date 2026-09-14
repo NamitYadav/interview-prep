@@ -13,7 +13,7 @@ const PRESETS: Preset[] = [
     id: 'full-loop',
     title: 'Full loop',
     blurb: 'A slice of every round, in round order.',
-    composition: { hr: 4, hm: 6, coding: 4, design: 3, case: 4, debrief: 4, hoe: 3 },
+    composition: { hr: 4, hm: 6, coding: 4, design: 3, case: 4, debrief: 4, hoe: 3, lead: 3, arch: 3 },
   },
   {
     id: 'technical',
@@ -49,7 +49,7 @@ export function MockSession({
 
   const start = (preset: Preset) => {
     const drill = buildSet(preset.composition, byRound);
-    const key = lapKey(drill);
+    const key = lapKey(role, drill);
     // Frozen on entry, like the weak drill: freezing the baseline too, so the recap can
     // tell "rated this session" apart from ratings you already had. Persisted rather
     // than kept in state alone, because a mid-session reload lands the user back on
@@ -79,7 +79,7 @@ export function MockSession({
   // against the previous one's starting point.
   const endSession = () => {
     if (!session) return;
-    const key = lapKey(session.drill);
+    const key = lapKey(role, session.drill);
     clearLap(key);
     clearBaseline(key);
   };
@@ -159,7 +159,7 @@ export function MockSession({
       <BackLink />
       <h1 tabIndex={-1} className="text-2xl font-semibold">{preset.title}</h1>
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{drill.length} questions. Rate as you go, finish whenever.</p>
-      <Practice questions={drill} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} ordered onLapComplete={finishSession} />
+      <Practice questions={drill} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} ordered onLapComplete={finishSession} role={role} />
       <div className="mt-3 flex justify-end">
         <button type="button" onClick={finishSession} className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">
           Finish session

@@ -6,7 +6,7 @@ beforeEach(() => localStorage.clear());
 
 const q = (id: string): Question => ({ id, round: 'hm', category: 'X', question: id, answer: ['a'], keyPoints: ['k'] });
 const set = ['a', 'b', 'c'].map(q);
-const key = lapKey(set);
+const key = lapKey('staff', set);
 const lap = { key, history: ['a', 'b'], historyPos: 1, requeued: [{ id: 'a', at: 9 }], step: 2 };
 
 describe('lap', () => {
@@ -17,14 +17,26 @@ describe('lap', () => {
 
   test('a different question set does not restore', () => {
     writeLap(lap);
-    expect(readLap(lapKey(['a', 'b'].map(q)))).toBeUndefined();
-    expect(readLap(lapKey(['a', 'b', 'd'].map(q)))).toBeUndefined();
+    expect(readLap(lapKey('staff', ['a', 'b'].map(q)))).toBeUndefined();
+    expect(readLap(lapKey('staff', ['a', 'b', 'd'].map(q)))).toBeUndefined();
   });
 
   test('lapKey distinguishes length and endpoints', () => {
-    expect(lapKey(set)).not.toBe(lapKey(['a', 'b'].map(q)));
-    expect(lapKey(set)).not.toBe(lapKey(['a', 'b', 'd'].map(q)));
-    expect(lapKey(set)).toBe(lapKey(['a', 'b', 'c'].map(q)));
+    expect(lapKey('staff', set)).not.toBe(lapKey('staff', ['a', 'b'].map(q)));
+    expect(lapKey('staff', set)).not.toBe(lapKey('staff', ['a', 'b', 'd'].map(q)));
+    expect(lapKey('staff', set)).toBe(lapKey('staff', ['a', 'b', 'c'].map(q)));
+  });
+
+  test('lapKey distinguishes role for the same question set', () => {
+    expect(lapKey('staff', set)).not.toBe(lapKey('senior', set));
+  });
+
+  test('lapKey is the role prefixed onto the length:first:last heuristic', () => {
+    expect(lapKey('staff', ['a', 'b'].map(q))).toBe('staff:2:a:b');
+  });
+
+  test('an empty set still produces a stable, role-distinguishing key', () => {
+    expect(lapKey('staff', [])).not.toBe(lapKey('lead', []));
   });
 
   test('rejects a position outside the stored history', () => {
@@ -50,7 +62,7 @@ describe('lap', () => {
   });
 
   test('clearLap removes only the named lap', () => {
-    const otherKey = lapKey(['x', 'y'].map(q));
+    const otherKey = lapKey('staff', ['x', 'y'].map(q));
     writeLap(lap);
     writeLap({ ...lap, key: otherKey });
     clearLap(key);
@@ -61,8 +73,8 @@ describe('lap', () => {
   // One global slot meant opening any other Practice set — another round, a category
   // chip, the Weak drill — destroyed the lap you were part-way through.
   test('laps for different sets coexist', () => {
-    const a = lapKey(['a', 'b', 'c'].map(q));
-    const b = lapKey(['x', 'y'].map(q));
+    const a = lapKey('staff', ['a', 'b', 'c'].map(q));
+    const b = lapKey('staff', ['x', 'y'].map(q));
     writeLap({ key: a, history: ['a', 'b'], historyPos: 1, requeued: [], step: 1 });
     writeLap({ key: b, history: ['x'], historyPos: 0, requeued: [], step: 0 });
     expect(readLap(a)?.historyPos).toBe(1);

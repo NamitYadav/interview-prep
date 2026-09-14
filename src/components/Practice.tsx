@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type Dispatch } from 'react';
-import type { Persisted, Question, Rating, RoundId } from '../types';
+import type { Persisted, Question, Rating, RoleId, RoundId } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { nextQuestion, roundStats } from '../lib/queue';
 import { rounds } from '../data';
@@ -27,11 +27,11 @@ const REQUEUE_GAP = 8;
 interface RequeueEntry { id: string; at: number }
 
 export function Practice({
-  questions, state, dispatch, strictMode, shortcuts = true, ordered = false, onLapComplete,
+  questions, state, dispatch, strictMode, shortcuts = true, ordered = false, onLapComplete, role,
 }: {
   questions: Question[]; state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean;
   shortcuts?: boolean;
-  ordered?: boolean; onLapComplete?: () => void;
+  ordered?: boolean; onLapComplete?: () => void; role: RoleId;
 }) {
   // In `ordered` mode (a curated, round-shaped set) the array's own order is the
   // queue; otherwise the weak/unrated/ok/solid bucket order from lib/queue.
@@ -44,7 +44,7 @@ export function Practice({
   // A reload — or a phone discarding a backgrounded tab — used to drop you back to the
   // top of a 287-question queue. `saved` restores the lap when the stored position
   // belongs to THIS question set; a key mismatch starts fresh.
-  const key = useMemo(() => lapKey(questions), [questions]);
+  const key = useMemo(() => lapKey(role, questions), [role, questions]);
   // lapKey is a heuristic (length + endpoints), and the bank's content changes between
   // sessions, so a restored history can name ids this set no longer contains — which
   // would render "No questions match" with no way out. Drop those, and fall back to a

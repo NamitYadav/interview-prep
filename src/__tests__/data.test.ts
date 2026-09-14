@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { ROUND_IDS, STORY_CATEGORIES, questions, rounds } from '../data';
-import { ROLE_IDS } from '../data/roles';
+import { ROLE_IDS, roles } from '../data/roles';
 import { MAX_DRAFTS } from '../lib/drafts';
 import { MAX_LAPS } from '../lib/lap';
 import type { RoundId } from '../types';
@@ -97,12 +97,17 @@ describe('question bank', () => {
   });
 
   // Every round's Practice tab and every category chip is its own lap, plus the Weak
-  // drill and the two mock presets. A cap below that count evicts silently — and a
-  // lap carries the pending weak requeues, so "comes back in ~8" was what got lost.
-  test('the lap cap holds one lap per possible question set', () => {
-    const perRound = rounds.map((r) => 1 + new Set(questions.filter((q) => q.round === r.id).map((q) => q.category)).size);
-    const sets = perRound.reduce((a, b) => a + b, 0) + 1 + 2;
-    expect(MAX_LAPS).toBeGreaterThanOrEqual(sets);
+  // drill and the mock presets, for whichever role has the most of them — only one
+  // role's laps are live at a time, so evicting a dormant role's entries is fine.
+  test('the lap cap holds one lap per possible question set for the largest role', () => {
+    let maxSets = 0;
+    for (const role of roles) {
+      const roleQuestions = questions.filter((q) => role.rounds.includes(q.round) && (q.roles === undefined || q.roles.includes(role.id)));
+      const perRound = role.rounds.map((r) => 1 + new Set(roleQuestions.filter((q) => q.round === r).map((q) => q.category)).size);
+      const sets = perRound.reduce((a, b) => a + b, 0) + 1 + 2; // +1 weak drill, +2 mock presets
+      maxSets = Math.max(maxSets, sets);
+    }
+    expect(MAX_LAPS).toBeGreaterThanOrEqual(maxSets);
   });
 
   test('every STORY_CATEGORIES entry matches at least one real question category', () => {

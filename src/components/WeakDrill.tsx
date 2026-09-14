@@ -31,7 +31,7 @@ export function WeakDrill({
           <p className="mb-4 text-xs text-zinc-500 dark:text-zinc-400">
             {remaining} of {drill.length} still weak · re-enter the drill to rebuild the set
           </p>
-          <Practice questions={drill} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} />
+          <Practice questions={drill} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />
         </>
       )}
     </main>
