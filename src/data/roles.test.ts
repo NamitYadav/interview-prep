@@ -55,10 +55,8 @@ describe('forRole', () => {
     expect(architect.questions.some((q) => q.id === untaggedHr!.id)).toBe(true);
   });
 
-  // Skipped: no question in the bank carries a `roles` tag yet. A later task in
-  // this plan tags ~23 existing questions, at which point this test should be
-  // un-skipped (change `test.skip` back to `test`) since real tagged data will exist.
-  test.skip('a tagged question appears only for the roles listed', () => {
+  // Exercised by Task 9's real `roles`-tagged questions (hm.ts, design.ts).
+  test('a tagged question appears only for the roles listed', () => {
     const tagged = forRole('staff').questions.find((q) => q.roles !== undefined);
     if (!tagged) return;
     expect(tagged.id).toBeDefined();
