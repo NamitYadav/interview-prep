@@ -33,8 +33,10 @@ export function DesignSession({ state, dispatch, role }: { state: Persisted; dis
   // A session in progress wins over the picker: after a reload the picker lands on the
   // weakest prompt, which is not necessarily the one whose clock is running.
   const [questionId, setQuestionId] = useState(() => {
-    const saved = readDesignSession()?.questionId;
-    return saved !== undefined && designQuestions.some((q) => q.id === saved) ? saved : pickQuestionId();
+    const saved = readDesignSession();
+    if (saved !== undefined && designQuestions.some((q) => q.id === saved.questionId)) return saved.questionId;
+    if (saved !== undefined) clearDesignSession();
+    return pickQuestionId();
   });
   // Bumped on every restart so the key below changes even when the next prompt
   // happens to be the very same question (e.g. only one prompt exists at all) —

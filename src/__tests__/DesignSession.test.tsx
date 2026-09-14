@@ -6,6 +6,7 @@ import type { Persisted, RoleId } from '../types';
 import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { questionsByRound } from '../data';
+import { readDesignSession, writeDesignSession } from '../lib/lap';
 import { DesignSession } from '../components/DesignSession';
 
 // Sessions and drafts persist in localStorage; without this a phase ticked in one
@@ -32,6 +33,17 @@ describe('DesignSession', () => {
     const heading = screen.queryByRole('heading', { name: /if they dig deeper/i });
     if (shown!.deeper?.length) expect(heading).toBeInTheDocument();
     else expect(heading).not.toBeInTheDocument();
+  });
+
+  test('mounting with a stale session for a question id outside the scoped set clears it from storage', () => {
+    writeDesignSession({ questionId: 'design-does-not-exist', startedAt: Date.now(), phases: [1, 2] });
+    render(<Harness />);
+    // Today's code already falls back to a fresh pickQuestionId() when the saved id isn't
+    // in the scoped set (nothing renders broken either way) — but it leaves the stale
+    // entry in storage until Finish or Another Prompt. The fix clears it immediately on
+    // mount, so any other reader of readDesignSession() in between sees "no session," not
+    // a session pointing at a question that doesn't exist.
+    expect(readDesignSession()).toBeUndefined();
   });
 
   // Practice shows "1 of 30" in this corner; the design prompt showed its raw id.
