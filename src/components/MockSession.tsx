@@ -6,7 +6,10 @@ import { forRole } from '../data';
 import { Practice } from './Practice';
 import { clearBaseline, clearLap, lapKey, readBaseline, readLap, writeBaseline, type Baseline } from '../lib/lap';
 
-interface Preset { id: string; title: string; blurb: string; composition: Partial<Record<RoundId, number>> }
+/** No `blurb` means "name the active role's rounds this preset draws from" — one static
+ *  string could not describe four roles' technical rounds without "live coding or
+ *  architecture" hedging. */
+interface Preset { id: string; title: string; blurb?: string; composition: Partial<Record<RoundId, number>> }
 
 const PRESETS: Preset[] = [
   {
@@ -18,7 +21,6 @@ const PRESETS: Preset[] = [
   {
     id: 'technical',
     title: 'Technical rounds',
-    blurb: 'Hiring manager, live coding or architecture, and system design only — no HR or case study.',
     composition: { hm: 8, coding: 6, design: 6, arch: 6 },
   },
 ];
@@ -96,6 +98,9 @@ export function MockSession({
     setSession(null);
   };
 
+  const blurbFor = (p: Preset) =>
+    p.blurb ?? roleRounds.filter((r) => p.composition[r.id] !== undefined).map((r) => r.title).join(' · ');
+
   if (!session) {
     return (
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
@@ -113,7 +118,9 @@ export function MockSession({
                 className="flex w-full flex-col rounded-lg border border-zinc-200 bg-white p-4 text-left hover:border-emerald-500 dark:border-zinc-800 dark:bg-zinc-900"
               >
                 <h2 className="font-medium">{p.title}</h2>
-                <p className="line-clamp-2 min-h-10 text-sm text-zinc-600 dark:text-zinc-400">{p.blurb}</p>
+                {/* No clamp: it cut "system desig…" mid-word at 375px, and the cards are one
+                    column, so nothing needs them the same height. */}
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">{blurbFor(p)}</p>
               </button>
             </li>
           ))}

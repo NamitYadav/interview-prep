@@ -68,7 +68,7 @@ between roles; only the round list and the visible question set change.
   components → state → performance → a11y/i18n → observability → rollout phase
   checklist to work through out loud, plus a scratch pad. Finish reveals the model
   answer and lets you rate yourself.
-- **Search** — every question, every round, in one search box, with the same status
+- **Search** — every question in the active role's loop, in one search box, with the same status
   filter (Unseen / Weak / OK / Solid).
 - **Print cheat sheet** — everything rated Weak plus everything you have a note on,
   grouped by round, laid out for printing before you walk in.
@@ -155,7 +155,7 @@ npm run build      # tsc + vite build
 Vite · React 19 · TypeScript · Tailwind CSS 4 · GeistMono Nerd Font (self-hosted from
 public/fonts) · Vitest · GitHub Pages
 
-One JS bundle, ~300KB gzipped — most of it is the question bank's own text, not
+One JS bundle, ~330KB gzipped — most of it is the question bank's own text, not
 code. Measured, not optimized: code-splitting would trim the initial load, but this
 is a single-user app run from a laptop, so it isn't worth the added complexity.
 Skipped for the same reason: a CSP `<meta>` tag (the inline pre-paint theme script

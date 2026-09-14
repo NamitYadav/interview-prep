@@ -26,13 +26,9 @@ export const rounds: Round[] = [
   { id: 'arch', title: 'Architecture deep-dive', blurb: 'Cross-team platform decisions, migration strategy, ADRs, design-system governance, build/runtime architecture.', targetSeconds: 240 },
 ];
 
+// Only forRole() reads this directly; there is no unscoped per-round accessor on
+// purpose — one would show another role's questions and nothing would fail.
 export const questions: Question[] = [...hr, ...hm, ...coding, ...design, ...caseStudy, ...debrief, ...hoe, ...lead, ...arch];
-
-const byRound = new Map<RoundId, Question[]>(ROUND_IDS.map((id) => [id, questions.filter((q) => q.round === id)]));
-
-export function questionsByRound(id: RoundId): Question[] {
-  return byRound.get(id) ?? [];
-}
 
 // Categories whose questions are naturally answered with a real story rather than
 // a technical explanation — QuestionCard offers the story bank pre-reveal for these.

@@ -9,18 +9,24 @@ export const ALL = '';
 // drawn here so it inherits the text colour. The element stays a real <select> — the
 // mobile picker and the keyboard behaviour are not worth rebuilding.
 export function Select({
-  label, value, onChange, options,
+  label, value, onChange, options, id, className = '',
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   options: { value: string; label: string }[];
+  /** For a visible <label htmlFor>; the aria-label stays so the name never depends on one. */
+  id?: string;
+  /** Outer spacing belongs to the call site: a baked-in mb-2 sat the Role select 4.5px
+   *  above the Loop date input on Home, because items-center centred box plus margin. */
+  className?: string;
 }) {
   // w-fit, not the default block: in a block parent (the Search view) the wrapper
   // would span the full width and strand the chevron at the far right edge.
   return (
-    <div className="relative mb-2 w-fit">
+    <div className={`relative w-fit ${className}`}>
       <select
+        id={id}
         aria-label={label}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -42,7 +48,9 @@ export function Select({
 }
 
 export const STATUS_OPTIONS = [
-  { value: 'all', label: 'All questions' },
+  // Names the axis, not the set: beside "All categories" a second "All …" read as a
+  // second scope, and alone on Search it read as a description of the page.
+  { value: 'all', label: 'Any status' },
   { value: 'unseen', label: 'Unseen' },
   { value: 'weak', label: 'Weak' },
   { value: 'ok', label: 'OK' },
