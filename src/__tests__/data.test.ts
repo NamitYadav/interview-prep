@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'vitest';
 import { ROUND_IDS, STORY_CATEGORIES, questions, rounds } from '../data';
+import { ROLE_IDS } from '../data/roles';
 import { MAX_DRAFTS } from '../lib/drafts';
 import { MAX_LAPS } from '../lib/lap';
 import type { RoundId } from '../types';
 
-const ID_RE = /^(hr|hm|coding|design|case|debrief|hoe)-\d{3}$/;
+const ID_RE = /^(hr|hm|coding|design|case|debrief|hoe|lead|arch)-\d{3}$/;
 
 describe('question bank', () => {
   test('rounds cover every RoundId once', () => {
@@ -37,7 +38,7 @@ describe('question bank', () => {
   // A floor against accidental loss, not a growth target. Round 4 deliberately cut 17
   // questions that were fully subsumed by a named sibling; these are the post-cut counts.
   test('every round keeps at least its post-round-4 question count', () => {
-    const min: Record<RoundId, number> = { hr: 36, hm: 99, coding: 35, design: 30, case: 30, debrief: 32, hoe: 33 };
+    const min: Record<RoundId, number> = { hr: 36, hm: 99, coding: 35, design: 30, case: 30, debrief: 32, hoe: 33, lead: 30, arch: 30 };
     for (const id of ROUND_IDS) {
       expect(questions.filter((q) => q.round === id).length, id).toBeGreaterThanOrEqual(min[id]);
     }
@@ -107,5 +108,13 @@ describe('question bank', () => {
   test('every STORY_CATEGORIES entry matches at least one real question category', () => {
     const categories = new Set(questions.map((q) => q.category));
     for (const c of STORY_CATEGORIES) expect(categories.has(c), c).toBe(true);
+  });
+
+  test('every roles tag holds only valid role ids and is non-empty when present', () => {
+    for (const q of questions) {
+      if (q.roles === undefined) continue;
+      expect(q.roles.length, q.id).toBeGreaterThan(0);
+      for (const r of q.roles) expect(ROLE_IDS, `${q.id}:${r}`).toContain(r);
+    }
   });
 });
