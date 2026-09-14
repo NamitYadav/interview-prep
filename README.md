@@ -1,10 +1,23 @@
 # Interview Prep
 
-Interactive mock-interview drill for staff frontend engineer loops in Berlin / EU.
-Nine rounds, 355 curated questions with model answers, key points and likely
-follow-ups. Reveal, rate yourself, and weak questions come back first.
+Interactive mock-interview drill for frontend engineer loops in Berlin / EU — Senior,
+Staff, Lead or Architect. Nine rounds across the four loops, 355 curated questions
+with model answers, key points and likely follow-ups. Reveal, rate yourself, and
+weak questions come back first.
 
 **Live:** https://namityadav.github.io/interview-prep/
+
+## Roles
+Switch the active role from the Loop date row on the home screen — it's a
+per-device setting, like the theme. Progress, notes and stories carry over
+between roles; only the round list and the visible question set change.
+
+| Role | Rounds |
+|---|---|
+| Senior frontend | HR, hiring manager, live coding, system design, case study, debrief |
+| Staff frontend | HR, hiring manager, live coding, system design, case study, debrief, head of engineering |
+| Lead frontend | HR, hiring manager, live coding, system design, tech lead round, head of engineering |
+| Frontend architect | HR, hiring manager, architecture deep-dive, system design, case study, debrief, head of engineering |
 
 ## Rounds
 1. HR screen (compensation, negotiation, German employment basics)
@@ -15,11 +28,16 @@ follow-ups. Reveal, rate yourself, and weak questions come back first.
 5. Case study (take-home + presentation)
 6. Case study debrief (panel grilling)
 7. Head of engineering
-8. Tech lead round (people management, delivery, hiring, conflict, technical direction)
-9. Architecture deep-dive (cross-team platform, migration strategy, ADRs, design-system
-   governance, build/runtime architecture)
+8. Tech lead round (Lead only) — people & growth, delivery & process, hiring & team shape,
+   conflict & stakeholders, technical direction, running the round
+9. Architecture deep-dive (Architect only) — cross-team platform, migration strategy,
+   decision records & governance, design-system ownership, build & runtime architecture,
+   trade-off probes
 
 ## Ways to drill
+- **Role switcher** — the Role select on the home screen swaps the active loop
+  (see [Roles](#roles) above): the round list, readiness counts and every drill
+  below re-scope to it immediately, without touching your ratings, notes or stories.
 - **Round practice** — a priority queue for one round: weak questions come first,
   then unseen, then ok, then solid. Rating a question Weak doesn't just leave it —
   it comes back around roughly 8 questions later, in the same lap, instead of
@@ -38,8 +56,8 @@ follow-ups. Reveal, rate yourself, and weak questions come back first.
   Solid that has gone stale counts as OK here, same as everywhere else. Click a row to
   drill that category, click it again to go back to all — the category select beside the
   tabs moves with it, and stays the way to change the filter without opening the panel.
-- **Weak drill** — everything you rated Weak, across all seven rounds, in one queue.
-  The set is frozen on entry; re-enter it to rebuild.
+- **Weak drill** — everything you rated Weak, across every round in the active role's
+  loop, in one queue. The set is frozen on entry; re-enter it to rebuild.
 - **Mock session** — a cross-round set in one sitting, in round order, like a real
   loop day. Two presets: *Full loop* (a slice of every round) and *Technical rounds*
   (hiring manager, live coding, system design). A banner marks each round
@@ -119,7 +137,11 @@ progress and haven't backed it up in the last week.
   backup: a new machine starts them fresh. Anything worth keeping goes in a note.
 
 ## Adding questions
-Edit `src/data/<round>.ts`. Ids are `<round>-<nnn>`. `npm test` validates shape and uniqueness.
+Edit `src/data/<round>.ts`. Ids are `<round>-<nnn>`. A question can carry an
+optional `roles: RoleId[]` to opt out of roles whose loop would otherwise show
+it (e.g. a platform-scoped question tagged away from Senior) — leave it off to
+show the question to every role whose loop includes its round. `npm test`
+validates shape and uniqueness.
 
 ## Development
 ```bash
