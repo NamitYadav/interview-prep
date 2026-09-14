@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import type { Persisted } from '../types';
-import { questions, questionsByRound, rounds } from '../data';
+import type { Persisted, RoleId } from '../types';
+import { forRole } from '../data';
+import { roles } from '../data/roles';
 import { roundStats } from '../lib/queue';
 import { useLoopDate } from '../hooks/useLoopDate';
 import { ExportButton, useLastExport } from './ExportImport';
 import { ProgressBar, statsCaption } from './ProgressBar';
+import { Select } from './Select';
 
 // Every card in a grid shares this shape so a short blurb never leaves the card
 // shorter than its neighbors: min-h reserves two lines' worth of space up front, and
@@ -27,9 +29,10 @@ const daysUntil = (dateStr: string): number => {
 
 const EXPORT_STALE_MS = 7 * 86_400_000;
 
-export function Home({ state }: { state: Persisted }) {
-  const weak = questions.filter((q) => state.progress[q.id]?.rating === 1).length;
-  const noted = questions.filter((q) => (state.notes[q.id] ?? '').trim().length > 0).length;
+export function Home({ state, role, setRole }: { state: Persisted; role: RoleId; setRole: (r: RoleId) => void }) {
+  const { role: activeRole, rounds: roleRounds, questions: roleQuestions, byRound } = forRole(role);
+  const weak = roleQuestions.filter((q) => state.progress[q.id]?.rating === 1).length;
+  const noted = roleQuestions.filter((q) => (state.notes[q.id] ?? '').trim().length > 0).length;
   const stories = Object.values(state.stories);
   const neverRehearsed = stories.filter((s) => s.lastRehearsed === undefined).length;
 
@@ -44,10 +47,10 @@ export function Home({ state }: { state: Persisted }) {
   const hasProgress = Object.keys(state.progress).length > 0;
   const exportIsStale = hasProgress && (!lastExport || now - Number(lastExport) > EXPORT_STALE_MS);
 
-  const roundCards = rounds.map((round, index) => ({
+  const roundCards = roleRounds.map((round, index) => ({
     round,
     index,
-    stats: roundStats(questionsByRound(round.id), state.progress),
+    stats: roundStats(byRound(round.id), state.progress),
   }));
   // With a loop date the cards sort by urgency, and a "Round 3" label on the first
   // card would contradict its position — so the label only shows in data order.
@@ -59,7 +62,7 @@ export function Home({ state }: { state: Persisted }) {
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
       <header className="mb-6">
         <h1 tabIndex={-1} className="text-2xl font-semibold">Interview Prep</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">Staff frontend · Berlin / EU loop</p>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">{activeRole.title} · Berlin / EU loop</p>
       </header>
 
       <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
@@ -72,6 +75,12 @@ export function Home({ state }: { state: Persisted }) {
           className="rounded border border-zinc-300 bg-transparent px-2 py-1 dark:border-zinc-700"
         />
         {daysLeft !== null && <span className="text-zinc-500 dark:text-zinc-400">{daysLeft} days left</span>}
+        <Select
+          label="Role"
+          value={role}
+          onChange={(v) => setRole(v as RoleId)}
+          options={roles.map((r) => ({ value: r.id, label: r.title }))}
+        />
       </div>
 
       {exportIsStale && (

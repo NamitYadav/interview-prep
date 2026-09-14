@@ -4,6 +4,7 @@ import type { Route, RoundId } from './types';
 import { useAppState } from './hooks/useAppState';
 import { useHashRoute } from './hooks/useHashRoute';
 import { useStrictMode } from './hooks/useStrictMode';
+import { useRole } from './hooks/useRole';
 import { useShortcuts } from './hooks/useShortcuts';
 import { Home } from './components/Home';
 import { RoundView } from './components/RoundView';
@@ -40,6 +41,7 @@ export default function App() {
   const route = useHashRoute();
   const [strictMode, setStrictMode] = useStrictMode();
   const [shortcuts, setShortcuts] = useShortcuts();
+  const [role, setRole] = useRole();
 
   // Move focus to the new view's heading after a route change — but not on first
   // load, where the page itself already has the user's attention and stealing
@@ -91,7 +93,7 @@ export default function App() {
           setShortcuts={setShortcuts}
         />
       </header>
-      {route === null && <Home state={state} />}
+      {route === null && <Home state={state} role={role} setRole={setRole} />}
       {route === 'weak' && <WeakDrill state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} />}
       {route === 'notes' && <NotesView state={state} />}
       {route === 'stories' && <StoriesView state={state} dispatch={dispatch} />}

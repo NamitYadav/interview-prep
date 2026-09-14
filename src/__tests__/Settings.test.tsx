@@ -183,7 +183,7 @@ describe('what the header and home screen carry now', () => {
   test('home carries no data controls of its own', () => {
     function HomeHarness() {
       const [state] = useReducer(reducer, EMPTY);
-      return <Home state={state} />;
+      return <Home state={state} role="staff" setRole={() => {}} />;
     }
     render(<HomeHarness />);
     expect(screen.queryByRole('button', { name: /^export$/i })).not.toBeInTheDocument();
