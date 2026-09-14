@@ -1,12 +1,13 @@
-import type { Persisted } from '../types';
+import type { Persisted, RoleId } from '../types';
 import { BackLink } from './BackLink';
-import { questionsByRound, rounds } from '../data';
+import { forRole } from '../data';
 
-export function PrintView({ state }: { state: Persisted }) {
+export function PrintView({ state, role }: { state: Persisted; role: RoleId }) {
+  const { rounds, byRound } = forRole(role);
   const sections = rounds
     .map((round) => ({
       round,
-      items: questionsByRound(round.id).filter(
+      items: byRound(round.id).filter(
         (q) => state.progress[q.id]?.rating === 1 || (state.notes[q.id] ?? '').trim().length > 0,
       ),
     }))

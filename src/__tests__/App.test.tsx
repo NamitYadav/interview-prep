@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { STORAGE_KEY, emptyState } from '../lib/storage';
+import { ROLE_KEY } from '../hooks/useRole';
 import App from '../App';
 
 afterEach(() => {
@@ -227,4 +228,12 @@ describe('shortcuts toggle', () => {
     await openSettings();
     expect(screen.getByRole('checkbox', { name: /shortcuts/i })).not.toBeChecked();
   });
+});
+
+test('a round hash outside the active role\'s loop renders Home instead', () => {
+  localStorage.setItem(ROLE_KEY, 'senior');
+  window.location.hash = '#hoe';
+  render(<App />);
+  expect(screen.getByRole('heading', { name: /interview prep/i })).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: /head of engineering/i })).not.toBeInTheDocument();
 });

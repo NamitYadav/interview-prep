@@ -9,7 +9,7 @@ import { RoundView } from '../components/RoundView';
 
 function Harness() {
   const [state, dispatch] = useReducer(reducer, EMPTY);
-  return <RoundView roundId="hr" state={state} dispatch={dispatch} strictMode={false} />;
+  return <RoundView roundId="hr" state={state} dispatch={dispatch} strictMode={false} role="staff" />;
 }
 
 const hrRound = rounds.find((r) => r.id === 'hr')!;
@@ -158,7 +158,7 @@ describe('RoundView', () => {
 
     function DesignHarness() {
       const [state, dispatch] = useReducer(reducer, EMPTY);
-      return <RoundView roundId="design" state={state} dispatch={dispatch} strictMode={false} />;
+      return <RoundView roundId="design" state={state} dispatch={dispatch} strictMode={false} role="staff" />;
     }
     render(<DesignHarness />);
     expect(screen.getByRole('tab', { name: /45-min prompt/i })).toBeInTheDocument();
@@ -168,7 +168,7 @@ describe('RoundView', () => {
     function BadHarness() {
       const [state, dispatch] = useReducer(reducer, EMPTY);
       // @ts-expect-error deliberately invalid RoundId to exercise the guard
-      return <RoundView roundId="not-a-round" state={state} dispatch={dispatch} strictMode={false} />;
+      return <RoundView roundId="not-a-round" state={state} dispatch={dispatch} strictMode={false} role="staff" />;
     }
     render(<BadHarness />);
     expect(screen.getByText(/round not found/i)).toBeInTheDocument();

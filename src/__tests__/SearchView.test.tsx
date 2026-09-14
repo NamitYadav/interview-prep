@@ -10,7 +10,7 @@ import type { Persisted } from '../types';
 
 function Harness({ initial = EMPTY }: { initial?: Persisted } = {}) {
   const [state, dispatch] = useReducer(reducer, initial);
-  return <SearchView state={state} dispatch={dispatch} />;
+  return <SearchView state={state} dispatch={dispatch} role="staff" />;
 }
 
 const [firstQuestion] = questions;

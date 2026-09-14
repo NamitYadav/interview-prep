@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useEffect, useReducer } from 'react';
-import type { Persisted } from '../types';
+import type { Persisted, RoleId } from '../types';
 import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { questionsByRound } from '../data';
@@ -12,9 +12,9 @@ import { DesignSession } from '../components/DesignSession';
 // test comes back checked in the next.
 beforeEach(() => localStorage.clear());
 
-function Harness() {
+function Harness({ role = 'staff' }: { role?: RoleId } = {}) {
   const [state, dispatch] = useReducer(reducer, EMPTY);
-  return <DesignSession state={state} dispatch={dispatch} />;
+  return <DesignSession state={state} dispatch={dispatch} role={role} />;
 }
 
 describe('DesignSession', () => {
@@ -150,7 +150,7 @@ describe('design scratch survives a reload across attempts', () => {
   function ReloadableHarness() {
     const [state, dispatch] = useReducer(reducer, persisted);
     useEffect(() => { persisted = state; });
-    return <DesignSession state={state} dispatch={dispatch} />;
+    return <DesignSession state={state} dispatch={dispatch} role="staff" />;
   }
 
   // The scratch key used to include the in-memory `attempt` counter, which restarts

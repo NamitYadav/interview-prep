@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type Dispatch } from 'react';
-import type { Persisted, Question } from '../types';
+import type { Persisted, Question, RoleId } from '../types';
 import type { Action } from '../hooks/useAppState';
-import { questionsByRound } from '../data';
+import { forRole } from '../data';
 import { nextQuestion } from '../lib/queue';
 import { useQuestionTimer } from '../hooks/useQuestionTimer';
 import { DRAFT_SAVE_FAILED, useDraft } from '../hooks/useDraft';
@@ -20,8 +20,8 @@ const TARGET_SECONDS = 45 * 60;
 
 const noop = () => {};
 
-export function DesignSession({ state, dispatch }: { state: Persisted; dispatch: Dispatch<Action> }) {
-  const designQuestions = questionsByRound('design');
+export function DesignSession({ state, dispatch, role }: { state: Persisted; dispatch: Dispatch<Action>; role: RoleId }) {
+  const designQuestions = forRole(role).byRound('design');
   // Excludes the prompt just shown: without this, nextQuestion is memoryless of what's
   // on screen, and a question sitting in the lowest bucket (unrated, or just rated
   // Weak — Weak keeps it there) got served again on the very next restart, over and

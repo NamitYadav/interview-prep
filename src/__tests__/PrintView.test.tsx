@@ -11,7 +11,7 @@ const withStarter = questions.find((q) => q.code && q.scratch)!;
 
 describe('PrintView', () => {
   test('shows an empty state when nothing is weak or noted', () => {
-    render(<PrintView state={EMPTY} />);
+    render(<PrintView state={EMPTY} role="staff" />);
     expect(screen.getByText(/nothing rated weak or noted yet/i)).toBeInTheDocument();
   });
 
@@ -21,7 +21,7 @@ describe('PrintView', () => {
       progress: { 'hr-001': { rating: 1, seen: 1, lastSeen: 1 } },
       notes: { 'coding-001': 'my real story here' },
     };
-    render(<PrintView state={state} />);
+    render(<PrintView state={state} role="staff" />);
     expect(screen.getByRole('heading', { name: 'HR screen' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Live coding' })).toBeInTheDocument();
     expect(screen.getByText('my real story here')).toBeInTheDocument();
@@ -30,7 +30,7 @@ describe('PrintView', () => {
   // "What is wrong with this component?" is unanswerable on paper without the component.
   test('prints the code snippet a question is about', () => {
     const state: Persisted = { ...EMPTY, progress: { [withSnippet.id]: { rating: 1, seen: 1, lastSeen: 1 } } };
-    const { container } = render(<PrintView state={state} />);
+    const { container } = render(<PrintView state={state} role="staff" />);
     const pre = container.querySelector('pre');
     expect(pre?.textContent).toBe(withSnippet.code);
     // Wraps rather than running off the right edge of the page.
@@ -41,13 +41,13 @@ describe('PrintView', () => {
 
   test('omits the starter text of a scratch question', () => {
     const state: Persisted = { ...EMPTY, progress: { [withStarter.id]: { rating: 1, seen: 1, lastSeen: 1 } } };
-    const { container } = render(<PrintView state={state} />);
+    const { container } = render(<PrintView state={state} role="staff" />);
     expect(container.querySelector('pre')).toBeNull();
   });
 
   test('the Print button calls window.print', async () => {
     const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {});
-    render(<PrintView state={{ ...EMPTY, notes: { 'hr-001': 'x' } }} />);
+    render(<PrintView state={{ ...EMPTY, notes: { 'hr-001': 'x' } }} role="staff" />);
     await userEvent.click(screen.getByRole('button', { name: /print/i }));
     expect(printSpy).toHaveBeenCalledOnce();
     printSpy.mockRestore();

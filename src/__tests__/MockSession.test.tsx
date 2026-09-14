@@ -9,7 +9,7 @@ import { MockSession } from '../components/MockSession';
 
 function Harness() {
   const [state, dispatch] = useReducer(reducer, EMPTY);
-  return <MockSession state={state} dispatch={dispatch} strictMode={false} />;
+  return <MockSession state={state} dispatch={dispatch} strictMode={false} role="staff" />;
 }
 
 describe('MockSession', () => {
@@ -108,7 +108,7 @@ describe('a reloaded mock session still counts what it rated', () => {
   function ReloadableHarness() {
     const [state, dispatch] = useReducer(reducer, persisted);
     useEffect(() => { persisted = state; });
-    return <MockSession state={state} dispatch={dispatch} strictMode={false} />;
+    return <MockSession state={state} dispatch={dispatch} strictMode={false} role="staff" />;
   }
 
   // The session's ratings were compared against a baseline frozen when the preset was
@@ -155,7 +155,7 @@ describe('a session abandoned before any action does not poison the next one', (
   function ReloadableHarness() {
     const [state, dispatch] = useReducer(reducer, persisted);
     useEffect(() => { persisted = state; });
-    return <MockSession state={state} dispatch={dispatch} strictMode={false} />;
+    return <MockSession state={state} dispatch={dispatch} strictMode={false} role="staff" />;
   }
 
   // Opening a preset writes a baseline immediately, but Practice only writes a lap once
