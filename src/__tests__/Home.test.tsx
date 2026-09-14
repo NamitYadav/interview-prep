@@ -6,7 +6,9 @@ import { useReducer, useState } from 'react';
 import type { Persisted, Progress, RoleId } from '../types';
 import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
-import { questions, questionsByRound } from '../data';
+import { forRole, questions } from '../data';
+// Staff sees every question in these rounds (every tag includes Staff), so this is the whole bank's view.
+const questionsByRound = forRole('staff').byRound;
 import { LAST_EXPORT_KEY } from '../components/ExportImport';
 import { LOOP_DATE_KEY } from '../hooks/useLoopDate';
 import { Home } from '../components/Home';

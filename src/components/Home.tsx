@@ -65,22 +65,30 @@ export function Home({ state, role, setRole }: { state: Persisted; role: RoleId;
         <p className="text-sm text-zinc-600 dark:text-zinc-400">{activeRole.title} · Berlin / EU loop</p>
       </header>
 
-      <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
-        <label htmlFor="loop-date" className="text-zinc-600 dark:text-zinc-400">Loop date</label>
-        <input
-          id="loop-date"
-          type="date"
-          value={loopDate ?? ''}
-          onChange={(e) => setLoopDate(e.target.value || null)}
-          className="rounded border border-zinc-300 bg-transparent px-2 py-1 dark:border-zinc-700"
-        />
-        {daysLeft !== null && <span className="text-zinc-500 dark:text-zinc-400">{daysLeft} days left</span>}
-        <Select
-          label="Role"
-          value={role}
-          onChange={(v) => setRole(v as RoleId)}
-          options={roles.map((r) => ({ value: r.id, label: r.title }))}
-        />
+      {/* Each label travels with its control: at 375px the row wraps, and a bare "Role"
+          label was left stranded at the end of line one with its select on line two. */}
+      <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+        <span className="flex items-center gap-2">
+          <label htmlFor="loop-date" className="text-zinc-600 dark:text-zinc-400">Loop date</label>
+          <input
+            id="loop-date"
+            type="date"
+            value={loopDate ?? ''}
+            onChange={(e) => setLoopDate(e.target.value || null)}
+            className="rounded border border-zinc-300 bg-transparent px-2 py-1 dark:border-zinc-700"
+          />
+          {daysLeft !== null && <span className="text-zinc-500 dark:text-zinc-400">{daysLeft} days left</span>}
+        </span>
+        <span className="flex items-center gap-2">
+          <label htmlFor="role" className="text-zinc-600 dark:text-zinc-400">Role</label>
+          <Select
+            id="role"
+            label="Role"
+            value={role}
+            onChange={(v) => setRole(v as RoleId)}
+            options={roles.map((r) => ({ value: r.id, label: r.title }))}
+          />
+        </span>
       </div>
 
       {exportIsStale && (
@@ -128,7 +136,7 @@ export function Home({ state, role, setRole }: { state: Persisted; role: RoleId;
         </a>
         <a href="#search" className={drillLink}>
           <span className="font-medium">Search</span>
-          <span className={drillMeta}>Every question, every round</span>
+          <span className={drillMeta}>Every question in your loop</span>
         </a>
         <a href="#print" className={drillLink}>
           <span className="font-medium">Print cheat sheet</span>

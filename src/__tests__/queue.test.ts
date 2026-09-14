@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { Progress, Question } from '../types';
-import { SOLID_DECAY_MS, categoryVerdict, nextQuestion, orderQueue, roundStats } from '../lib/queue';
+import { SOLID_DECAY_MS, categoryVerdict, filterByStatus, nextQuestion, orderQueue, roundStats } from '../lib/queue';
 
 const q = (id: string): Question => ({
   id, round: 'hm', category: 'X', question: id, answer: ['a'], keyPoints: ['k'],
@@ -117,5 +117,37 @@ describe('categoryVerdict', () => {
     expect(categoryVerdict(stats(5, 0, 0))).toBe('weak');
     expect(categoryVerdict(stats(0, 5, 0))).toBe('ok');
     expect(categoryVerdict(stats(0, 0, 5))).toBe('solid');
+  });
+});
+
+describe('filterByStatus', () => {
+  const now = 1_000_000;
+  const progress: Progress = {
+    a: { rating: 1, seen: 1, lastSeen: now },
+    b: { rating: 2, seen: 1, lastSeen: now },
+    c: { rating: 3, seen: 1, lastSeen: now },
+    d: { rating: 3, seen: 1, lastSeen: now - SOLID_DECAY_MS - 1 },
+    // e: never rated
+  };
+  const ids = (status: Parameters<typeof filterByStatus>[1]) =>
+    filterByStatus(qs, status, progress, now).map((x) => x.id);
+
+  test('all returns the same array untouched', () => {
+    expect(filterByStatus(qs, 'all', progress, now)).toBe(qs);
+  });
+
+  test('unseen is exactly the unrated questions', () => {
+    expect(ids('unseen')).toEqual(['e']);
+  });
+
+  test('each rating filters to its own bucket', () => {
+    expect(ids('weak')).toEqual(['a']);
+    expect(ids('solid')).toEqual(['c']);
+  });
+
+  // The same bucket() the queue orders by, so the filter agrees with the bar and the
+  // verdicts: a Solid past the decay window is OK everywhere.
+  test('a decayed solid filters as ok, not solid', () => {
+    expect(ids('ok')).toEqual(['b', 'd']);
   });
 });

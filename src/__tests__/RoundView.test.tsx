@@ -4,7 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
 import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
-import { questionsByRound, rounds } from '../data';
+import { forRole, rounds } from '../data';
+const questionsByRound = forRole('staff').byRound;
 import { RoundView } from '../components/RoundView';
 
 function Harness() {

@@ -19,8 +19,8 @@ export function SearchView({ state, dispatch, role }: { state: Persisted; dispat
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
       <BackLink />
       <h1 tabIndex={-1} className="mb-1 text-2xl font-semibold">Search</h1>
-      <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">Every question, every round, in one search.</p>
-      <Select label="Status" value={status} onChange={(v) => setStatus(v as QuestionStatus)} options={STATUS_OPTIONS} />
+      <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">Every question in your loop, in one search.</p>
+      <Select className="mb-2" label="Status" value={status} onChange={(v) => setStatus(v as QuestionStatus)} options={STATUS_OPTIONS} />
       <Browse questions={filtered} state={state} dispatch={dispatch} />
     </main>
   );

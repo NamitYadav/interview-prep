@@ -19,7 +19,7 @@ export function WeakDrill({
       <BackLink />
       <h1 tabIndex={-1} className="text-2xl font-semibold">Weak drill</h1>
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-        Everything you rated weak, across every round.
+        Everything you rated weak, across every round in your loop.
       </p>
 
       {drill.length === 0 ? (

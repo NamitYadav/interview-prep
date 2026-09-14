@@ -112,7 +112,7 @@ export function RoundView({
           </button>
         ))}
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="mb-2 flex flex-wrap gap-2">
         <Select
           label="Category"
           value={selected ?? ALL}
