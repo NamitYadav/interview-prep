@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useEffect, useReducer } from 'react';
@@ -6,12 +6,14 @@ import type { Persisted, RoleId } from '../types';
 import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { questionsByRound } from '../data';
-import { readDesignSession, writeDesignSession } from '../lib/lap';
+import { writeDesignSession } from '../lib/lap';
+import * as lapModule from '../lib/lap';
 import { DesignSession } from '../components/DesignSession';
 
 // Sessions and drafts persist in localStorage; without this a phase ticked in one
 // test comes back checked in the next.
 beforeEach(() => localStorage.clear());
+afterEach(() => vi.restoreAllMocks());
 
 function Harness({ role = 'staff' }: { role?: RoleId } = {}) {
   const [state, dispatch] = useReducer(reducer, EMPTY);
@@ -35,17 +37,16 @@ describe('DesignSession', () => {
     else expect(heading).not.toBeInTheDocument();
   });
 
-  test('mounting with a stale session for a question id outside the scoped set discards it, not resumes it', () => {
+  test('mounting with a stale session for a question id outside the scoped set calls clearDesignSession', () => {
+    // Asserting on the eventual storage state is vacuous here: pickQuestionId()'s
+    // fallback always lands on a valid question, and DesignPrompt's mount effect
+    // unconditionally re-persists a session for it — so storage ends up holding a
+    // valid entry whether or not the guard's explicit clearDesignSession() call ever
+    // runs. Spy on the call itself to observe the one line this guard actually adds.
+    const clearSpy = vi.spyOn(lapModule, 'clearDesignSession');
     writeDesignSession({ questionId: 'design-does-not-exist', startedAt: Date.now(), phases: [1, 2] });
     render(<Harness />);
-    // Today's code already falls back to a fresh pickQuestionId() when the saved id isn't
-    // in the scoped set (nothing renders broken either way) — but it leaves the stale
-    // entry in storage until Finish or Another Prompt. The fix clears it immediately on
-    // mount and picks a fresh question, whose own DesignPrompt effect re-persists a brand
-    // new, valid session synchronously within render(). So storage never sits empty here —
-    // it goes stale -> cleared -> replaced. What matters is that the stale pointer doesn't
-    // survive.
-    expect(readDesignSession()?.questionId).not.toBe('design-does-not-exist');
+    expect(clearSpy).toHaveBeenCalled();
   });
 
   // Practice shows "1 of 30" in this corner; the design prompt showed its raw id.
