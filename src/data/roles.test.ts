@@ -55,13 +55,12 @@ describe('forRole', () => {
     expect(architect.questions.some((q) => q.id === untaggedHr!.id)).toBe(true);
   });
 
-  test('a tagged question appears only for the roles listed', () => {
+  // Skipped: no question in the bank carries a `roles` tag yet. A later task in
+  // this plan tags ~23 existing questions, at which point this test should be
+  // un-skipped (change `test.skip` back to `test`) since real tagged data will exist.
+  test.skip('a tagged question appears only for the roles listed', () => {
     const tagged = forRole('staff').questions.find((q) => q.roles !== undefined);
-    if (!tagged) {
-      // Skip if no tagged questions exist yet in the data
-      expect(true).toBe(true);
-      return;
-    }
+    if (!tagged) return;
     expect(tagged.id).toBeDefined();
     for (const id of ['senior', 'staff', 'lead', 'architect'] as const) {
       const present = forRole(id).questions.some((q) => q.id === tagged.id);
