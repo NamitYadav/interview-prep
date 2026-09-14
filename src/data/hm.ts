@@ -19,6 +19,7 @@ export const hm: Question[] = [
       'Gives an explicit ordered decision framework',
       'States a default bias toward a modular monolith until proven otherwise',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['What would make you migrate an existing monolith to micro-frontends?', 'How do you keep design consistency across independently deployed apps?'],
   },
   {
@@ -38,6 +39,7 @@ export const hm: Question[] = [
       'Explicit deprecation and migration/adoption plan',
       'Names the "too many variants" failure mode and its fix',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['How do you handle a team that needs a variant the library does not support?', 'How do you decide something belongs in the shared library versus staying app-specific?'],
   },
   {
@@ -57,6 +59,7 @@ export const hm: Question[] = [
       'Defaults to local/context for scoped client state',
       'Justifies a global store by cross-cutting client state with real transitions, not by time-travel debugging',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['How would you migrate a team off over-used global state?', 'What is a case where you regretted using local state instead of a global store?'],
   },
   {
@@ -76,6 +79,7 @@ export const hm: Question[] = [
       'Optimistic updates always paired with rollback and visible error handling',
       'Names the race-condition edge case between optimistic and background updates',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['How would you debug a cache that shows stale data intermittently?', 'When would you avoid optimistic updates entirely?'],
   },
   {
@@ -95,6 +99,7 @@ export const hm: Question[] = [
       'Gives a practical decision framework tied to data-heaviness and session pattern',
       'Names the "SSR because trendy" anti-pattern explicitly',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['How would you measure whether SSR actually helped after adopting it?', 'What would make you migrate a dashboard back to a pure SPA?'],
   },
   {
@@ -114,6 +119,7 @@ export const hm: Question[] = [
       'Escalating batch rollout with a predefined rollback trigger',
       'Explicit communication plan and buffer for long-tail apps',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['What would you do if the pilot app revealed a blocking issue?', 'How do you decide the rollback trigger threshold in advance?'],
   },
   {
@@ -138,6 +144,7 @@ export const hm: Question[] = [
       'Coalesces updates into one flush per frame, keeping the latest value per key, rather than one render per message',
       'Names concrete backpressure levers: server-side aggregation, viewport-scoped subscriptions, a bounded client buffer',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['How would you test the reconnect-and-resume path in CI?', 'What does the UI show while the connection is down but data is still on screen?'],
   },
   {
@@ -156,6 +163,7 @@ export const hm: Question[] = [
       'Keeps a periodic full build on main because the affected graph misses runtime coupling',
       'Takes a position: no internal versioning inside the repo, real semver plus a changelog and a support window for external consumers',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['A cached task returned a wrong result and it shipped. How do you find out why, and what stops it recurring?', 'When would you publish a package outward instead of keeping consumers on the current commit?'],
   },
 
@@ -595,6 +603,7 @@ export const hm: Question[] = [
       'Names one thing they would do differently and why',
       'States the blast radius as a number of teams and names the artifact (RFC/ADR/standard) left behind',
     ],
+    roles: ['staff', 'lead', 'architect'],
     followUps: ['What would you have done if that approach had not worked?', 'How do you know the change actually stuck after you moved on?'],
   },
   {
@@ -695,6 +704,7 @@ export const hm: Question[] = [
       'Names a real obstacle and adaptation, not a frictionless story',
       'Names the number of teams, the number of quarters, and the RFC or strategy doc that carried it',
     ],
+    roles: ['staff', 'lead', 'architect'],
     followUps: ['Which team was hardest to bring on board, and why?', 'How did you keep the initiative from stalling once the initial excitement faded?'],
   },
   {
@@ -759,6 +769,7 @@ export const hm: Question[] = [
       'Names who reviewed it, one thing the review changed, and who signed off',
       'Gives evidence it was used: a decision made or refused by citing it, and when it was revisited',
     ],
+    roles: ['staff', 'lead', 'architect'],
     followUps: ['Which bet in it turned out to be wrong, and how did you find out?', 'How do you write a strategy that stays useful after a reorg changes the team shape?'],
   },
   {
@@ -783,6 +794,7 @@ export const hm: Question[] = [
       'States the strongest objection raised in calibration and whether it was fair',
       'Says what they told the person afterward, including in the case that did not go through',
     ],
+    roles: ['staff', 'lead', 'architect'],
     followUps: ['How do you sponsor someone whose strongest work is invisible to the calibration room?', 'What would you do if you concluded mid-cycle that the case was not actually there?'],
   },
 
