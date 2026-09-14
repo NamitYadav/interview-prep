@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type Dispatch } from 'react';
 import { BackLink } from './BackLink';
-import type { Persisted, Question, RoundId } from '../types';
+import type { Persisted, Question, RoleId, Round, RoundId } from '../types';
 import type { Action } from '../hooks/useAppState';
-import { questionsByRound } from '../data';
+import { forRole } from '../data';
 import { Practice } from './Practice';
 import { clearBaseline, clearLap, lapKey, readBaseline, readLap, writeBaseline, type Baseline } from '../lib/lap';
 
@@ -13,29 +13,34 @@ const PRESETS: Preset[] = [
     id: 'full-loop',
     title: 'Full loop',
     blurb: 'A slice of every round, in round order.',
-    composition: { hr: 4, hm: 6, coding: 4, design: 3, case: 4, debrief: 4, hoe: 3 },
+    composition: { hr: 4, hm: 6, coding: 4, design: 3, case: 4, debrief: 4, hoe: 3, lead: 3, arch: 3 },
   },
   {
     id: 'technical',
     title: 'Technical rounds',
-    blurb: 'Hiring manager, live coding, and system design only — no HR or case study.',
-    composition: { hm: 8, coding: 6, design: 6 },
+    blurb: 'Hiring manager, live coding or architecture, and system design only — no HR or case study.',
+    composition: { hm: 8, coding: 6, design: 6, arch: 6 },
   },
 ];
 
 // Plain array order, not weak-weighted — a real loop doesn't let you pick your
-// weakest questions in each round, so neither does this preset.
-function buildSet(composition: Preset['composition']): Question[] {
+// weakest questions in each round, so neither does this preset. Order comes from the
+// role's own round sequence, not the composition literal's key order — those only
+// happen to match for Staff/Senior; Lead and Architect reorder rounds relative to it.
+function buildSet(composition: Preset['composition'], roleRounds: Round[], byRound: (r: RoundId) => Question[]): Question[] {
   const picked: Question[] = [];
-  for (const [roundId, count] of Object.entries(composition) as [RoundId, number][]) {
-    picked.push(...questionsByRound(roundId).slice(0, count));
+  for (const round of roleRounds) {
+    const count = composition[round.id];
+    if (count === undefined) continue;
+    picked.push(...byRound(round.id).slice(0, count));
   }
   return picked;
 }
 
 export function MockSession({
-  state, dispatch, strictMode, shortcuts = true,
-}: { state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean; shortcuts?: boolean }) {
+  state, dispatch, strictMode, shortcuts = true, role,
+}: { state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean; shortcuts?: boolean; role: RoleId }) {
+  const { rounds: roleRounds, byRound } = forRole(role);
   const [session, setSession] = useState<{ preset: Preset; drill: Question[]; baseline: Baseline } | null>(null);
   const [finished, setFinished] = useState(false);
 
@@ -47,8 +52,8 @@ export function MockSession({
   }, [finished]);
 
   const start = (preset: Preset) => {
-    const drill = buildSet(preset.composition);
-    const key = lapKey(drill);
+    const drill = buildSet(preset.composition, roleRounds, byRound);
+    const key = lapKey(role, drill);
     // Frozen on entry, like the weak drill: freezing the baseline too, so the recap can
     // tell "rated this session" apart from ratings you already had. Persisted rather
     // than kept in state alone, because a mid-session reload lands the user back on
@@ -78,7 +83,7 @@ export function MockSession({
   // against the previous one's starting point.
   const endSession = () => {
     if (!session) return;
-    const key = lapKey(session.drill);
+    const key = lapKey(role, session.drill);
     clearLap(key);
     clearBaseline(key);
   };
@@ -158,7 +163,7 @@ export function MockSession({
       <BackLink />
       <h1 tabIndex={-1} className="text-2xl font-semibold">{preset.title}</h1>
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{drill.length} questions. Rate as you go, finish whenever.</p>
-      <Practice questions={drill} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} ordered onLapComplete={finishSession} />
+      <Practice questions={drill} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} ordered onLapComplete={finishSession} role={role} />
       <div className="mt-3 flex justify-end">
         <button type="button" onClick={finishSession} className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">
           Finish session

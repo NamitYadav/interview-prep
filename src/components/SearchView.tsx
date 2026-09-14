@@ -1,18 +1,19 @@
 import { useMemo, useState, type Dispatch } from 'react';
 import { BackLink } from './BackLink';
-import type { Persisted } from '../types';
+import type { Persisted, RoleId } from '../types';
 import type { Action } from '../hooks/useAppState';
-import { questions } from '../data';
+import { forRole } from '../data';
 import { filterByStatus, type QuestionStatus } from '../lib/queue';
 import { Browse } from './Browse';
 import { STATUS_OPTIONS, Select } from './Select';
 
-export function SearchView({ state, dispatch }: { state: Persisted; dispatch: Dispatch<Action> }) {
+export function SearchView({ state, dispatch, role }: { state: Persisted; dispatch: Dispatch<Action>; role: RoleId }) {
+  const { questions } = forRole(role);
   const [status, setStatus] = useState<QuestionStatus>('all');
   // Frozen on the filter, not on progress, for the same reason RoundView freezes: rating
   // a question from the list would otherwise make the card you are looking at vanish.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const filtered = useMemo(() => filterByStatus(questions, status, state.progress), [status]);
+  const filtered = useMemo(() => filterByStatus(questions, status, state.progress), [status, questions]);
 
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6">

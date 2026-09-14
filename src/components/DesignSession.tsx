@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type Dispatch } from 'react';
-import type { Persisted, Question } from '../types';
+import type { Persisted, Question, RoleId } from '../types';
 import type { Action } from '../hooks/useAppState';
-import { questionsByRound } from '../data';
+import { forRole } from '../data';
 import { nextQuestion } from '../lib/queue';
 import { useQuestionTimer } from '../hooks/useQuestionTimer';
 import { DRAFT_SAVE_FAILED, useDraft } from '../hooks/useDraft';
@@ -20,8 +20,8 @@ const TARGET_SECONDS = 45 * 60;
 
 const noop = () => {};
 
-export function DesignSession({ state, dispatch }: { state: Persisted; dispatch: Dispatch<Action> }) {
-  const designQuestions = questionsByRound('design');
+export function DesignSession({ state, dispatch, role }: { state: Persisted; dispatch: Dispatch<Action>; role: RoleId }) {
+  const designQuestions = forRole(role).byRound('design');
   // Excludes the prompt just shown: without this, nextQuestion is memoryless of what's
   // on screen, and a question sitting in the lowest bucket (unrated, or just rated
   // Weak — Weak keeps it there) got served again on the very next restart, over and
@@ -33,8 +33,10 @@ export function DesignSession({ state, dispatch }: { state: Persisted; dispatch:
   // A session in progress wins over the picker: after a reload the picker lands on the
   // weakest prompt, which is not necessarily the one whose clock is running.
   const [questionId, setQuestionId] = useState(() => {
-    const saved = readDesignSession()?.questionId;
-    return saved !== undefined && designQuestions.some((q) => q.id === saved) ? saved : pickQuestionId();
+    const saved = readDesignSession();
+    if (saved !== undefined && designQuestions.some((q) => q.id === saved.questionId)) return saved.questionId;
+    if (saved !== undefined) clearDesignSession();
+    return pickQuestionId();
   });
   // Bumped on every restart so the key below changes even when the next prompt
   // happens to be the very same question (e.g. only one prompt exists at all) —

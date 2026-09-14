@@ -2,8 +2,8 @@ import { afterEach, describe, expect, test } from 'vitest';
 
 afterEach(() => localStorage.clear());
 import { render, screen, within, fireEvent } from '@testing-library/react';
-import { useReducer } from 'react';
-import type { Persisted, Progress } from '../types';
+import { useReducer, useState } from 'react';
+import type { Persisted, Progress, RoleId } from '../types';
 import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { questions, questionsByRound } from '../data';
@@ -13,7 +13,8 @@ import { Home } from '../components/Home';
 
 function Harness({ initial }: { initial: Persisted }) {
   const [state] = useReducer(reducer, initial);
-  return <Home state={state} />;
+  const [role, setRole] = useState<RoleId>('staff');
+  return <Home state={state} role={role} setRole={setRole} />;
 }
 
 const roundOrder = () => within(screen.getByRole('list')).getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
@@ -112,5 +113,14 @@ describe('Home', () => {
     const cards = within(screen.getByRole('list')).getAllByRole('listitem');
     expect(cards[0]).toHaveClass('sm:first:col-span-2');
     expect(cards[cards.length - 1]).not.toHaveClass('sm:last:col-span-2');
+  });
+
+  test('switching roles changes the visible round cards and readiness counts', async () => {
+    const userEvent = (await import('@testing-library/user-event')).default;
+    render(<Harness initial={EMPTY} />);
+    expect(screen.getByText('HR screen')).toBeInTheDocument();
+    expect(screen.getByText('Head of engineering')).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByLabelText('Role'), 'Senior frontend');
+    expect(screen.queryByText('Head of engineering')).not.toBeInTheDocument();
   });
 });

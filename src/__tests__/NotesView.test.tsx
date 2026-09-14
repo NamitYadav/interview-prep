@@ -8,12 +8,12 @@ const withNotes = (notes: Record<string, string>): Persisted => ({ ...EMPTY, not
 
 describe('NotesView', () => {
   test('shows an empty state when no notes exist', () => {
-    render(<NotesView state={EMPTY} />);
+    render(<NotesView state={EMPTY} role="staff" />);
     expect(screen.getByText(/no notes yet/i)).toBeInTheDocument();
   });
 
   test('lists each noted question with its round and note text', () => {
-    render(<NotesView state={withNotes({ 'hr-001': 'My relocation story.' })} />);
+    render(<NotesView state={withNotes({ 'hr-001': 'My relocation story.' })} role="staff" />);
     expect(screen.getByText('1 noted')).toBeInTheDocument();
     expect(screen.getByText('My relocation story.')).toBeInTheDocument();
     expect(screen.getByText('hr-001')).toBeInTheDocument();
@@ -21,7 +21,7 @@ describe('NotesView', () => {
   });
 
   test('ignores blank notes and notes for questions not in the bank', () => {
-    render(<NotesView state={withNotes({ 'hr-001': '   ', 'gone-999': 'orphan' })} />);
+    render(<NotesView state={withNotes({ 'hr-001': '   ', 'gone-999': 'orphan' })} role="staff" />);
     expect(screen.getByText(/no notes yet/i)).toBeInTheDocument();
     expect(screen.queryByText('orphan')).not.toBeInTheDocument();
   });

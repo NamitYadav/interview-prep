@@ -1,4 +1,4 @@
-import type { Question } from '../types';
+import type { Question, RoleId } from '../types';
 import { keyedStore } from './keyedStore';
 
 // Where you are in each lap. Per-device and OUT of backups, like the theme and
@@ -33,11 +33,12 @@ export interface SavedLap {
   savedAt: number;
 }
 
-// Identifies the question set without changing any caller's signature. Note this is a
-// heuristic, not a hash: two sets sharing length and endpoints collide, so Practice also
-// drops restored ids the current set no longer contains.
-export const lapKey = (questions: Question[]): string =>
-  `${questions.length}:${questions[0]?.id ?? ''}:${questions[questions.length - 1]?.id ?? ''}`;
+// Identifies the question set without changing the underlying heuristic's shape: two
+// roles filtering the same round to the same length/endpoints (e.g. Senior and Staff
+// both showing the same untagged hm questions with the last one clipped by a tag)
+// would otherwise collide on one lap slot.
+export const lapKey = (role: RoleId, questions: Question[]): string =>
+  `${role}:${questions.length}:${questions[0]?.id ?? ''}:${questions[questions.length - 1]?.id ?? ''}`;
 
 const isStringArray = (v: unknown): v is string[] => Array.isArray(v) && v.every((x) => typeof x === 'string');
 

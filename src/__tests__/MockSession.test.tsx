@@ -2,14 +2,14 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useEffect, useReducer } from 'react';
-import type { Persisted } from '../types';
+import type { Persisted, RoleId } from '../types';
 import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { MockSession } from '../components/MockSession';
 
-function Harness() {
+function Harness({ role = 'staff' }: { role?: RoleId } = {}) {
   const [state, dispatch] = useReducer(reducer, EMPTY);
-  return <MockSession state={state} dispatch={dispatch} strictMode={false} />;
+  return <MockSession state={state} dispatch={dispatch} strictMode={false} role={role} />;
 }
 
 describe('MockSession', () => {
@@ -108,7 +108,7 @@ describe('a reloaded mock session still counts what it rated', () => {
   function ReloadableHarness() {
     const [state, dispatch] = useReducer(reducer, persisted);
     useEffect(() => { persisted = state; });
-    return <MockSession state={state} dispatch={dispatch} strictMode={false} />;
+    return <MockSession state={state} dispatch={dispatch} strictMode={false} role="staff" />;
   }
 
   // The session's ratings were compared against a baseline frozen when the preset was
@@ -155,7 +155,7 @@ describe('a session abandoned before any action does not poison the next one', (
   function ReloadableHarness() {
     const [state, dispatch] = useReducer(reducer, persisted);
     useEffect(() => { persisted = state; });
-    return <MockSession state={state} dispatch={dispatch} strictMode={false} />;
+    return <MockSession state={state} dispatch={dispatch} strictMode={false} role="staff" />;
   }
 
   // Opening a preset writes a baseline immediately, but Practice only writes a lap once
@@ -177,5 +177,51 @@ describe('a session abandoned before any action does not poison the next one', (
     await userEvent.click(screen.getByRole('button', { name: /technical rounds/i }));
     await userEvent.click(screen.getByRole('button', { name: /finish session/i }));
     expect(screen.getByText(/0 of 20 rated/i)).toBeInTheDocument();
+  });
+});
+
+describe('role-scoped mock sessions', () => {
+  // Senior's loop has no hoe round at all, and the full-loop composition's hoe:3 slice
+  // must contribute nothing for Senior — this is the scoping half of the bug in Finding
+  // 1 (the ordering half is covered below, with Lead).
+  test("Senior's Full loop contains no HoE questions", async () => {
+    render(<Harness role="senior" />);
+    await userEvent.click(screen.getByRole('button', { name: /full loop/i }));
+    // hr:4 + hm:6 + coding:4 + design:3 + case:4 + debrief:4 = 25; hoe never counted.
+    expect(screen.getByText(/25 questions/i)).toBeInTheDocument();
+
+    for (let i = 0; i < 25; i++) {
+      expect(screen.queryByText(/head of engineering/i)).not.toBeInTheDocument();
+      const skipBtn = screen.queryByRole('button', { name: /^skip/i });
+      if (!skipBtn) break;
+      await userEvent.click(skipBtn);
+    }
+    expect(screen.getByText(/0 of 25 rated/i)).toBeInTheDocument();
+  });
+
+  // Lead's own loop order is hr, hm, coding, design, lead, hoe — hoe comes LAST. The old
+  // buildSet iterated the composition literal's key order instead (..., hoe, lead, ...),
+  // so Lead saw hoe questions before its own lead-round questions. Walking the whole lap
+  // and recording every "Round k of n" banner in the order it appears catches that.
+  test("Lead's Full loop follows the role's own round order (lead round before hoe)", async () => {
+    render(<Harness role="lead" />);
+    await userEvent.click(screen.getByRole('button', { name: /full loop/i }));
+    // hr:4 + hm:6 + coding:4 + design:3 + lead:3 + hoe:3 = 23; case/debrief/arch are 0.
+    expect(screen.getByText(/23 questions/i)).toBeInTheDocument();
+
+    const bannersSeen: string[] = [];
+    for (let i = 0; i < 23; i++) {
+      const banner = screen.queryByText(/^Round \d+ of \d+/);
+      if (banner?.textContent) bannersSeen.push(banner.textContent);
+      const skipBtn = screen.queryByRole('button', { name: /^skip/i });
+      if (!skipBtn) break;
+      await userEvent.click(skipBtn);
+    }
+
+    const leadIndex = bannersSeen.findIndex((t) => /tech lead round/i.test(t));
+    const hoeIndex = bannersSeen.findIndex((t) => /head of engineering/i.test(t));
+    expect(leadIndex).toBeGreaterThanOrEqual(0);
+    expect(hoeIndex).toBeGreaterThanOrEqual(0);
+    expect(leadIndex).toBeLessThan(hoeIndex);
   });
 });

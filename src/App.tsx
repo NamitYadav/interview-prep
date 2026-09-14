@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { ROUND_IDS, rounds } from './data';
+import { ROUND_IDS, forRole, rounds } from './data';
 import type { Route, RoundId } from './types';
 import { useAppState } from './hooks/useAppState';
 import { useHashRoute } from './hooks/useHashRoute';
 import { useStrictMode } from './hooks/useStrictMode';
+import { useRole } from './hooks/useRole';
 import { useShortcuts } from './hooks/useShortcuts';
 import { Home } from './components/Home';
 import { RoundView } from './components/RoundView';
@@ -40,6 +41,9 @@ export default function App() {
   const route = useHashRoute();
   const [strictMode, setStrictMode] = useStrictMode();
   const [shortcuts, setShortcuts] = useShortcuts();
+  const [role, setRole] = useRole();
+  const { rounds: roleRounds } = forRole(role);
+  const isActiveRoundId = (r: Route): r is RoundId => roleRounds.some((round) => round.id === r);
 
   // Move focus to the new view's heading after a route change — but not on first
   // load, where the page itself already has the user's attention and stealing
@@ -53,9 +57,18 @@ export default function App() {
     document.querySelector<HTMLElement>('main h1')?.focus();
   }, [route]);
 
+  const activeRoundId = route !== null && isActiveRoundId(route) ? route : null;
+  const isNamedView = route !== null && route in VIEW_TITLES;
+  const showHome = route === null || (activeRoundId === null && !isNamedView);
+  // What's actually on screen, role guard included — an out-of-loop round hash (e.g.
+  // #hoe while Senior is active) renders Home, but titleFor(route) doesn't know that
+  // and would still name the hidden round in the tab, history entry, and the
+  // post-navigation screen-reader announcement below.
+  const displayedRoute = showHome ? null : route;
+
   useEffect(() => {
-    document.title = titleFor(route);
-  }, [route]);
+    document.title = titleFor(displayedRoute);
+  }, [displayedRoute]);
 
   // One region, mounted for the life of the app and empty until there is something to
   // say. A role="status" that appears with its text already inside is routinely missed:
@@ -91,15 +104,15 @@ export default function App() {
           setShortcuts={setShortcuts}
         />
       </header>
-      {route === null && <Home state={state} />}
-      {route === 'weak' && <WeakDrill state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} />}
-      {route === 'notes' && <NotesView state={state} />}
+      {showHome && <Home state={state} role={role} setRole={setRole} />}
+      {route === 'weak' && <WeakDrill state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />}
+      {route === 'notes' && <NotesView state={state} role={role} />}
       {route === 'stories' && <StoriesView state={state} dispatch={dispatch} />}
-      {route === 'mock' && <MockSession state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} />}
-      {route === 'search' && <SearchView state={state} dispatch={dispatch} />}
-      {route === 'print' && <PrintView state={state} />}
-      {route !== null && isRoundId(route) && (
-        <RoundView key={route} roundId={route} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} />
+      {route === 'mock' && <MockSession state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />}
+      {route === 'search' && <SearchView state={state} dispatch={dispatch} role={role} />}
+      {route === 'print' && <PrintView state={state} role={role} />}
+      {activeRoundId !== null && (
+        <RoundView key={activeRoundId} roundId={activeRoundId} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />
       )}
     </>
   );

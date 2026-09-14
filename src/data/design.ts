@@ -347,6 +347,7 @@ export const design: Question[] = [
       'CI covers more than one representative tenant configuration',
       'Slices RUM per tenant and rolls config changes out per tenant with a one-step rollback',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['How would you let one tenant test a beta feature before it ships to everyone?', 'How would you structure this if two tenants needed genuinely different page layouts, not just colors?'],
   },
   {
@@ -368,6 +369,7 @@ export const design: Question[] = [
       'Only the active locale bundle ships to a given user',
       'Reports missing-key rate and bundle size per locale from production, with an RTL regression as a rollback trigger',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['How would you catch a hardcoded English string before it reaches production?', 'How would you test RTL layout in CI without a human reviewing every screen?'],
   },
   {
@@ -389,6 +391,7 @@ export const design: Question[] = [
       'Field-level redaction uses the same capability model as whole-view branching',
       'Alerts on unexpected 403s as the signal that client and server permission models have drifted',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['How would you test that a hidden action is also properly rejected server-side?', 'How would you handle a permission that changes while the user has the page open?'],
   },
   {
@@ -408,6 +411,7 @@ export const design: Question[] = [
       'Usage is instrumented so blast radius and rollout order are known, not guessed',
       'Codemod plus an active, tracked deprecation deadline rather than a changelog note',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['How would you handle an app that cannot migrate before your deadline?', 'What would you automate first to make the next breaking change cheaper?'],
   },
   {
@@ -434,6 +438,7 @@ export const design: Question[] = [
       'Addresses GDPR data-minimization and clearing local personal data on logout/deletion',
       'Instruments outbox depth and time-to-sync, with a cohort rollout and a failed-sync rollback trigger',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['How would you handle a queued mutation that fails validation once it finally syncs?', 'How would you test the offline path in CI?'],
   },
   {
@@ -455,6 +460,7 @@ export const design: Question[] = [
       'Reconnect resyncs to current state rather than replaying full history',
       'Names latency budgets (local edit under 50ms, remote edit visible under 200ms p95) and a divergence rollback trigger',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['How would you handle a user who has been offline for an hour rejoining the session?', 'How would you show attribution for who wrote what without cluttering the document?'],
   },
   {
@@ -476,6 +482,7 @@ export const design: Question[] = [
       'Explicit complete step with a checksum check before treating the upload as done',
       'Names a p95 chunk-feedback budget under 1s, plus a flagged rollout with single-request upload as the fallback',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['How would you detect that a resumed upload is actually for a different, similarly-named file?', 'How would you show upload progress accurately across pause/resume cycles?'],
   },
   {
@@ -499,6 +506,7 @@ export const design: Question[] = [
       'Treats the resolve endpoint as critical path: fails open to a cached default and reports per-flag exposure counts',
       'Wires the kill-switch to an automatic error-rate trigger rather than relying on a human being awake',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['How would you test a flag combination locally without hitting the real targeting service?', 'How would you roll out a flag gradually while watching for a specific error-rate regression?'],
   },
 
@@ -523,6 +531,7 @@ export const design: Question[] = [
       'Names what stays a library rather than a remote (design system, auth shell, analytics, flag client)',
       'Ties the migration to measured deploys-per-team and lead time, with a stop-and-consolidate trigger',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['How do you stop two remotes on different React versions from shipping two copies of React to the user?', 'What do you do when one team stops upgrading the shared design-system singleton?'],
   },
   {
@@ -545,6 +554,7 @@ export const design: Question[] = [
       'Separates immutable asset caching, anonymous-HTML caching, and client data caching, and never caches personalised HTML at a shared CDN',
       'Changes rendering mode one route at a time behind a flag with an LCP/INP rollback trigger',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['How would you decide whether a given authenticated route is worth server-rendering at all?', 'What would you check before adding a third-party script to an authenticated page?'],
   },
 
@@ -569,6 +579,7 @@ export const design: Question[] = [
       'Says undocumented but observable behaviour is de facto public API, and documents what is explicitly not covered',
       'Migrates additively: new prop alongside old, dev-time deprecation warning naming the codemod, usage telemetry, deadline, removal in a major',
     ],
+    roles: ['staff', 'architect'],
     followUps: ['A team has styled against an internal class name you now need to change. What do you do?', 'How would you decide whether a requested variant belongs in the shared component or in that team\'s codebase?'],
   },
 

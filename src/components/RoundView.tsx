@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type Dispatch } from 'react';
 import { BackLink } from './BackLink';
-import type { Persisted, RoundId } from '../types';
+import type { Persisted, RoleId, RoundId } from '../types';
 import type { Action } from '../hooks/useAppState';
-import { questionsByRound, rounds } from '../data';
+import { forRole } from '../data';
 import { filterByStatus, roundStats, type QuestionStatus } from '../lib/queue';
 import { Browse } from './Browse';
 import { Practice } from './Practice';
@@ -15,10 +15,11 @@ type Tab = 'practice' | 'browse' | 'design-prompt';
 const TAB_LABEL: Record<Tab, string> = { practice: 'Practice', browse: 'Browse', 'design-prompt': '45-min prompt' };
 
 export function RoundView({
-  roundId, state, dispatch, strictMode, shortcuts = true,
-}: { roundId: RoundId; state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean; shortcuts?: boolean }) {
+  roundId, state, dispatch, strictMode, shortcuts = true, role,
+}: { roundId: RoundId; state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean; shortcuts?: boolean; role: RoleId }) {
+  const { rounds, byRound } = forRole(role);
   const round = rounds.find((r) => r.id === roundId);
-  const all = useMemo(() => questionsByRound(roundId), [roundId]);
+  const all = useMemo(() => byRound(roundId), [byRound, roundId]);
   const categories = useMemo(() => [...new Set(all.map((q) => q.category))], [all]);
   const [selected, setSelected] = useState<string | null>(null);
   const [status, setStatus] = useState<QuestionStatus>('all');
@@ -123,9 +124,9 @@ export function RoundView({
       </div>
 
       <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>
-        {tab === 'practice' && <Practice key={`${roundId}:${selected ?? ''}:${status}`} questions={filtered} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} />}
+        {tab === 'practice' && <Practice key={`${roundId}:${selected ?? ''}:${status}`} questions={filtered} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />}
         {tab === 'browse' && <Browse questions={filtered} state={state} dispatch={dispatch} />}
-        {tab === 'design-prompt' && <DesignSession state={state} dispatch={dispatch} />}
+        {tab === 'design-prompt' && <DesignSession state={state} dispatch={dispatch} role={role} />}
       </div>
     </main>
   );

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { STORAGE_KEY, emptyState } from '../lib/storage';
+import { ROLE_KEY } from '../hooks/useRole';
 import App from '../App';
 
 afterEach(() => {
@@ -78,6 +79,17 @@ describe('document title', () => {
       window.dispatchEvent(new HashChangeEvent('hashchange'));
     });
     expect(document.title).toBe('Mock session · Interview Prep');
+  });
+
+  // Same setup as the round-guard test below: Senior's loop has no hoe round, so #hoe
+  // renders Home — but titleFor(route) used to resolve through the global round list
+  // regardless, so the tab, history entry and screen-reader announcement still named
+  // the hidden round.
+  test('a round hash outside the active role\'s loop keeps the Home title', () => {
+    localStorage.setItem(ROLE_KEY, 'senior');
+    window.location.hash = '#hoe';
+    render(<App />);
+    expect(document.title).toBe('Interview Prep');
   });
 });
 
@@ -227,4 +239,12 @@ describe('shortcuts toggle', () => {
     await openSettings();
     expect(screen.getByRole('checkbox', { name: /shortcuts/i })).not.toBeChecked();
   });
+});
+
+test('a round hash outside the active role\'s loop renders Home instead', () => {
+  localStorage.setItem(ROLE_KEY, 'senior');
+  window.location.hash = '#hoe';
+  render(<App />);
+  expect(screen.getByRole('heading', { name: /interview prep/i })).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: /head of engineering/i })).not.toBeInTheDocument();
 });

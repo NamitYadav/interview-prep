@@ -1,10 +1,10 @@
-import type { Persisted } from '../types';
+import type { Persisted, RoleId } from '../types';
 import { BackLink } from './BackLink';
-import { questions, rounds } from '../data';
+import { forRole } from '../data';
 
-const titleOf = (id: string) => rounds.find((r) => r.id === id)?.title ?? id;
-
-export function NotesView({ state }: { state: Persisted }) {
+export function NotesView({ state, role }: { state: Persisted; role: RoleId }) {
+  const { questions, rounds } = forRole(role);
+  const titleOf = (id: string) => rounds.find((r) => r.id === id)?.title ?? id;
   // Derived from the bank rather than from the notes map, so ordering follows the
   // rounds and a note left behind by a removed question simply drops out.
   const noted = questions.filter((q) => (state.notes[q.id] ?? '').trim().length > 0);

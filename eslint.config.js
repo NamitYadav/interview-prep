@@ -15,4 +15,10 @@ export default tseslint.config(
       globals: { ...globals.browser, ...globals.es2021 },
     },
   },
+  {
+    rules: {
+      // role="staff" test-harness prop on custom components is not a DOM aria-role.
+      'jsx-a11y/aria-role': ['error', { ignoreNonDOM: true }],
+    },
+  },
 );
