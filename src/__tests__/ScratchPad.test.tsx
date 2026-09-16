@@ -97,7 +97,7 @@ describe('ScratchPad runner', () => {
   test('messages from any other window are ignored', () => {
     render(<ScratchPad question={q} />);
     fromSandbox({ type: 'log', level: 'log', text: 'spoofed' }, window);
-    expect(screen.queryByRole('log')).not.toBeInTheDocument();
+    expect(screen.getByRole('log', { name: /output/i })).toBeEmptyDOMElement();
   });
 
   test('a run that logs nothing says so once done', () => {
@@ -114,14 +114,40 @@ describe('ScratchPad runner', () => {
     const before = frame();
     fromSandbox({ type: 'log', level: 'log', text: 'x' });
     fireEvent.click(screen.getByRole('button', { name: /stop/i }));
-    expect(screen.queryByRole('log')).not.toBeInTheDocument();
+    expect(screen.getByRole('log', { name: /output/i })).toBeEmptyDOMElement();
     expect(screen.getByRole('status')).toBeEmptyDOMElement();
     expect(frame()).not.toBe(before);
   });
 
-  test('the frame is sandboxed to scripts only and points at the sandbox page', () => {
+  test('a frame that never reports ready fails the run after the timeout', () => {
+    vi.useFakeTimers();
+    try {
+      render(<ScratchPad question={q} />);
+      fireEvent.click(screen.getByRole('button', { name: /run/i }));
+      act(() => vi.advanceTimersByTime(3000));
+      expect(screen.getByRole('log', { name: /output/i })).toHaveTextContent('did not load');
+      expect(screen.getByRole('status')).not.toHaveTextContent('Running…');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('a ready that arrives in time cancels the timeout', () => {
+    vi.useFakeTimers();
+    try {
+      render(<ScratchPad question={q} />);
+      fireEvent.click(screen.getByRole('button', { name: /run/i }));
+      fromSandbox({ type: 'ready' });
+      act(() => vi.advanceTimersByTime(3000));
+      expect(screen.getByRole('log', { name: /output/i })).toBeEmptyDOMElement();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('the frame is sandboxed to scripts and forms only, and points at the sandbox page', () => {
     render(<ScratchPad question={q} />);
-    expect(frame()).toHaveAttribute('sandbox', 'allow-scripts');
+    expect(frame()).toHaveAttribute('sandbox', 'allow-scripts allow-forms');
     expect(frame().getAttribute('src')).toMatch(/\/sandbox\.html$/);
   });
 

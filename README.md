@@ -101,10 +101,12 @@ between roles; only the round list and the visible question set change.
   `Ctrl+↩` inside the pad). Console output and errors show up under the pad; the
   React component prompts (Autocomplete, Tabs, VirtualList and friends) also render
   live in a preview with sample props. Every Run starts from a clean slate, and
-  **Stop** kills whatever is going on. It runs TypeScript and JSX without type-checking,
-  the way CoderPad does, with React's hooks available as globals — no imports. What you
-  type is kept per question on this device, so a reload or a switch to another question
-  doesn't lose it; it stays out of export/import backups. Run output is never stored.
+  **Stop** kills whatever is going on. The pad runs in a sandbox: forms submit, but
+  nothing can navigate, open windows or touch your saved progress. It runs
+  TypeScript and JSX without type-checking, the way CoderPad does, with React's
+  hooks available as globals — no imports. What you type is kept per question on
+  this device, so a reload or a switch to another question doesn't lose it; it
+  stays out of export/import backups. Run output is never stored.
 
 ## Your own material
 - **My notes** — every note you have written, in round order, read-only. Edit them on

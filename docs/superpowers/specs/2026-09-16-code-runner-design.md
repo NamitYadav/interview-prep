@@ -48,9 +48,11 @@ still useful.
 A second Vite entry, `sandbox.html` → `src/sandbox/main.tsx`, bundled separately so the
 main app bundle does not grow. It contains React, ReactDOM, Sucrase and ~60 lines of glue.
 The app embeds it as `<iframe src={import.meta.env.BASE_URL + 'sandbox.html'}
-sandbox="allow-scripts">` — same host, but `allow-scripts` without `allow-same-origin`
-gives the frame an opaque origin, so the user's code cannot read the app's localStorage
-(ratings, notes, drafts) or the DOM around it.
+sandbox="allow-scripts allow-forms">` — same host, but `allow-scripts allow-forms` without
+`allow-same-origin` gives the frame an opaque origin, so the user's code cannot read the
+app's localStorage (ratings, notes, drafts) or the DOM around it. Form submission is
+allowed because the AmountForm starter is a React 19 form Action; navigation, popups and
+same-origin access stay blocked.
 
 ### Protocol
 

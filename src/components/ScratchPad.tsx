@@ -6,8 +6,9 @@ import { draftKey } from '../lib/drafts';
 import type { FromSandbox, LogLevel, ToSandbox } from '../sandbox/protocol';
 
 // Same host as the app, so it works in dev, `vite preview` and on GitHub Pages alike.
-// `allow-scripts` without `allow-same-origin` makes the frame's origin opaque: the pad's
-// code cannot read the app's localStorage or DOM.
+// `allow-scripts allow-forms` without `allow-same-origin` makes the frame's origin opaque:
+// the pad's code cannot read the app's localStorage or DOM. Forms are allowed because the
+// AmountForm starter (coding-034) is a React 19 form Action, which needs the `submit` event.
 const SANDBOX_URL = `${import.meta.env.BASE_URL}sandbox.html`;
 
 const button = 'rounded border border-zinc-300 px-3 py-1 text-sm hover:border-emerald-500 dark:border-zinc-700';
@@ -16,6 +17,8 @@ const warnText = 'text-amber-700 dark:text-amber-400';
 const modKey = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+';
 
 type Line = { level: LogLevel; text: string };
+
+const READY_TIMEOUT_MS = 3000;
 
 // ponytail: a synchronous `while (true)` in the pad blocks the frame's thread. Chrome
 // gives sandboxed opaque-origin frames their own process, so the app stays responsive and
@@ -31,6 +34,7 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
   // attempts. Reloading a cached same-host page costs tens of milliseconds.
   const [frameKey, setFrameKey] = useState(0);
   const pending = useRef<ToSandbox | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [lines, setLines] = useState<Line[]>([]);
   const [status, setStatus] = useState<'idle' | 'running' | 'done'>('idle');
 
@@ -41,6 +45,7 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
       if (!frame || e.source !== frame.contentWindow) return;
       const msg = e.data;
       if (msg.type === 'ready') {
+        if (timer.current) clearTimeout(timer.current);
         if (pending.current) frame.contentWindow?.postMessage(pending.current, '*');
         pending.current = null;
       } else if (msg.type === 'log') {
@@ -55,11 +60,22 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
     return () => window.removeEventListener('message', onMessage);
   }, []);
 
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
   const reload = useCallback((next: ToSandbox | null) => {
     pending.current = next;
     setLines([]);
     setStatus(next ? 'running' : 'idle');
     setFrameKey((k) => k + 1);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = next
+      ? setTimeout(() => {
+          if (!pending.current) return;
+          pending.current = null;
+          setLines([{ level: 'error', text: '✗ The sandbox page did not load — check the browser console.' }]);
+          setStatus('done');
+        }, READY_TIMEOUT_MS)
+      : null;
   }, []);
   const run = () => reload({ type: 'run', code: scratch.draft, preview: question.preview });
   const stop = () => reload(null);
@@ -104,22 +120,27 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
         </span>
       </div>
 
-      {lines.length > 0 && (
-        <div role="log" aria-label="Output" className={`mt-2 max-h-64 overflow-auto whitespace-pre-wrap ${mono}`}>
-          {lines.map((l, i) => (
-            <div key={i} className={l.level === 'warn' || l.level === 'error' ? warnText : undefined}>{l.text}</div>
-          ))}
-        </div>
-      )}
+      {/* Mounted empty so the live region exists before the first line arrives: a log
+          that appears with its text already inside is routinely missed. */}
+      <div
+        role="log"
+        aria-label="Output"
+        className={lines.length > 0 ? `mt-2 max-h-64 overflow-auto whitespace-pre-wrap ${mono}` : undefined}
+      >
+        {lines.map((l, i) => (
+          <div key={i} className={l.level === 'warn' || l.level === 'error' ? warnText : undefined}>{l.text}</div>
+        ))}
+      </div>
 
       {/* Kept in the DOM even without a preview: the code still runs there. */}
       <iframe
         key={frameKey}
         ref={iframeRef}
         src={SANDBOX_URL}
-        sandbox="allow-scripts"
+        sandbox="allow-scripts allow-forms"
         title="Preview"
         aria-hidden={question.preview ? undefined : true}
+        tabIndex={question.preview ? undefined : -1}
         className={question.preview ? 'mt-2 min-h-48 w-full rounded border border-zinc-300 dark:border-zinc-700' : 'h-0 w-0 border-0'}
       />
     </div>

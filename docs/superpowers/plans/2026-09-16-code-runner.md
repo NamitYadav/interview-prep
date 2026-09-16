@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Sucrase is imported **only** from `src/sandbox/*`. The main page's chunk must not contain the sandbox code (Task 3 Step 4 checks a marker string); `npm run build` must emit both `dist/index.html` and `dist/sandbox.html`. Rollup will hoist React into a chunk shared by both pages — that is expected, and the README's *Stack* paragraph is updated to say so (Task 5).
-- The iframe is `sandbox="allow-scripts"` — never add `allow-same-origin`. Parent accepts a message only when `event.source === iframe.contentWindow`.
+- The iframe is `sandbox="allow-scripts allow-forms"` — never add `allow-same-origin`. Parent accepts a message only when `event.source === iframe.contentWindow`.
 - The textarea keeps `aria-label="Scratch editor"`; existing `QuestionCard` scratch tests must pass unchanged.
 - Run output is never persisted, exported, or imported.
 - No CodeMirror, no auto-run, no Web Worker, no theme sync, no assertions-in-data (spec › *Out of scope*).
