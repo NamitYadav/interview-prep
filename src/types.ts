@@ -5,6 +5,10 @@ export interface Role { id: RoleId; title: string; blurb: string; rounds: RoundI
 export interface Round { id: RoundId; title: string; blurb: string; targetSeconds: number }
 export interface Question {
   id: string; round: RoundId; category: string; question: string; code?: string; scratch?: true;
+  /** JSX that mounts this component with sample props, e.g. `<Tabs tabs={[...]} />`. The
+   *  sandbox appends `__render(<preview/>)` after the pad's code. Only meaningful with
+   *  `scratch: true`; a scratch question without it runs console-only. */
+  preview?: string;
   answer: string[]; keyPoints: string[]; followUps?: string[];
   // Material to use only when the interviewer digs. Kept out of `answer` so the
   // word-budget test in data.test.ts measures only what you actually say first.

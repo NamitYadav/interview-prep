@@ -77,6 +77,23 @@ describe('question bank', () => {
     }
   });
 
+  // `preview` is the JSX harness the sandbox mounts after the pad's code. Only ScratchPad
+  // reads it, and ScratchPad only renders for scratch questions — a preview on a read-only
+  // snippet would be dead data.
+  test('a preview only appears on a scratch question with code', () => {
+    for (const q of questions) {
+      if (q.preview) expect(q.scratch && q.code, `${q.id} has a preview but is not a scratch pad`).toBeTruthy();
+    }
+  });
+
+  test('every component starter in the coding round has a preview', () => {
+    // A top-level function with a capitalised name is a component; the hooks and utilities
+    // are camelCase and the caches are classes.
+    const components = questions.filter((q) => q.round === 'coding' && q.scratch && /^(async )?function [A-Z]/m.test(q.code ?? ''));
+    expect(components.map((q) => q.id)).toEqual(['coding-028', 'coding-029', 'coding-030', 'coding-031', 'coding-032', 'coding-034', 'coding-035']);
+    for (const q of components) expect(q.preview, `${q.id} is a component with no preview`).toBeTruthy();
+  });
+
   // The habit the data-structures questions exist to train is saying a complexity out
   // loud. If it is not in the checklist, the drill never scores it.
   test('every data-structures question puts a complexity in its key points', () => {

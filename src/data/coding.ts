@@ -394,6 +394,7 @@ class NotifierFactory {
     round: 'coding',
     category: 'Build prompts',
     scratch: true,
+    preview: '<Autocomplete fetchSuggestions={(q) => new Promise((resolve) => setTimeout(() => resolve(["apple", "apricot", "avocado", "banana", "blueberry", "cherry"].filter((s) => s.startsWith(q.toLowerCase()))), q.length === 1 ? 900 : 200))} />',
     question: 'Build an autocomplete input: as the user types, fetch suggestions and show them in a list. In-flight requests must not race — a slow response for an earlier keystroke must never overwrite a later, faster one. Talk me through your approach.',
     code: `function Autocomplete({ fetchSuggestions }: { fetchSuggestions: (q: string) => Promise<string[]> }) {
   // state: query, suggestions, loading
@@ -421,6 +422,7 @@ class NotifierFactory {
     round: 'coding',
     category: 'Build prompts',
     scratch: true,
+    preview: '<VirtualList items={Array.from({ length: 10000 }, (_, i) => "Row " + (i + 1))} rowHeight={28} viewportHeight={280} />',
     question: 'Build a virtualised list that can smoothly render 100,000 rows of fixed height. Only the rows currently in (or near) the viewport should exist in the DOM. Talk me through your approach.',
     code: `function VirtualList({ items, rowHeight, viewportHeight }: { items: string[]; rowHeight: number; viewportHeight: number }) {
   // state: scrollTop
@@ -448,6 +450,7 @@ class NotifierFactory {
     round: 'coding',
     category: 'Build prompts',
     scratch: true,
+    preview: '<Combobox options={["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt", "Stuttgart", "Leipzig", "Dresden"]} />',
     question: 'Build an accessible combobox: a text input with a filtered, keyboard-navigable listbox of options, following the ARIA Authoring Practices Guide pattern. Talk me through your approach.',
     code: `function Combobox({ options }: { options: string[] }) {
   // state: query, activeIndex, open
@@ -475,6 +478,7 @@ class NotifierFactory {
     round: 'coding',
     category: 'Build prompts',
     scratch: true,
+    preview: '<Tabs tabs={[{ id: "overview", label: "Overview", panel: "Overview panel" }, { id: "activity", label: "Activity", panel: "Activity panel" }, { id: "settings", label: "Settings", panel: "Settings panel" }]} />',
     question: 'Build an accessible tabs component (tab list, tabs, panels) following the ARIA Authoring Practices Guide pattern, with roving tabindex keyboard navigation. Talk me through your approach.',
     code: `function Tabs({ tabs }: { tabs: { id: string; label: string; panel: string }[] }) {
   // state: activeId
@@ -501,6 +505,7 @@ class NotifierFactory {
     round: 'coding',
     category: 'Build prompts',
     scratch: true,
+    preview: '<TransactionsTable rows={Array.from({ length: 57 }, (_, i) => ({ id: "tx-" + i, date: new Date(2026, 0, 1 + i).toISOString().slice(0, 10), counterparty: ["Acme GmbH", "Globex", "Initech", "Umbrella"][i % 4], amountMinor: ((i * 7919) % 100000) - 25000, currency: i % 3 === 0 ? "USD" : "EUR", status: ["settled", "pending", "failed"][i % 3] }))} />',
     question: 'Build a transactions table: around 2,000 rows of { id, date, counterparty, amountMinor, currency, status }, with sortable columns, a text filter, and pagination at 50 rows a page. Amounts render formatted for their currency. Talk me through your approach.',
     code: `type Transaction = {
   id: string;
@@ -569,6 +574,7 @@ function TransactionsTable({ rows }: { rows: Transaction[] }) {
     round: 'coding',
     category: 'Build prompts',
     scratch: true,
+    preview: '<AmountForm />',
     question: 'Build an amount input — an amount field plus a currency select — submitted with a React 19 form Action. The action validates that the amount parses to integer minor units, and the form shows pending state and a field-level error. Talk me through your approach.',
     code: `type FormState = { error?: string; amountMinor?: number };
 
@@ -608,6 +614,7 @@ function AmountForm() {
     round: 'coding',
     category: 'Build prompts',
     scratch: true,
+    preview: '<ReorderableList items={["Alpha", "Bravo", "Charlie", "Delta"]} onReorder={(next) => console.log("reorder", next)} />',
     question: 'Build a drag-to-reorder list: dragging an item to a new position updates the list order, keyboard-operable, no external DnD library. Talk me through your approach.',
     code: `function ReorderableList({ items, onReorder }: { items: string[]; onReorder: (next: string[]) => void }) {
   // TODO: draggable items, onDragStart/onDragOver/onDrop to compute the new order

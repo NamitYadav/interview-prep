@@ -31,12 +31,13 @@ Answered during brainstorming; recorded so the plan does not reopen them.
 preview?: string;
 ```
 
-The 13 `Build prompts` starters in `src/data/coding.ts` each get a `preview` with props
-that exercise the TODOs in the starter — e.g. `Autocomplete` gets a `fetchSuggestions`
-that resolves after a delay so the race is observable, `VirtualList` gets a few thousand
-items, `ReorderableList` gets an `onReorder` that logs. The 8 `Data structures &
-traversal` starters get none: they are functions, and the user calls them with
-`console.log` in the pad.
+The 7 component starters among the `Build prompts` in `src/data/coding.ts` (Autocomplete,
+VirtualList, Combobox, Tabs, TransactionsTable, AmountForm, ReorderableList) each get a
+`preview` with props that exercise the TODOs in the starter — e.g. `Autocomplete` gets a
+`fetchSuggestions` that resolves after a delay so the race is observable, `VirtualList`
+gets a few thousand items, `ReorderableList` gets an `onReorder` that logs. The other 14 scratch starters (the 6 function/hook build prompts and the 8 `Data
+structures & traversal` questions) get none: they are functions, and the user calls them
+with `console.log` in the pad.
 
 `data.test.ts` gains: `preview` implies `scratch` and `code`. Nothing asserts that every
 React starter has a preview; a build prompt without one degrades to console-only, which is
