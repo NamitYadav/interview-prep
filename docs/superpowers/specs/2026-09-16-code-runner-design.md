@@ -39,9 +39,9 @@ gets a few thousand items, `ReorderableList` gets an `onReorder` that logs. The 
 structures & traversal` questions) get none: they are functions, and the user calls them
 with `console.log` in the pad.
 
-`data.test.ts` gains: `preview` implies `scratch` and `code`. Nothing asserts that every
-React starter has a preview; a build prompt without one degrades to console-only, which is
-still useful.
+`data.test.ts` gains: `preview` implies `scratch` and `code`. `data.test.ts` also asserts
+that every component starter (a top-level capitalised `function`) carries a preview, so a
+new component prompt cannot land console-only by accident.
 
 ## Sandbox page
 
@@ -195,8 +195,10 @@ the sandbox chunk).
   which is terminable everywhere.
 - **No type checking.** Sucrase strips types. A TS error that would fail `tsc` runs
   anyway; that matches CoderPad-style rounds, which also do not type-check.
-- **No imports.** The pad is one file with React's exports as globals. A `import x from`
-  line is a syntax error in `new Function`; the error surfaces in the output panel.
+- **No imports.** The pad is one file with React's exports as globals. An `import` whose
+  bindings are used is a `SyntaxError` in `new Function` and surfaces in the output panel;
+  one whose bindings are unused is elided by Sucrase's TypeScript transform and silently
+  disappears. Either way nothing is imported.
 
 ## Out of scope
 

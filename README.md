@@ -141,7 +141,8 @@ progress and haven't backed it up in the last week.
   Settings button shows a ♪.
 - **Scratch pads** (Build-prompt code, 45-minute design write-ups), lap positions and
   the running design session are working state, stored per device and outside the
-  backup: a new machine starts them fresh. Anything worth keeping goes in a note. Run output is not stored at all — it is gone when you leave the question.
+  backup: a new machine starts them fresh. Anything worth keeping goes in a note.
+  Run output is not stored at all — it is gone when you leave the question.
 
 ## Adding questions
 Edit `src/data/<round>.ts`. Ids are `<round>-<nnn>`. A question can carry an
