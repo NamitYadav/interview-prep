@@ -3,8 +3,7 @@ import type { Question, Rating, Stories } from '../types';
 import { rounds, isStoryPrompt } from '../data';
 import { useQuestionTimer } from '../hooks/useQuestionTimer';
 import { useDebouncedField } from '../hooks/useDebouncedField';
-import { DRAFT_SAVE_FAILED, useDraft } from '../hooks/useDraft';
-import { draftKey } from '../lib/drafts';
+import { ScratchPad } from './ScratchPad';
 import { useRecorder } from '../hooks/useRecorder';
 import { formatTime } from '../lib/format';
 import { RATINGS, RatingRadios } from './RatingRadios';
@@ -64,9 +63,6 @@ export function QuestionCard({
   const showCountdown = strictMode && !revealed && targetSeconds !== undefined && remainingMs !== null;
 
   const note_ = useDebouncedField(note, onNote);
-  // The scratch editor was uncontrolled — defaultValue with no onChange — so anything
-  // typed into it during a live-coding drill was captured nowhere and lost on advance.
-  const scratch = useDraft(draftKey(question.id, 'scratch'), question.code ?? '');
   const recorder = useRecorder();
 
   // Ephemeral, never persisted — a self-check against the model answer, not a
@@ -147,22 +143,7 @@ export function QuestionCard({
 
       {question.code && (
         question.scratch ? (
-          <>
-            <textarea
-              key={question.id}
-              value={scratch.draft}
-              onChange={(e) => scratch.onChange(e.target.value)}
-              onBlur={scratch.onBlur}
-              spellCheck={false}
-              wrap="off"
-              rows={Math.max(question.code.split('\n').length + 2, scratch.draft.split('\n').length + 2)}
-              aria-label="Scratch editor"
-              className="mb-4 w-full overflow-x-auto rounded bg-zinc-100 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-800"
-            />
-            {scratch.saveFailed && (
-              <p role="alert" className="-mt-2 mb-4 text-xs text-amber-700 dark:text-amber-400">{DRAFT_SAVE_FAILED}</p>
-            )}
-          </>
+          <ScratchPad key={question.id} question={question} shortcuts={shortcuts} />
         ) : (
           <pre className="mb-4 overflow-x-auto rounded bg-zinc-100 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-800">
             <code>{question.code}</code>
