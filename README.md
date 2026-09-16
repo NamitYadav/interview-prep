@@ -97,9 +97,14 @@ between roles; only the round list and the visible question set change.
 - Every question takes a **note**.
 - The **Live coding** build prompts and the data-structures questions give you an
   editable scratch pad pre-filled with the starter code, instead of a read-only
-  snippet — write your approach out before revealing. What you type is kept per
-  question on this device, so a reload or a switch to another question doesn't lose
-  it; it stays out of export/import backups.
+  snippet — write your approach out before revealing, then **Run** it (`⌘↩` /
+  `Ctrl+↩` inside the pad). Console output and errors show up under the pad; the
+  React component prompts (Autocomplete, Tabs, VirtualList and friends) also render
+  live in a preview with sample props. Every Run starts from a clean slate, and
+  **Stop** kills whatever is going on. It runs TypeScript and JSX without type-checking,
+  the way CoderPad does, with React's hooks available as globals — no imports. What you
+  type is kept per question on this device, so a reload or a switch to another question
+  doesn't lose it; it stays out of export/import backups. Run output is never stored.
 
 ## Your own material
 - **My notes** — every note you have written, in round order, read-only. Edit them on
@@ -134,7 +139,7 @@ progress and haven't backed it up in the last week.
   Settings button shows a ♪.
 - **Scratch pads** (Build-prompt code, 45-minute design write-ups), lap positions and
   the running design session are working state, stored per device and outside the
-  backup: a new machine starts them fresh. Anything worth keeping goes in a note.
+  backup: a new machine starts them fresh. Anything worth keeping goes in a note. Run output is not stored at all — it is gone when you leave the question.
 
 ## Adding questions
 Edit `src/data/<round>.ts`. Ids are `<round>-<nnn>`. A question can carry an
@@ -148,16 +153,20 @@ validates shape and uniqueness.
 npm install
 npm run dev        # http://localhost:5173/interview-prep/
 npm test           # vitest watch
-npm run build      # tsc + vite build
+npm run build      # tsc + vite build — emits index.html and sandbox.html (the code-runner frame)
 ```
 
 ## Stack
 Vite · React 19 · TypeScript · Tailwind CSS 4 · GeistMono Nerd Font (self-hosted from
 public/fonts) · Vitest · GitHub Pages
 
-One JS bundle, ~330KB gzipped — most of it is the question bank's own text, not
-code. Measured, not optimized: code-splitting would trim the initial load, but this
-is a single-user app run from a laptop, so it isn't worth the added complexity.
+Two JS chunks for the app itself — the app and the React runtime, ~335KB gzipped
+together, most of it the question bank's own text, not code — plus a third chunk that
+only `sandbox.html` loads: the second Vite page that runs scratch-pad code in a
+sandboxed iframe, with Sucrase to strip types and compile JSX. React is shared between
+the two pages; the compiler is never downloaded by the app. Measured, not optimized:
+further code-splitting would trim the initial load, but this is a single-user app run
+from a laptop, so it isn't worth the added complexity.
 Skipped for the same reason: a CSP `<meta>` tag (the inline pre-paint theme script
 would need a build-time hash to keep it, which is fragile for the gain on a static
 page with no user input to sanitize), type-aware ESLint rules (`recommendedTypeChecked`
