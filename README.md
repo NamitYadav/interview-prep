@@ -41,12 +41,14 @@ between roles; only the round list and the visible question set change.
 - **Round practice** — a priority queue for one round: weak questions come first,
   then unseen, then ok, then solid. Rating a question Weak doesn't just leave it —
   it comes back around roughly 8 questions later, in the same lap, instead of
-  waiting for a whole different lap. Filter by category and by status —
+  waiting for a whole different lap (on the last question of a lap it simply comes
+  back once more before the summary). Filter by category and by status —
   *Unseen* (never rated), *Weak*, *OK*, *Solid* — or switch to the
-  **Browse** tab to search every question, answer and key point at once (a Top
-  button appears once you have scrolled a way down it). The status filter is frozen
+  **Browse** tab to search every question, answer and key point at once, grouped by
+  category (a Top button appears once you have scrolled a way down it). The status filter is frozen
   when you pick it, so rating a question doesn't pull it out from under the lap; pick
-  it again to rebuild the set. The progress bar keeps describing the whole category
+  it again to rebuild the set; a filter with nothing in it offers a **Show all
+  questions** button instead of a dead end. The progress bar keeps describing the whole category
   either way. A lap
   ends once every question (and every requeued one) has been shown, with a
   summary and a way to start another.
@@ -76,12 +78,14 @@ between roles; only the round list and the visible question set change.
 ## Working a question
 - Write **your answer** in three bullets first — before you reveal anything. It
   stays visible above the model answer once revealed, so you're comparing what you
-  actually said, not just reading key points cold.
+  actually said, not just reading key points cold. It is kept on this device until
+  you rate the question, so a reload mid-answer (or Back) does not lose it.
 - If your browser supports it, **hold to record** a spoken answer; play it back
   once revealed. Nothing is saved or sent anywhere — it's gone the moment you move
   to the next question.
 - **Reveal** the model answer, then tick off the key points you actually said out loud.
-  The hit count suggests a rating. Once revealed, the card shows how long you took and
+  The hit count suggests a rating: all of them Solid, fewer than half Weak, otherwise
+  OK. Once revealed, the card shows how long you took and
   the round's target time — a stopwatch, not a countdown, so nothing forces a hide,
   unless you turn on **Strict mode** (below).
 - **Back** steps to the previous question if you want to re-rate it; disabled at the
@@ -100,8 +104,9 @@ between roles; only the round list and the visible question set change.
   snippet — write your approach out before revealing, then **Run** it (`⌘↩` /
   `Ctrl+↩` inside the pad). Console output and errors show up under the pad; the
   React component prompts (Autocomplete, Tabs, VirtualList and friends) also render
-  live in a preview with sample props. Every Run starts from a clean slate, and
-  **Stop** kills whatever is going on. The pad runs in a sandbox: forms submit, but
+  live in a preview with sample props once the sandbox reports in. Every Run starts
+  from a clean slate, and **Stop** kills whatever is going on. Tab indents inside the
+  pad; Esc moves focus to Run. The pad runs in a sandbox: forms submit, but
   nothing can navigate, open windows or touch your saved progress. It runs
   TypeScript and JSX without type-checking, the way CoderPad does, with React's
   hooks available as globals — no imports. What you type is kept per question on
@@ -112,14 +117,15 @@ between roles; only the round list and the visible question set change.
 - **My notes** — every note you have written, in round order, read-only. Edit them on
   the question itself.
 - **My stories** — a STAR-style story bank, independent of any one question. Sorted
-  least-recently-rehearsed first, so the stale ones surface. Mark one rehearsed when
+  least-recently-rehearsed first, so the stale ones surface. New story drops you straight
+  into its title. Mark one rehearsed when
   you have said it out loud, or pull one up mid-question via "Use this".
 
 ## Readiness
 Set a **Loop date** on the home screen and every round card shows how many
 questions are unseen, how many are weak, and how many days you have left; cards
-themselves reorder by urgency (weak and unseen count more) while the Round N label
-stays fixed to its usual position. A banner nudges you to export if you have
+themselves reorder by urgency (weak and unseen count more), and the Round N labels
+come off since they would contradict the order. A banner nudges you to export if you have
 progress and haven't backed it up in the last week.
 
 ## Keyboard (practice queues)
@@ -139,10 +145,16 @@ progress and haven't backed it up in the last week.
   downloaded. The chosen sound and volume are stored per device, outside the backup;
   playback never starts on its own, so press Play after a reload. While it plays, the
   Settings button shows a ♪.
-- **Scratch pads** (Build-prompt code, 45-minute design write-ups), lap positions and
-  the running design session are working state, stored per device and outside the
-  backup: a new machine starts them fresh. Anything worth keeping goes in a note.
-  Run output is not stored at all — it is gone when you leave the question.
+- **Scratch pads** (Build-prompt code, 45-minute design write-ups, your pre-reveal
+  answers), lap positions and the running design session are working state, stored per
+  device and outside the backup: a new machine starts them fresh, and **Reset** and
+  **Import** clear all of them along with the data they belonged to. Anything worth
+  keeping goes in a note. Run output is not stored at all — it is gone when you leave
+  the question.
+- **Offline**: the app installs as a PWA and works without a network after its first
+  visit — the build writes a service worker that precaches every file it emits. The
+  one exception is **Run** in the scratch pad: the sandbox frame has an opaque origin
+  the worker cannot serve, so it needs the network.
 
 ## Adding questions
 Edit `src/data/<round>.ts`. Ids are `<round>-<nnn>`. A question can carry an
@@ -170,6 +182,11 @@ sandboxed iframe, with Sucrase to strip types and compile JSX. React is shared b
 the two pages; the compiler is never downloaded by the app. Measured, not optimized:
 further code-splitting would trim the initial load, but this is a single-user app run
 from a laptop, so it isn't worth the added complexity.
+The service worker is written by a ~40-line plugin in `vite.config.ts` rather than
+`vite-plugin-pwa`: it only has to precache the build output, and a hash of the file list
+as the cache name gives it versioning for free. Browse and Search render every row and
+lean on `content-visibility: auto` to skip laying out the off-screen ones instead of a
+virtualised list.
 Skipped for the same reason: a CSP `<meta>` tag (the inline pre-paint theme script
 would need a build-time hash to keep it, which is fragile for the gain on a static
 page with no user input to sanitize), type-aware ESLint rules (`recommendedTypeChecked`

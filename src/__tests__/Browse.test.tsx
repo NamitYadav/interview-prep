@@ -18,6 +18,22 @@ function Harness() {
 }
 
 describe('Browse', () => {
+  // Data files are appended to over time, so in file order a late addition sat alone at
+  // the bottom under a category that had ended a screen above.
+  test('rows are grouped by category in first-appearance order', () => {
+    const scattered: Question[] = [
+      ...qs,
+      { id: 'hm-003', round: 'hm', category: 'Frontend', question: 'Late frontend addition?', answer: ['Answer three.'], keyPoints: ['Point three'] },
+    ];
+    function ScatteredHarness() {
+      const [state, dispatch] = useReducer(reducer, EMPTY);
+      return <Browse questions={scattered} state={state} dispatch={dispatch} />;
+    }
+    render(<ScatteredHarness />);
+    const rows = screen.getAllByRole('button', { expanded: false }).map((b) => b.textContent);
+    expect(rows.map((r) => r?.startsWith('Frontend'))).toEqual([true, true, false]);
+  });
+
   test('lists every question collapsed with a count and no rating', () => {
     render(<Harness />);
     expect(screen.getByText('2 of 2')).toBeInTheDocument();

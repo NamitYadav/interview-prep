@@ -4,6 +4,17 @@ import './index.css';
 import App from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
+// Offline after the first visit: sw.js is written by the build (see vite.config.ts) and
+// precaches every emitted file. Production only — in dev it would cache Vite's module
+// graph and hide edits behind a stale copy.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {
+      /* no offline copy this time; the app itself is unaffected */
+    });
+  });
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>

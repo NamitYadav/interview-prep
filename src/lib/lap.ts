@@ -135,7 +135,10 @@ export function clearDesignSession(): void {
 // worse than no lap: after a reset you resume mid-lap with everything unrated, and
 // after an import your position belongs to somebody else's data. Baselines go with
 // them — they are the same session, and one without the other is just wrong counts.
+// The design session is the same class of thing: after a reset it resumed the old prompt
+// with its phases still ticked and a clock already at 00:00.
 export function clearAllLaps(): void {
   lapStore.clear();
   baselineStore.clear();
+  designStore.clear();
 }

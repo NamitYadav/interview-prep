@@ -359,7 +359,11 @@ describe('Practice weak-question requeuing', () => {
     expect(screen.queryByText(/lap done/i)).not.toBeInTheDocument();
     expect(currentQuestionText()).toBe('Question 1?');
 
-    // Now that the one pending requeue has been drained, the lap can actually end.
+    // Weak again on the drained repeat, with nothing left to interleave: it comes back
+    // exactly once more (the "same lap" promise), and a second Weak ends the lap.
+    await rateWeak();
+    expect(screen.queryByText(/lap done/i)).not.toBeInTheDocument();
+    expect(currentQuestionText()).toBe('Question 1?');
     await rateWeak();
     expect(screen.getByText(/lap done/i)).toBeInTheDocument();
   });
@@ -514,6 +518,56 @@ describe('your-answer draft survives Back', () => {
     await userEvent.click(screen.getByRole('button', { name: /skip/i }));
     expect(screen.getByLabelText(/your answer/i)).toHaveValue('');
     expect(screen.queryByText('only mine')).not.toBeInTheDocument();
+  });
+});
+
+describe('review fixes', () => {
+  // ownsKeys treated every INPUT as owning the keyboard, so ticking a key point (focus
+  // now on a checkbox) silently disabled 1/2/3 — the exact moment the README says to
+  // press them.
+  test('1/2/3 still rate while a key-point checkbox has focus', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Point one' }));
+    expect(screen.getByRole('checkbox', { name: 'Point one' })).toHaveFocus();
+    fireEvent.keyDown(screen.getByRole('checkbox', { name: 'Point one' }), { key: '2' });
+    expect(screen.getByText('Second question?')).toBeInTheDocument();
+  });
+
+  test('Space on a focused checkbox is left to the checkbox', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    const box = screen.getByRole('checkbox', { name: 'Point one' });
+    box.focus();
+    const ev = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+    box.dispatchEvent(ev);
+    expect(ev.defaultPrevented).toBe(false);
+  });
+
+  // With no other requeue pending, a Weak on the last question was dropped by the drain
+  // branch and the lap ended on a question just rated "don't know".
+  test('a weak rating on the last question of a lap comes back once, then the lap ends', async () => {
+    render(<Harness />);
+    await rateVisible();
+    expect(screen.getByText('Second question?')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    await userEvent.click(screen.getByRole('radio', { name: /weak/i }));
+    expect(screen.queryByText(/lap done/i)).not.toBeInTheDocument();
+    expect(screen.getByText('Second question?')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    await userEvent.click(screen.getByRole('radio', { name: /weak/i }));
+    expect(screen.getByText(/lap done/i)).toBeInTheDocument();
+  });
+
+  test('your answer survives a remount and is cleared once the question is rated', async () => {
+    const first = render(<Harness />);
+    fireEvent.change(screen.getByLabelText(/your answer/i), { target: { value: 'kept across reload' } });
+    first.unmount();
+    render(<Harness />);
+    expect(screen.getByLabelText(/your answer/i)).toHaveValue('kept across reload');
+    await rateVisible();
+    await userEvent.click(screen.getByRole('button', { name: /back/i }));
+    expect(screen.queryByText('kept across reload')).not.toBeInTheDocument();
   });
 });
 

@@ -26,10 +26,18 @@ export function Browse({ questions, state, dispatch }: { questions: Question[]; 
     () => new Map(questions.map((q) => [q.id, `${q.question} ${q.category} ${q.answer.join(' ')} ${(q.deeper ?? []).join(' ')} ${q.keyPoints.join(' ')}`.toLowerCase()])),
     [questions],
   );
+  // Grouped by category, in the order categories first appear: the data files are
+  // appended to over time, so in file order a late addition sat alone at the bottom
+  // under a category that had already ended a screen above.
+  const grouped = useMemo(() => {
+    const order = new Map<string, number>();
+    for (const q of questions) if (!order.has(q.category)) order.set(q.category, order.size);
+    return [...questions].sort((a, b) => order.get(a.category)! - order.get(b.category)!);
+  }, [questions]);
   const needle = search.trim().toLowerCase();
   const visible = useMemo(
-    () => (needle ? questions.filter((q) => haystack.get(q.id)?.includes(needle)) : questions),
-    [questions, haystack, needle],
+    () => (needle ? grouped.filter((q) => haystack.get(q.id)?.includes(needle)) : grouped),
+    [grouped, haystack, needle],
   );
 
   return (
@@ -47,8 +55,10 @@ export function Browse({ questions, state, dispatch }: { questions: Question[]; 
         {visible.map((q) => {
           const rating = state.progress[q.id]?.rating;
           const open = openId === q.id;
+          // content-visibility: the whole loop is 355 rows on #search; the browser skips
+          // laying out the ones off-screen, no virtualisation code needed.
           return (
-            <li key={q.id}>
+            <li key={q.id} className="[content-visibility:auto] [contain-intrinsic-size:auto_3.25rem]">
               <button
                 type="button"
                 aria-expanded={open}

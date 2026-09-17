@@ -2,14 +2,18 @@ import { useEffect, useRef, useState } from 'react';
 import type { Question, Rating, Stories } from '../types';
 import { rounds, isStoryPrompt } from '../data';
 import { useQuestionTimer } from '../hooks/useQuestionTimer';
+import { useDraft } from '../hooks/useDraft';
+import { draftKey } from '../lib/drafts';
 import { useDebouncedField } from '../hooks/useDebouncedField';
 import { ScratchPad } from './ScratchPad';
 import { useRecorder } from '../hooks/useRecorder';
 import { formatTime } from '../lib/format';
 import { RATINGS, RatingRadios } from './RatingRadios';
 
+// All of them is Solid, fewer than half is Weak, the rest is OK — one hit out of four
+// used to read "suggested: OK", which is more generous than anyone grades themselves.
 const suggestedRating = (hits: number, total: number): Rating | undefined =>
-  total === 0 ? undefined : hits === total ? 3 : hits === 0 ? 1 : 2;
+  total === 0 ? undefined : hits === total ? 3 : hits * 2 < total ? 1 : 2;
 
 // Sized to sit beside Reveal; the red recording state layers its colors on top.
 const secondaryButton = 'rounded border border-zinc-300 px-3 py-2 text-sm hover:border-emerald-500 dark:border-zinc-700';
@@ -32,14 +36,13 @@ const withPlaceholders = (text: string) =>
 
 export function QuestionCard({
   question, revealed, note, rating, strictMode = false, shortcuts = false, checked, onCheckedChange, focusOnMount = true,
-  yourAnswer, onYourAnswerChange, stories, onRehearse, onReveal, onNote, onRate, meta,
+  stories, onRehearse, onReveal, onNote, onRate, meta,
 }: {
   question: Question; revealed: boolean; note: string; rating?: Rating; strictMode?: boolean;
   /** Where you are in the lap ("12 of 99"); the raw question id meant nothing to a reader. */
   meta?: string;
   shortcuts?: boolean;
   checked?: Set<number>; onCheckedChange?: (next: Set<number>) => void; focusOnMount?: boolean;
-  yourAnswer?: string; onYourAnswerChange?: (next: string) => void;
   stories?: Stories; onRehearse?: (id: string) => void;
   onReveal: () => void; onNote: (text: string) => void; onRate: (r: Rating) => void;
 }) {
@@ -65,14 +68,11 @@ export function QuestionCard({
   const note_ = useDebouncedField(note, onNote);
   const recorder = useRecorder();
 
-  // Ephemeral, never persisted — a self-check against the model answer, not a
-  // stored draft. Resets per question via Practice's `key={current.id}` remount,
-  // same as every other piece of local state here.
-  // Hoisted by Practice for the same reason checked is: `key={current.id}` remounts the
-  // card, so without an owner above it, going Back discarded what you had written.
-  const [ownAnswer, setOwnAnswer] = useState('');
-  const answerText = yourAnswer ?? ownAnswer;
-  const setAnswerText = onYourAnswerChange ?? setOwnAnswer;
+  // A per-question draft like the scratch pad, so a reload (or a phone discarding the
+  // tab) mid-answer does not lose it and Back finds it again. Practice clears it when the
+  // question is rated: it is a self-check against the model answer, not prep data.
+  const answer = useDraft(draftKey(question.id, 'answer'));
+  const answerText = answer.draft;
 
   // Reveal one follow-up at a time, pre-reveal, each with its own running clock
   // from the moment it was probed — rehearsing the follow-up before you've even
@@ -203,7 +203,8 @@ export function QuestionCard({
             <textarea
               id={`your-answer-${question.id}`}
               value={answerText}
-              onChange={(e) => setAnswerText(e.target.value)}
+              onChange={(e) => answer.onChange(e.target.value)}
+              onBlur={answer.onBlur}
               rows={3}
               placeholder="Your answer in 3 bullets, before you look"
               aria-label="Your answer"

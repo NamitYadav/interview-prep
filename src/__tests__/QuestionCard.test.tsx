@@ -243,6 +243,14 @@ describe('QuestionCard key points checklist', () => {
     await userEvent.click(screen.getByRole('checkbox', { name: 'Point two' }));
     expect(screen.getByText(/2\/2 key points hit · suggested: Solid/i)).toBeInTheDocument();
   });
+
+  test('fewer than half the key points suggests Weak, not OK', async () => {
+    renderCard({ ...base, keyPoints: ['One', 'Two', 'Three', 'Four'] }, true);
+    await userEvent.click(screen.getByRole('checkbox', { name: 'One' }));
+    expect(screen.getByText(/1\/4 key points hit · suggested: Weak/i)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Two' }));
+    expect(screen.getByText(/2\/4 key points hit · suggested: OK/i)).toBeInTheDocument();
+  });
 });
 
 describe('QuestionCard follow-ups (post-reveal)', () => {

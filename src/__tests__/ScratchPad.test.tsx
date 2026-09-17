@@ -52,6 +52,16 @@ describe('ScratchPad editor', () => {
     expect(screen.getByRole('button', { name: 'before' })).toHaveFocus();
   });
 
+  test('Escape moves focus from the editor to Run, so forward Tab is not a trap', async () => {
+    const user = userEvent.setup();
+    render(<ScratchPad question={q} />);
+    const ta = screen.getByRole('textbox', { name: /scratch editor/i });
+    expect(ta).toHaveAccessibleDescription(/esc leaves the editor/i);
+    ta.focus();
+    await user.keyboard('{Escape}');
+    expect(screen.getByRole('button', { name: /run/i })).toHaveFocus();
+  });
+
   test('Cmd/Ctrl+Enter runs from inside the editor', () => {
     render(<ScratchPad question={q} />);
     fireEvent.keyDown(screen.getByRole('textbox', { name: /scratch editor/i }), { key: 'Enter', ctrlKey: true });
@@ -157,10 +167,33 @@ describe('ScratchPad runner', () => {
     expect(frame()).toHaveClass('h-0');
   });
 
-  test('with a preview the frame is visible', () => {
+  // Before the first Run, and when the sandbox never loads, the preview was a bright empty
+  // rectangle under the editor.
+  test('with a preview the frame shows once the sandbox is ready for a run, and hides on Stop', () => {
     render(<ScratchPad question={{ ...q, preview: '<f />' }} />);
+    expect(frame()).toHaveClass('h-0');
+    fireEvent.click(screen.getByRole('button', { name: /run/i }));
+    expect(frame()).toHaveClass('h-0');
+    fromSandbox({ type: 'ready' });
     expect(frame()).not.toHaveAttribute('aria-hidden');
     expect(frame()).toHaveClass('min-h-48');
+    fireEvent.click(screen.getByRole('button', { name: /stop/i }));
+    expect(frame()).toHaveClass('h-0');
+  });
+
+  // Pad code has window.parent.postMessage, so the source check proves nothing about the
+  // shape. A non-string `text` rendered as a React child took the whole app down.
+  test('malformed messages from the frame are coerced or ignored, never thrown', () => {
+    render(<ScratchPad question={q} />);
+    fromSandbox({ type: 'log', level: 'bogus', text: { anything: 1 } });
+    fromSandbox({ type: 'error', text: 42 });
+    fromSandbox({ type: 'nonsense' });
+    fromSandbox('a string');
+    fromSandbox(null);
+    const log = screen.getByRole('log', { name: /output/i });
+    expect(log).toHaveTextContent('[object Object]');
+    expect(log).toHaveTextContent('✗ 42');
+    expect(log.children).toHaveLength(2);
   });
 
   test('the Run hint shows only when shortcuts are on', () => {
