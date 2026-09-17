@@ -5,14 +5,21 @@ import { nextQuestion, roundStats } from '../lib/queue';
 import { rounds } from '../data';
 import { formatTime } from '../lib/format';
 import { clearLap, lapKey, readLap, writeLap } from '../lib/lap';
+import { clearDraft, draftKey } from '../lib/drafts';
 import { QuestionCard } from './QuestionCard';
 
 // Single-character shortcuts on `window` are only safe while nothing else on the page
 // wants that key. A focused <audio> is the one that bit: the recording player owns the
 // arrow keys AND Space, and `n` while scrubbing your own take skipped the question.
 // contenteditable is here for the same reason a textarea is.
+//
+// A checkbox or radio is an INPUT too, but it wants only Space and the arrows: ticking a
+// key point used to leave focus there and silently kill 1/2/3, which is exactly the
+// moment the README says to press them.
+const isToggle = (target: EventTarget | null) =>
+  target instanceof HTMLInputElement && (target.type === 'checkbox' || target.type === 'radio');
 const ownsKeys = (target: EventTarget | null) =>
-  target instanceof HTMLElement &&
+  target instanceof HTMLElement && !isToggle(target) &&
   (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT' ||
     target.tagName === 'AUDIO' || target.tagName === 'VIDEO' ||
     // closest, not isContentEditable: it covers a focused descendant of an editable
@@ -92,11 +99,6 @@ export function Practice({
   // keep this as its own state, reset by Practice's `key={current.id}` remount, which
   // meant re-visiting a question via Back always showed an empty checklist.
   const [checkedByQuestion, setCheckedByQuestion] = useState<Record<string, Set<number>>>({});
-
-  // Same reason as checkedByQuestion: the card remounts per question, so going Back
-  // used to discard whatever you had drafted before revealing. Lap-scoped on purpose —
-  // it is a self-check against the model answer, not an artefact worth persisting.
-  const [answerByQuestion, setAnswerByQuestion] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (lapDone) {
@@ -184,6 +186,18 @@ export function Practice({
       serveNext(first.id);
       return;
     }
+    // The only thing pending is the question just rated Weak, with nothing left to put
+    // between it and its repeat. Serve it once more anyway: the promise is "back in the
+    // same lap", and ending the lap on a question you just said you don't know broke it
+    // silently. Once — a second Weak on that repeat ends the lap, otherwise this would
+    // loop until you rated it something else.
+    const own = pending.find((e) => e.id === current?.id);
+    if (own && !finalRepeat.current) {
+      finalRepeat.current = true;
+      setRequeued((r) => r.filter((e) => e !== own));
+      serveNext(own.id);
+      return;
+    }
     // Cleared here, not only from the lapDone effect: a parent that unmounts Practice
     // on this callback (MockSession swapping in its recap) means no render with
     // lapDone === true ever commits, so the effect would never fire and the finished
@@ -193,9 +207,14 @@ export function Practice({
     onLapComplete?.();
   };
 
+  const finalRepeat = useRef(false);
+
   const rate = (rating: Rating) => {
     if (!current) return;
     dispatch({ type: 'rate', id: current.id, rating, now: Date.now() });
+    // The answer you wrote before revealing has done its job once you have rated; left
+    // in place it would pre-fill the box next lap and defeat "write first, then look".
+    clearDraft(draftKey(current.id, 'answer'));
     // A weak rating requeues the question. The setRequeued below has not landed in
     // state by the time advance() runs in this same closure, so the entry is handed
     // over explicitly — otherwise advance() sees a list without it and can end the lap
@@ -229,6 +248,7 @@ export function Practice({
     setStep(0);
     setRevealed(false);
     setLapDone(false);
+    finalRepeat.current = false;
   };
 
   // Rating the last question of a lap unmounts the button that was just activated, and
@@ -255,7 +275,8 @@ export function Practice({
       if (ownsKeys(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
       const isButton = e.target instanceof HTMLElement && e.target.tagName === 'BUTTON';
       if (e.key === ' ') {
-        if (isButton) return;
+        // Space activates a focused button and toggles a focused checkbox; both keep it.
+        if (isButton || isToggle(e.target)) return;
         // Only claim Space as the reveal shortcut before reveal — once revealed, a
         // revealed answer can be long enough to scroll, and Space is the standard
         // page-scroll key.
@@ -308,8 +329,6 @@ export function Practice({
         shortcuts={shortcuts}
         checked={checkedByQuestion[current.id]}
         onCheckedChange={(next) => setCheckedByQuestion((prev) => ({ ...prev, [current.id]: next }))}
-        yourAnswer={answerByQuestion[current.id] ?? ''}
-        onYourAnswerChange={(next) => setAnswerByQuestion((prev) => ({ ...prev, [current.id]: next }))}
         stories={state.stories}
         onRehearse={(id) => dispatch({ type: 'rehearseStory', id, now: Date.now() })}
         onReveal={() => setRevealed(true)}

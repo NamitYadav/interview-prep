@@ -131,10 +131,16 @@ describe('RoundView', () => {
     expect(screen.getByRole('heading', { level: 2 }).textContent).not.toBe(first);
   });
 
-  test('a status with nothing in it shows the empty state', async () => {
+  test('a status with nothing in it shows the empty state, with a button that resets the filters', async () => {
     render(<Harness />);
+    await userEvent.selectOptions(category(), firstHrCategory);
     await userEvent.selectOptions(statusFilter(), 'weak');
     expect(screen.getByText(/no questions match/i)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /show all questions/i }));
+    expect(screen.queryByText(/no questions match/i)).not.toBeInTheDocument();
+    expect(statusFilter()).toHaveValue('all');
+    expect(category()).toHaveValue('');
+    expect(screen.getByRole('button', { name: /reveal/i })).toBeInTheDocument();
   });
 
   test('the progress bar keeps describing the whole category, not the status slice', async () => {

@@ -145,6 +145,16 @@ describe('ExportImport', () => {
     expect(localStorage.getItem('interview-prep:drafts')).toBeNull();
   });
 
+  // Reset and Import cleared laps and drafts but not the 45-minute design session, so it
+  // resumed with its phases ticked and a clock already at 00:00 on a wiped data set.
+  test('reset clears the running design session too', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    localStorage.setItem('interview-prep:design-session', JSON.stringify({ current: { questionId: 'design-001', startedAt: 1, phases: [0, 1] } }));
+    render(<Harness initial={seeded} />);
+    await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
+    expect(localStorage.getItem('interview-prep:design-session')).toBeNull();
+  });
+
   test('a declined reset leaves laps and drafts alone', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(false);
     localStorage.setItem('interview-prep:laps', JSON.stringify({ k: {} }));

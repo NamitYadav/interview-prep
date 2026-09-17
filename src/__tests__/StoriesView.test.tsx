@@ -40,6 +40,8 @@ describe('StoriesView', () => {
     await userEvent.click(screen.getByRole('button', { name: /new story/i }));
     expect(screen.getByPlaceholderText(/story title/i)).toBeInTheDocument();
     expect(screen.queryByText(/no stories yet/i)).not.toBeInTheDocument();
+    // Focus used to stay on the button, leaving a blank card nothing pointed at.
+    expect(screen.getByPlaceholderText(/story title/i)).toHaveFocus();
   });
 
   test('editing title then body within the same debounce window commits both, not just the last one', () => {

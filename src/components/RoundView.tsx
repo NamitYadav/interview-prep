@@ -124,7 +124,22 @@ export function RoundView({
       </div>
 
       <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>
-        {tab === 'practice' && <Practice key={`${roundId}:${selected ?? ''}:${status}`} questions={filtered} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />}
+        {tab === 'practice' && (filtered.length === 0 ? (
+          // Practice has its own empty state, but only this view knows which filters to
+          // undo — the message alone left you hunting for the select that emptied it.
+          <div className="rounded border border-dashed p-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="mb-3">No questions match this filter.</p>
+            <button
+              type="button"
+              onClick={() => { setStatus('all'); setSelected(null); }}
+              className="rounded border border-zinc-300 px-3 py-1 hover:border-emerald-500 dark:border-zinc-700"
+            >
+              Show all questions
+            </button>
+          </div>
+        ) : (
+          <Practice key={`${roundId}:${selected ?? ''}:${status}`} questions={filtered} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />
+        ))}
         {tab === 'browse' && <Browse questions={filtered} state={state} dispatch={dispatch} />}
         {tab === 'design-prompt' && <DesignSession state={state} dispatch={dispatch} role={role} />}
       </div>

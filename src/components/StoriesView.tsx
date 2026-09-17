@@ -1,4 +1,4 @@
-import type { Dispatch } from 'react';
+import { useEffect, useRef, useState, type Dispatch } from 'react';
 import { BackLink } from './BackLink';
 import type { Persisted, Story } from '../types';
 import type { Action } from '../hooks/useAppState';
@@ -17,8 +17,13 @@ export function StoriesView({ state, dispatch }: { state: Persisted; dispatch: D
     ([, a], [, b]) => (a.lastRehearsed ?? 0) - (b.lastRehearsed ?? 0),
   );
 
+  // The new card takes focus on its title: the button kept it, so the blank story sat
+  // below with nothing pointing at it.
+  const [focusId, setFocusId] = useState<string | null>(null);
   const addStory = () => {
-    dispatch({ type: 'createStory', id: crypto.randomUUID() });
+    const id = crypto.randomUUID();
+    dispatch({ type: 'createStory', id });
+    setFocusId(id);
   };
 
   return (
@@ -47,7 +52,7 @@ export function StoriesView({ state, dispatch }: { state: Persisted; dispatch: D
       ) : (
         <ul className="space-y-3">
           {entries.map(([id, story]) => (
-            <StoryEditor key={id} id={id} story={story} dispatch={dispatch} />
+            <StoryEditor key={id} id={id} story={story} dispatch={dispatch} focusTitle={id === focusId} />
           ))}
         </ul>
       )}
@@ -55,7 +60,11 @@ export function StoriesView({ state, dispatch }: { state: Persisted; dispatch: D
   );
 }
 
-function StoryEditor({ id, story, dispatch }: { id: string; story: Story; dispatch: Dispatch<Action> }) {
+function StoryEditor({ id, story, dispatch, focusTitle }: { id: string; story: Story; dispatch: Dispatch<Action>; focusTitle: boolean }) {
+  const titleRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (focusTitle) titleRef.current?.focus();
+  }, [focusTitle]);
   // Each field dispatches only its own value — the reducer merges it against
   // whatever is currently stored, so committing one field never overwrites a
   // concurrent, still-in-flight edit to the other with a stale snapshot of it.
@@ -65,6 +74,7 @@ function StoryEditor({ id, story, dispatch }: { id: string; story: Story; dispat
   return (
     <li className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
       <input
+        ref={titleRef}
         value={title.draft}
         onChange={(e) => title.onChange(e.target.value)}
         onBlur={title.onBlur}

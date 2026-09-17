@@ -18,6 +18,8 @@ const modKey = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(naviga
 
 type Line = { level: LogLevel; text: string };
 
+const asText = (v: unknown): string => (typeof v === 'string' ? v : String(v));
+
 const READY_TIMEOUT_MS = 3000;
 
 // ponytail: a synchronous `while (true)` in the pad blocks the frame's thread. Chrome
@@ -37,21 +39,31 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [lines, setLines] = useState<Line[]>([]);
   const [status, setStatus] = useState<'idle' | 'running' | 'done'>('idle');
+  // The frame is only shown once it has reported ready for a run: before that (and when
+  // it fails to load) it was a bright empty rectangle under the editor in the dark theme.
+  const [frameReady, setFrameReady] = useState(false);
+  const runRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const onMessage = (e: MessageEvent<FromSandbox>) => {
+    const onMessage = (e: MessageEvent<unknown>) => {
       const frame = iframeRef.current;
       // `event.origin` is 'null' for an opaque frame and proves nothing; the source does.
       if (!frame || e.source !== frame.contentWindow) return;
-      const msg = e.data;
+      // The source proves where it came from, not what it is: pad code has
+      // window.parent.postMessage and can send anything. A non-string `text` rendered as
+      // a React child threw straight through to the app-wide ErrorBoundary.
+      const msg = e.data as Partial<FromSandbox> | null;
+      if (typeof msg !== 'object' || msg === null) return;
       if (msg.type === 'ready') {
         if (timer.current) clearTimeout(timer.current);
         if (pending.current) frame.contentWindow?.postMessage(pending.current, '*');
         pending.current = null;
+        setFrameReady(true);
       } else if (msg.type === 'log') {
-        setLines((prev) => [...prev, { level: msg.level, text: msg.text }]);
+        const level: LogLevel = msg.level === 'warn' || msg.level === 'error' || msg.level === 'info' ? msg.level : 'log';
+        setLines((prev) => [...prev, { level, text: asText(msg.text) }]);
       } else if (msg.type === 'error') {
-        setLines((prev) => [...prev, { level: 'error', text: `✗ ${msg.text}` }]);
+        setLines((prev) => [...prev, { level: 'error', text: `✗ ${asText(msg.text)}` }]);
       } else if (msg.type === 'done') {
         setStatus('done');
       }
@@ -66,6 +78,7 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
     pending.current = next;
     setLines([]);
     setStatus(next ? 'running' : 'idle');
+    setFrameReady(false);
     setFrameKey((k) => k + 1);
     if (timer.current) clearTimeout(timer.current);
     timer.current = next
@@ -91,10 +104,17 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
       const el = e.currentTarget;
       el.setRangeText('  ', el.selectionStart, el.selectionEnd, 'end');
       scratch.onChange(el.value);
+    } else if (e.key === 'Escape') {
+      // Tab indents, so forward Tab could never leave the editor: a keyboard user had no
+      // way to reach Run. Escape hands focus to it, the same convention code editors use.
+      e.preventDefault();
+      runRef.current?.focus();
     }
   };
 
   const code = question.code ?? '';
+  const hintId = `scratch-hint-${question.id}`;
+  const showPreview = Boolean(question.preview) && frameReady && status !== 'idle';
   return (
     <div className="mb-4">
       <textarea
@@ -106,12 +126,14 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
         wrap="off"
         rows={Math.max(code.split('\n').length + 2, scratch.draft.split('\n').length + 2)}
         aria-label="Scratch editor"
+        aria-describedby={hintId}
         className={`w-full overflow-x-auto ${mono}`}
       />
+      <p id={hintId} className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Tab indents · Esc leaves the editor</p>
       {scratch.saveFailed && <p role="alert" className={`mt-1 text-xs ${warnText}`}>{DRAFT_SAVE_FAILED}</p>}
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <button type="button" onClick={run} className={button}>
+        <button ref={runRef} type="button" onClick={run} className={button}>
           Run {shortcuts && <kbd className="ml-2 text-xs opacity-70 [@media(hover:none)]:hidden">{modKey}↩</kbd>}
         </button>
         <button type="button" onClick={stop} className={button}>Stop</button>
@@ -132,16 +154,16 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
         ))}
       </div>
 
-      {/* Kept in the DOM even without a preview: the code still runs there. */}
+      {/* Kept in the DOM even when hidden: the code still runs there. */}
       <iframe
         key={frameKey}
         ref={iframeRef}
         src={SANDBOX_URL}
         sandbox="allow-scripts allow-forms"
         title="Preview"
-        aria-hidden={question.preview ? undefined : true}
-        tabIndex={question.preview ? undefined : -1}
-        className={question.preview ? 'mt-2 min-h-48 w-full rounded border border-zinc-300 dark:border-zinc-700' : 'h-0 w-0 border-0'}
+        aria-hidden={showPreview ? undefined : true}
+        tabIndex={showPreview ? undefined : -1}
+        className={showPreview ? 'mt-2 min-h-48 w-full rounded border border-zinc-300 dark:border-zinc-700' : 'h-0 w-0 border-0'}
       />
     </div>
   );

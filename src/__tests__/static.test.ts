@@ -20,6 +20,10 @@ describe('static files', () => {
     expect(css).toMatch(/@layer base\s*\{[^}]*:focus-visible/);
   });
 
+  test('index.html links the web manifest through the base URL', () => {
+    expect(html).toContain('rel="manifest" href="%BASE_URL%manifest.webmanifest"');
+  });
+
   test('README states the real question count', () => {
     expect(readme).toContain(`${questions.length} curated questions`);
   });
