@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Preview</title>
+    <style>
+      /* Unthemed on purpose: the user's component is the only thing on this page. The
+         frame has an opaque origin, so the app's self-hosted font would need CORS — the
+         system stack is fine here. */
+      :root { color-scheme: light dark; }
+      body { margin: 0; padding: 12px; font: 14px/1.4 system-ui, sans-serif; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/sandbox/main.tsx"></script>
+  </body>
+</html>
