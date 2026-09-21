@@ -148,12 +148,46 @@ export function MockSession({
       else if (entry.rating === 2) counts.ok++;
       else counts.solid++;
     }
+    // The counts say how it went; these say what to do about it. Weak stays open — it is
+    // the next day's list. Not-rated is what Finish skipped over, and after an early
+    // Finish that can be most of the set, so it folds away.
+    const ratedThisSession = (q: Question) => {
+      const e = state.progress[q.id];
+      return e !== undefined && e.seen !== baseline[q.id];
+    };
+    const weakQs = drill.filter((q) => ratedThisSession(q) && state.progress[q.id]?.rating === 1);
+    const unratedQs = drill.filter((q) => !ratedThisSession(q));
+    // The drill is already in the role's round order, so grouping is a filter per round.
+    const groupByRound = (qs: Question[]) =>
+      roleRounds.map((r) => ({ round: r, qs: qs.filter((q) => q.round === r.id) })).filter((g) => g.qs.length > 0);
+    const questionList = (qs: Question[]) => (
+      <div className="space-y-3 text-sm">
+        {groupByRound(qs).map(({ round, qs: group }) => (
+          <section key={round.id}>
+            <h3 className="mb-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">{round.title}</h3>
+            <ul className="list-disc space-y-1 pl-5">{group.map((q) => <li key={q.id}>{q.question}</li>)}</ul>
+          </section>
+        ))}
+      </div>
+    );
     return (
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
         <BackLink />
         <h1 ref={recapRef} tabIndex={-1} className="text-2xl font-semibold">Session recap</h1>
         <p className="mb-1 text-sm text-zinc-600 dark:text-zinc-400">{preset.title} · {rated.length} of {drill.length} rated</p>
         <p className="mb-4 text-sm">{counts.solid} solid · {counts.ok} ok · {counts.weak} weak</p>
+        {weakQs.length > 0 && (
+          <section className="mb-4">
+            <h2 className="mb-2 font-medium">Rated weak</h2>
+            {questionList(weakQs)}
+          </section>
+        )}
+        {unratedQs.length > 0 && (
+          <details className="mb-4">
+            <summary className="cursor-pointer font-medium">Not rated ({unratedQs.length})</summary>
+            <div className="mt-2">{questionList(unratedQs)}</div>
+          </details>
+        )}
         <button
           type="button"
           onClick={backToPresets}

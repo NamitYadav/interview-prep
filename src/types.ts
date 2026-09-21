@@ -9,6 +9,10 @@ export interface Question {
    *  sandbox appends `__render(<preview/>)` after the pad's code. Only meaningful with
    *  `scratch: true`; a scratch question without it runs console-only. */
   preview?: string;
+  /** A console-only scratch starter (no `preview`) runs in a Web Worker, which is
+   *  terminable and works offline. Set this when the starter needs the DOM (document,
+   *  IntersectionObserver) and it runs in the sandbox frame instead, like the previews. */
+  needsDom?: true;
   answer: string[]; keyPoints: string[]; followUps?: string[];
   // Material to use only when the interviewer digs. Kept out of `answer` so the
   // word-budget test in data.test.ts measures only what you actually say first.

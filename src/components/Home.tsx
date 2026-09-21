@@ -5,7 +5,7 @@ import { roles } from '../data/roles';
 import { roundStats } from '../lib/queue';
 import { useLoopDate } from '../hooks/useLoopDate';
 import { ExportButton, useLastExport } from './ExportImport';
-import { ProgressBar, statsCaption } from './ProgressBar';
+import { ProgressBar, plural, statsCaption } from './ProgressBar';
 import { Select } from './Select';
 
 // Every card in a grid shares this shape so a short blurb never leaves the card
@@ -20,12 +20,22 @@ const cardBlurb = 'min-h-10 text-sm text-zinc-600 dark:text-zinc-400';
 const drillLink = 'flex items-baseline justify-between gap-4 py-3 hover:text-emerald-600 dark:hover:text-emerald-400';
 const drillMeta = 'text-right text-sm text-zinc-500 dark:text-zinc-400';
 
-const daysUntil = (dateStr: string): number => {
-  const today = new Date();
+const startOfToday = (now: number): number => {
+  const today = new Date(now);
   today.setHours(0, 0, 0, 0);
-  const target = new Date(`${dateStr}T00:00:00`);
-  return Math.round((target.getTime() - today.getTime()) / 86_400_000);
+  return today.getTime();
 };
+
+const daysUntil = (dateStr: string, now: number): number => {
+  const target = new Date(`${dateStr}T00:00:00`);
+  return Math.round((target.getTime() - startOfToday(now)) / 86_400_000);
+};
+
+// The one line under the date input. Past the date it stops counting: "-3 days left"
+// read as a bug, and the cards below were still being sorted by an urgency that no
+// longer means anything.
+const loopDateLabel = (daysLeft: number): string =>
+  daysLeft < 0 ? 'Loop date has passed' : daysLeft === 0 ? 'Loop day is today' : `${plural(daysLeft, 'day')} left`;
 
 const EXPORT_STALE_MS = 7 * 86_400_000;
 
@@ -36,25 +46,36 @@ export function Home({ state, role, setRole }: { state: Persisted; role: RoleId;
   const stories = Object.values(state.stories);
   const neverRehearsed = stories.filter((s) => s.lastRehearsed === undefined).length;
 
-  const [loopDate, setLoopDate] = useLoopDate();
-  const daysLeft = loopDate ? daysUntil(loopDate) : null;
-
-  const lastExport = useLastExport();
   // Captured once at mount rather than read fresh each render — Date.now() is
   // impure, and a millisecond-stale "now" makes no visible difference to a
-  // week-scale staleness check.
+  // day-scale count or a week-scale staleness check.
   const [now] = useState(() => Date.now());
+
+  const [loopDate, setLoopDate] = useLoopDate();
+  const daysLeft = loopDate ? daysUntil(loopDate, now) : null;
+  // Only a date still ahead drives the readiness sort and the per-card countdown.
+  const upcoming = daysLeft !== null && daysLeft >= 0;
+
+  const lastExport = useLastExport();
   const hasProgress = Object.keys(state.progress).length > 0;
   const exportIsStale = hasProgress && (!lastExport || now - Number(lastExport) > EXPORT_STALE_MS);
+
+  // `lastSeen` is the latest rating's time, so this is "questions you rated in the
+  // window", which is the number that tells you whether you drilled today at all. It
+  // needs no rating history: a question rated twice today still counts once, which is
+  // what "questions drilled" means.
+  const ratedSince = (since: number) => roleQuestions.filter((q) => (state.progress[q.id]?.lastSeen ?? 0) >= since).length;
+  const ratedToday = ratedSince(startOfToday(now));
+  const ratedThisWeek = ratedSince(startOfToday(now) - 6 * 86_400_000);
 
   const roundCards = roleRounds.map((round, index) => ({
     round,
     index,
     stats: roundStats(byRound(round.id), state.progress),
   }));
-  // With a loop date the cards sort by urgency, and a "Round 3" label on the first
-  // card would contradict its position — so the label only shows in data order.
-  const orderedCards = loopDate
+  // With a loop date ahead the cards sort by urgency, and a "Round 3" label on the
+  // first card would contradict its position — so the label only shows in data order.
+  const orderedCards = upcoming
     ? [...roundCards].sort((a, b) => (b.stats.weak * 2 + b.stats.unrated) - (a.stats.weak * 2 + a.stats.unrated))
     : roundCards;
 
@@ -63,6 +84,11 @@ export function Home({ state, role, setRole }: { state: Persisted; role: RoleId;
       <header className="mb-6">
         <h1 tabIndex={-1} className="text-2xl font-semibold">Interview Prep</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">{activeRole.title} · Berlin / EU loop</p>
+        {hasProgress && (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            {plural(ratedToday, 'question')} rated today · {ratedThisWeek} in the last 7 days
+          </p>
+        )}
       </header>
 
       {/* Each label travels with its control: at 375px the row wraps, and a bare "Role"
@@ -77,7 +103,7 @@ export function Home({ state, role, setRole }: { state: Persisted; role: RoleId;
             onChange={(e) => setLoopDate(e.target.value || null)}
             className="rounded border border-zinc-300 bg-transparent px-2 py-1 dark:border-zinc-700"
           />
-          {daysLeft !== null && <span className="text-zinc-500 dark:text-zinc-400">{daysLeft} days left</span>}
+          {daysLeft !== null && <span className="text-zinc-500 dark:text-zinc-400">{loopDateLabel(daysLeft)}</span>}
         </span>
         <span className="flex items-center gap-2">
           <label htmlFor="role" className="text-zinc-600 dark:text-zinc-400">Role</label>
@@ -103,14 +129,14 @@ export function Home({ state, role, setRole }: { state: Persisted; role: RoleId;
           widest card is the round that needs the most work, not the least. */}
       <ol className="grid gap-3 sm:grid-cols-2">
         {orderedCards.map(({ round, index, stats: s }) => (
-          <li key={round.id} className={`flex ${loopDate ? 'sm:first:col-span-2' : 'sm:last:col-span-2'}`}>
+          <li key={round.id} className={`flex ${upcoming ? 'sm:first:col-span-2' : 'sm:last:col-span-2'}`}>
             <a href={`#${round.id}`} className={`w-full text-left ${cardLink}`}>
-              {!loopDate && <div className="mb-1 text-xs text-zinc-500 dark:text-zinc-400">Round {index + 1}</div>}
+              {!upcoming && <div className="mb-1 text-xs text-zinc-500 dark:text-zinc-400">Round {index + 1}</div>}
               <h2 className="font-medium">{round.title}</h2>
               <p className={`mb-3 ${cardBlurb}`}>{round.blurb}</p>
               <div className="mt-auto">
                 <ProgressBar stats={s} label={`${round.title} progress`} />
-                <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">{statsCaption(s, daysLeft)}</p>
+                <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">{statsCaption(s, upcoming ? daysLeft : null)}</p>
               </div>
             </a>
           </li>

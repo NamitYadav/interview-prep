@@ -15,6 +15,11 @@ export default tseslint.config(
       globals: { ...globals.browser, ...globals.es2021 },
     },
   },
+  // scripts/ runs under Node, not in the page.
+  {
+    files: ['scripts/**'],
+    languageOptions: { globals: globals.node },
+  },
   {
     rules: {
       // role="staff" test-harness prop on custom components is not a DOM aria-role.

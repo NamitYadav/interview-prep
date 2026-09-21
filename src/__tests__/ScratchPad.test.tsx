@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Question } from '../types';
@@ -161,7 +161,7 @@ describe('ScratchPad runner', () => {
     expect(frame().getAttribute('src')).toMatch(/\/sandbox\.html$/);
   });
 
-  test('without a preview the frame is kept in the DOM but hidden', () => {
+  test('without a preview (and no Worker, as in jsdom) the frame is kept in the DOM but hidden', () => {
     render(<ScratchPad question={q} />);
     expect(frame()).toHaveAttribute('aria-hidden', 'true');
     expect(frame()).toHaveClass('h-0');
@@ -201,5 +201,103 @@ describe('ScratchPad runner', () => {
     expect(screen.getByRole('button', { name: /run/i }).querySelector('kbd')).toBeNull();
     rerender(<ScratchPad question={q} shortcuts />);
     expect(screen.getByRole('button', { name: /run/i }).querySelector('kbd')).not.toBeNull();
+  });
+});
+
+// Console-only starters run in a Worker when the browser has one. jsdom does not, so the
+// suites above exercise the frame; this one installs a stand-in that records what the pad
+// does with it.
+describe('ScratchPad worker runner', () => {
+  class FakeWorker {
+    static instances: FakeWorker[] = [];
+    url: string;
+    posted: unknown[] = [];
+    terminated = false;
+    onmessage: ((e: MessageEvent<unknown>) => void) | null = null;
+    onerror: ((e: ErrorEvent) => void) | null = null;
+    constructor(url: URL | string) {
+      this.url = String(url);
+      FakeWorker.instances.push(this);
+    }
+    postMessage(msg: unknown) { this.posted.push(msg); }
+    terminate() { this.terminated = true; }
+  }
+  const latest = () => FakeWorker.instances[FakeWorker.instances.length - 1]!;
+  const fromWorker = (data: unknown) => act(() => { latest().onmessage?.({ data } as MessageEvent<unknown>); });
+
+  beforeEach(() => {
+    FakeWorker.instances = [];
+    vi.stubGlobal('Worker', FakeWorker);
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  test('a console-only starter has no frame and runs its draft in a fresh worker', () => {
+    render(<ScratchPad question={q} />);
+    expect(screen.queryByTitle('Preview')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /run/i }));
+    expect(FakeWorker.instances).toHaveLength(1);
+    expect(latest().url).toMatch(/sandbox\/worker\.ts/);
+    expect(latest().posted).toEqual([{ type: 'run', code: q.code }]);
+    expect(screen.getByRole('status')).toHaveTextContent('Running…');
+  });
+
+  test('worker output and completion land in the same log and status', () => {
+    render(<ScratchPad question={q} />);
+    fireEvent.click(screen.getByRole('button', { name: /run/i }));
+    fromWorker({ type: 'log', level: 'log', text: 'hello 42' });
+    fromWorker({ type: 'error', text: 'TypeError: nope' });
+    expect(screen.getByRole('log', { name: /output/i })).toHaveTextContent('hello 42');
+    expect(screen.getByText(/TypeError: nope/)).toHaveTextContent('✗ TypeError: nope');
+    fromWorker({ type: 'done' });
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+  });
+
+  test('Run again terminates the previous worker so nothing leaks between attempts', () => {
+    render(<ScratchPad question={q} />);
+    fireEvent.click(screen.getByRole('button', { name: /run/i }));
+    const first = latest();
+    fireEvent.click(screen.getByRole('button', { name: /run/i }));
+    expect(first.terminated).toBe(true);
+    expect(FakeWorker.instances).toHaveLength(2);
+  });
+
+  test('Stop terminates the worker and clears the output', () => {
+    render(<ScratchPad question={q} />);
+    fireEvent.click(screen.getByRole('button', { name: /run/i }));
+    fromWorker({ type: 'log', level: 'log', text: 'x' });
+    fireEvent.click(screen.getByRole('button', { name: /stop/i }));
+    expect(latest().terminated).toBe(true);
+    expect(screen.getByRole('log', { name: /output/i })).toBeEmptyDOMElement();
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+  });
+
+  test('a worker that fails to start says so once', () => {
+    render(<ScratchPad question={q} />);
+    fireEvent.click(screen.getByRole('button', { name: /run/i }));
+    act(() => { latest().onerror?.(new Event('error') as ErrorEvent); });
+    expect(screen.getByRole('log', { name: /output/i })).toHaveTextContent('did not start');
+    expect(latest().terminated).toBe(true);
+    expect(screen.getByRole('status')).not.toHaveTextContent('Running…');
+  });
+
+  test('unmounting terminates a running worker', () => {
+    const { unmount } = render(<ScratchPad question={q} />);
+    fireEvent.click(screen.getByRole('button', { name: /run/i }));
+    unmount();
+    expect(latest().terminated).toBe(true);
+  });
+
+  test('a preview starter keeps the frame even when Worker exists', () => {
+    render(<ScratchPad question={{ ...q, preview: '<f />' }} />);
+    expect(screen.getByTitle('Preview')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /run/i }));
+    expect(FakeWorker.instances).toHaveLength(0);
+  });
+
+  test('a needsDom starter keeps the frame even when Worker exists', () => {
+    render(<ScratchPad question={{ ...q, needsDom: true }} />);
+    expect(screen.getByTitle('Preview')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /run/i }));
+    expect(FakeWorker.instances).toHaveLength(0);
   });
 });

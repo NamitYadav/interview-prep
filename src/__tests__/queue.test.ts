@@ -16,7 +16,7 @@ describe('orderQueue', () => {
       // d, e never rated
     };
     // `now` is pinned just after lastSeen so nothing has decayed yet.
-    expect(orderQueue(qs, progress, 20).map((x) => x.id)).toEqual(['b', 'd', 'e', 'c', 'a']);
+    expect(orderQueue(qs, progress, 20, () => 0).map((x) => x.id)).toEqual(['b', 'd', 'e', 'c', 'a']);
   });
 
   test('a solid decays into the ok bucket after the decay window', () => {
@@ -32,7 +32,7 @@ describe('orderQueue', () => {
 
   test('a decayed solid still ranks behind weak and unrated', () => {
     const progress: Progress = { a: { rating: 3, seen: 1, lastSeen: 0 }, b: { rating: 1, seen: 1, lastSeen: 0 } };
-    expect(orderQueue(qs, progress, SOLID_DECAY_MS + 1).map((x) => x.id)).toEqual(['b', 'c', 'd', 'e', 'a']);
+    expect(orderQueue(qs, progress, SOLID_DECAY_MS + 1, () => 0).map((x) => x.id)).toEqual(['b', 'c', 'd', 'e', 'a']);
   });
 
   test('within a bucket, oldest lastSeen sorts first', () => {
@@ -41,11 +41,26 @@ describe('orderQueue', () => {
       c: { rating: 1, seen: 1, lastSeen: 10 },
       b: { rating: 1, seen: 1, lastSeen: 20 },
     };
-    expect(orderQueue(qs, progress, 40).map((x) => x.id)).toEqual(['c', 'b', 'a', 'd', 'e']);
+    expect(orderQueue(qs, progress, 40, () => 0).map((x) => x.id)).toEqual(['c', 'b', 'a', 'd', 'e']);
   });
 
-  test('ties (e.g. all unrated) preserve original order (stable sort)', () => {
-    expect(orderQueue(qs, {}).map((x) => x.id)).toEqual(['a', 'b', 'c', 'd', 'e']);
+  test('ties (e.g. all unrated) fall back to original order when the draw is constant', () => {
+    expect(orderQueue(qs, {}, 0, () => 0).map((x) => x.id)).toEqual(['a', 'b', 'c', 'd', 'e']);
+  });
+
+  // The first lap of every round used to walk the bank in file order: every unrated
+  // question ties on lastSeen 0 and the sort is stable.
+  test('ties are broken by the random draw, never across buckets', () => {
+    const draws = [0.9, 0.1, 0.5, 0.3, 0.7];
+    let i = 0;
+    const progress: Progress = { a: { rating: 1, seen: 1, lastSeen: 0 } };
+    // a is weak and stays first however it draws; b..e are unrated and reorder by draw.
+    expect(orderQueue(qs, progress, 1, () => draws[i++]!).map((x) => x.id)).toEqual(['a', 'b', 'd', 'c', 'e']);
+  });
+
+  test('a real random draw still keeps every question exactly once', () => {
+    const ids = orderQueue(qs, {}).map((x) => x.id).sort();
+    expect(ids).toEqual(['a', 'b', 'c', 'd', 'e']);
   });
 
   test('does not mutate input', () => {
@@ -56,11 +71,12 @@ describe('orderQueue', () => {
 });
 
 describe('nextQuestion', () => {
+  const first = () => 0;
   test('returns head of queue', () => {
-    expect(nextQuestion(qs, {})?.id).toBe('a');
+    expect(nextQuestion(qs, {}, new Set(), 0, first)?.id).toBe('a');
   });
   test('skips excluded ids', () => {
-    expect(nextQuestion(qs, {}, new Set(['a', 'b']))?.id).toBe('c');
+    expect(nextQuestion(qs, {}, new Set(['a', 'b']), 0, first)?.id).toBe('c');
   });
   test('undefined when everything is excluded (lap done)', () => {
     expect(nextQuestion(qs, {}, new Set(['a', 'b', 'c', 'd', 'e']))).toBeUndefined();

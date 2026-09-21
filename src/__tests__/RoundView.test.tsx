@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
@@ -7,6 +7,10 @@ import { reducer } from '../hooks/useAppState';
 import { forRole, rounds } from '../data';
 const questionsByRound = forRole('staff').byRound;
 import { RoundView } from '../components/RoundView';
+
+// Ties in the practice queue are broken at random (lib/queue); a constant draw keeps the
+// stable sort's data order so these assertions can name specific questions.
+beforeEach(() => { vi.spyOn(Math, 'random').mockReturnValue(0); });
 
 function Harness() {
   const [state, dispatch] = useReducer(reducer, EMPTY);

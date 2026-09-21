@@ -10,6 +10,9 @@ import { lapKey, readLap } from '../lib/lap';
 
 // Practice now persists lap position, so each test needs a clean slate.
 beforeEach(() => localStorage.clear());
+// Ties in the practice queue are broken at random (lib/queue); a constant draw keeps the
+// stable sort's data order so these assertions can name specific questions.
+beforeEach(() => { vi.spyOn(Math, 'random').mockReturnValue(0); });
 
 const qs: Question[] = [
   { id: 'hm-001', round: 'hm', category: 'A', question: 'First question?', answer: ['Answer one.'], keyPoints: ['Point one'], followUps: ['Follow one'] },

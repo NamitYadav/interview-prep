@@ -775,6 +775,7 @@ function throttle<A extends unknown[]>(fn: (...args: A) => void, wait: number) {
     round: 'coding',
     category: 'Data structures & traversal',
     scratch: true,
+    needsDom: true,
     question: 'Given two DOM nodes, find their lowest common ancestor. Talk me through your approach.',
     code: `function lowestCommonAncestor(a: Node, b: Node): Node | null {
   // TODO: return the deepest node that contains both a and b
@@ -805,6 +806,7 @@ function throttle<A extends unknown[]>(fn: (...args: A) => void, wait: number) {
     round: 'coding',
     category: 'Data structures & traversal',
     scratch: true,
+    needsDom: true,
     question: 'Implement getElementsByClassName yourself — given a root element and a class name, return every descendant carrying that class. No querySelectorAll. Talk me through your approach.',
     code: `function getElementsByClassName(root: Element, className: string): Element[] {
   // TODO: walk the subtree with an explicit stack rather than recursion
@@ -1000,6 +1002,7 @@ function buildTree(flat: Comment[]): CommentNode[] {
     round: 'coding',
     category: 'Data structures & traversal',
     scratch: true,
+    needsDom: true,
     question: 'Build an infinite-scroll hook with IntersectionObserver: load the next page when the user approaches the end of the list. Talk me through your approach.',
     code: `function useInfiniteScroll(loadMore: () => Promise<void>, hasMore: boolean) {
   // TODO: observe a sentinel node via a ref callback so it re-observes on change

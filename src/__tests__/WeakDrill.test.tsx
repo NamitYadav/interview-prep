@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
@@ -6,6 +6,10 @@ import type { Persisted } from '../types';
 import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { WeakDrill } from '../components/WeakDrill';
+
+// Ties in the practice queue are broken at random (lib/queue); a constant draw keeps the
+// stable sort's data order so these assertions can name specific questions.
+beforeEach(() => { vi.spyOn(Math, 'random').mockReturnValue(0); });
 
 const weakOn = (...ids: string[]): Persisted => ({
   ...EMPTY,
