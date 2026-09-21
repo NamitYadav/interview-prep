@@ -80,6 +80,14 @@ describe('question bank', () => {
   // `preview` is the JSX harness the sandbox mounts after the pad's code. Only ScratchPad
   // reads it, and ScratchPad only renders for scratch questions — a preview on a read-only
   // snippet would be dead data.
+  // `needsDom` only decides where a console-only pad runs (frame instead of worker); on a
+  // preview starter it would be dead data, and on a non-scratch question meaningless.
+  test('needsDom is only set on console-only scratch starters', () => {
+    for (const q of questions) {
+      if (q.needsDom) expect(q.scratch && q.code && !q.preview, `${q.id} sets needsDom but is not a console-only pad`).toBeTruthy();
+    }
+  });
+
   test('a preview only appears on a scratch question with code', () => {
     for (const q of questions) {
       if (q.preview) expect(q.scratch && q.code, `${q.id} has a preview but is not a scratch pad`).toBeTruthy();

@@ -45,6 +45,36 @@ describe('MockSession', () => {
     expect(screen.getByText(/1 solid · 0 ok · 0 weak/i)).toBeInTheDocument();
   });
 
+  test('the recap names the questions rated weak, by round, and folds away the unrated ones', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /technical rounds/i }));
+    const weakOne = screen.getByRole('heading', { level: 2 }).textContent!;
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    await userEvent.click(screen.getByRole('radio', { name: /^weak/i }));
+    const solidOne = screen.getByRole('heading', { level: 2 }).textContent!;
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    await userEvent.click(screen.getByRole('radio', { name: /^solid/i }));
+    await userEvent.click(screen.getByRole('button', { name: /finish session/i }));
+
+    const weak = screen.getByRole('heading', { name: /rated weak/i }).parentElement!;
+    expect(weak).toHaveTextContent(weakOne);
+    expect(weak).toHaveTextContent(/hiring manager/i);
+    expect(weak).not.toHaveTextContent(solidOne);
+
+    const unrated = screen.getByText(/not rated \(18\)/i).closest('details')!;
+    expect(unrated).not.toHaveAttribute('open');
+    expect(unrated).not.toHaveTextContent(weakOne);
+    expect(unrated).toHaveTextContent(/live coding/i);
+  });
+
+  test('a recap with nothing weak has no weak list', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /full loop/i }));
+    await userEvent.click(screen.getByRole('button', { name: /finish session/i }));
+    expect(screen.queryByRole('heading', { name: /rated weak/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/not rated \(28\)/i)).toBeInTheDocument();
+  });
+
   test('full loop serves questions in round order, not re-shuffled across rounds', async () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('button', { name: /full loop/i }));

@@ -11,6 +11,10 @@ import { writeDesignSession } from '../lib/lap';
 import * as lapModule from '../lib/lap';
 import { DesignSession } from '../components/DesignSession';
 
+// Ties in the practice queue are broken at random (lib/queue); a constant draw keeps the
+// stable sort's data order so these assertions can name specific questions.
+beforeEach(() => { vi.spyOn(Math, 'random').mockReturnValue(0); });
+
 // Sessions and drafts persist in localStorage; without this a phase ticked in one
 // test comes back checked in the next.
 beforeEach(() => localStorage.clear());

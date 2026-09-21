@@ -1,9 +1,13 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { STORAGE_KEY, emptyState } from '../lib/storage';
 import { ROLE_KEY } from '../hooks/useRole';
 import App from '../App';
+
+// Ties in the practice queue are broken at random (lib/queue); a constant draw keeps the
+// stable sort's data order so these assertions can name specific questions.
+beforeEach(() => { vi.spyOn(Math, 'random').mockReturnValue(0); });
 
 afterEach(() => {
   vi.restoreAllMocks();

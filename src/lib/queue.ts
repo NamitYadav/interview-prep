@@ -23,11 +23,25 @@ export const questionBucket = (progress: Progress, id: string, now: number): num
 
 const lastSeen = (progress: Progress, id: string): number => progress[id]?.lastSeen ?? 0;
 
-export function orderQueue(questions: Question[], progress: Progress, now: number = Date.now()): Question[] {
+// Ties — same bucket, same lastSeen — are broken at random rather than by array order.
+// Every unrated question has lastSeen 0, so a stable sort walked the first lap of every
+// round in file order: hiring manager always opened on Architecture and never
+// interleaved categories, which is both worse for retention and unlike a real round.
+// One random draw per question per call; the lap's history is what fixes which
+// questions have already been served, so re-drawing on every call changes nothing
+// the user can see. Tests pass `() => 0` to get the old, predictable order back.
+export function orderQueue(
+  questions: Question[],
+  progress: Progress,
+  now: number = Date.now(),
+  random: () => number = Math.random,
+): Question[] {
+  const draw = new Map(questions.map((q) => [q.id, random()]));
   return [...questions].sort(
     (a, b) =>
       questionBucket(progress, a.id, now) - questionBucket(progress, b.id, now) ||
-      lastSeen(progress, a.id) - lastSeen(progress, b.id),
+      lastSeen(progress, a.id) - lastSeen(progress, b.id) ||
+      draw.get(a.id)! - draw.get(b.id)!,
   );
 }
 
@@ -38,8 +52,9 @@ export function nextQuestion(
   progress: Progress,
   exclude: ReadonlySet<string> = new Set(),
   now: number = Date.now(),
+  random: () => number = Math.random,
 ): Question | undefined {
-  return orderQueue(questions, progress, now).find((q) => !exclude.has(q.id));
+  return orderQueue(questions, progress, now, random).find((q) => !exclude.has(q.id));
 }
 
 export interface RoundStats {

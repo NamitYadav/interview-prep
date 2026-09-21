@@ -39,7 +39,8 @@ between roles; only the round list and the visible question set change.
   (see [Roles](#roles) above): the round list, readiness counts and every drill
   below re-scope to it immediately, without touching your ratings, notes or stories.
 - **Round practice** — a priority queue for one round: weak questions come first,
-  then unseen, then ok, then solid. Rating a question Weak doesn't just leave it —
+  then unseen, then ok, then solid; within a bucket the order is shuffled, so a first
+  lap mixes categories instead of walking the bank in file order. Rating a question Weak doesn't just leave it —
   it comes back around roughly 8 questions later, in the same lap, instead of
   waiting for a whole different lap (on the last question of a lap it simply comes
   back once more before the summary). Filter by category and by status —
@@ -64,7 +65,8 @@ between roles; only the round list and the visible question set change.
   loop day. Two presets: *Full loop* (a slice of every round) and *Technical rounds*
   (hiring manager, live coding, system design). A banner marks each round
   transition. Ends in a recap, either by hitting Finish or once you have gone
-  through the whole set.
+  through the whole set: the counts, then the questions you rated Weak listed by
+  round, and the ones you never rated folded under them.
 - **Frontend system design → 45-min prompt** — a third tab on the design round: one
   prompt, a visible (non-forcing) 45-minute clock, and the requirements → API/data →
   components → state → performance → a11y/i18n → observability → rollout phase
@@ -106,8 +108,10 @@ between roles; only the round list and the visible question set change.
   React component prompts (Autocomplete, Tabs, VirtualList and friends) also render
   live in a preview with sample props once the sandbox reports in. Every Run starts
   from a clean slate, and **Stop** kills whatever is going on. Tab indents inside the
-  pad; Esc moves focus to Run. The pad runs in a sandbox: forms submit, but
-  nothing can navigate, open windows or touch your saved progress. It runs
+  pad; Esc moves focus to Run. Console-only starters run in a Web Worker, so Stop
+  ends even an infinite loop; the component starters and the few that need the DOM run
+  in a sandboxed frame instead, where forms submit but nothing can navigate, open
+  windows or touch your saved progress. Either way it runs
   TypeScript and JSX without type-checking, the way CoderPad does, with React's
   hooks available as globals — no imports. What you type is kept per question on
   this device, so a reload or a switch to another question doesn't lose it; it
@@ -125,8 +129,11 @@ between roles; only the round list and the visible question set change.
 Set a **Loop date** on the home screen and every round card shows how many
 questions are unseen, how many are weak, and how many days you have left; cards
 themselves reorder by urgency (weak and unseen count more), and the Round N labels
-come off since they would contradict the order. A banner nudges you to export if you have
-progress and haven't backed it up in the last week.
+come off since they would contradict the order. Once the date has passed the countdown
+stops and the cards go back to round order. Under the title, a line counts the
+questions you rated today and in the last seven days, so an empty day is visible. A
+banner nudges you to export if you have progress and haven't backed it up in the last
+week.
 
 ## Keyboard (practice queues)
 `Space` reveal · `1` / `2` / `3` rate Weak / OK / Solid · `N` skip · `B` back.
@@ -152,9 +159,10 @@ progress and haven't backed it up in the last week.
   keeping goes in a note. Run output is not stored at all — it is gone when you leave
   the question.
 - **Offline**: the app installs as a PWA and works without a network after its first
-  visit — the build writes a service worker that precaches every file it emits. The
-  one exception is **Run** in the scratch pad: the sandbox frame has an opaque origin
-  the worker cannot serve, so it needs the network.
+  visit — the build writes a service worker that precaches every file it emits,
+  including the Web Worker that runs console-only scratch pads. The one exception is
+  **Run** on a component starter (or one flagged as needing the DOM): the sandbox frame
+  has an opaque origin the worker cannot serve, so it needs the network.
 
 ## Adding questions
 Edit `src/data/<round>.ts`. Ids are `<round>-<nnn>`. A question can carry an
@@ -169,17 +177,23 @@ npm install
 npm run dev        # http://localhost:5173/interview-prep/
 npm test           # vitest watch
 npm run build      # tsc + vite build — emits index.html and sandbox.html (the code-runner frame)
+npm run smoke      # build, then drive the built app in headless Zen (Firefox): app boot, sandbox frame, worker
 ```
+The smoke check covers what jsdom cannot: the opaque-origin frame loading its module
+script cross-origin and answering over postMessage, the worker compiling and reporting
+output and dying on `terminate()`, the built app rendering. It is local-only — CI has
+no browser — and `SMOKE_BROWSER` points it at any Firefox or Chromium binary.
 
 ## Stack
 Vite · React 19 · TypeScript · Tailwind CSS 4 · GeistMono Nerd Font (self-hosted from
 public/fonts) · Vitest · GitHub Pages
 
 Two JS chunks for the app itself — the app and the React runtime, ~335KB gzipped
-together, most of it the question bank's own text, not code — plus a third chunk that
-only `sandbox.html` loads: the second Vite page that runs scratch-pad code in a
-sandboxed iframe, with Sucrase to strip types and compile JSX. React is shared between
-the two pages; the compiler is never downloaded by the app. Measured, not optimized:
+together, most of it the question bank's own text, not code — plus two runners the app
+only fetches on Run: the `sandbox.html` page that runs component starters in a
+sandboxed iframe, and a self-contained Web Worker for the console-only ones. Both
+carry Sucrase to strip types and compile JSX; React is shared between the two pages,
+and the compiler is never downloaded by the app. Measured, not optimized:
 further code-splitting would trim the initial load, but this is a single-user app run
 from a laptop, so it isn't worth the added complexity.
 The service worker is written by a ~40-line plugin in `vite.config.ts` rather than

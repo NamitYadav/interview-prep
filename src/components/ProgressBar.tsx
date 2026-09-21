@@ -26,14 +26,15 @@ export function ProgressBar({ stats, label }: { stats: RoundStats; label: string
   );
 }
 
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+export const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
-/** Only the numbers that change what you do next: weak, unseen, and the clock. */
+/** Only the numbers that change what you do next: weak, unseen, and the clock. A past
+ *  loop date is the caller's to leave out — "-3 days" is not a countdown. */
 export function statsCaption(stats: RoundStats, daysLeft?: number | null): string {
   const parts: string[] = [];
   if (stats.weak > 0) parts.push(`${stats.weak} weak`);
   if (stats.unrated > 0) parts.push(`${stats.unrated} unseen`);
   if (parts.length === 0) parts.push('All rated');
-  if (daysLeft !== undefined && daysLeft !== null) parts.push(plural(daysLeft, 'day'));
+  if (daysLeft !== undefined && daysLeft !== null) parts.push(daysLeft === 0 ? 'today' : plural(daysLeft, 'day'));
   return parts.join(' · ');
 }

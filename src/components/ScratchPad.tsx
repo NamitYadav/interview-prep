@@ -22,18 +22,31 @@ const asText = (v: unknown): string => (typeof v === 'string' ? v : String(v));
 
 const READY_TIMEOUT_MS = 3000;
 
-// ponytail: a synchronous `while (true)` in the pad blocks the frame's thread. Chrome
-// gives sandboxed opaque-origin frames their own process, so the app stays responsive and
-// Stop works; Firefox and Safari share the process and the tab freezes until the browser
-// offers to stop the page (the draft is saved 300ms after the last keystroke, so little is
-// lost). Upgrade path: run the console-only starters in a Web Worker, which is terminable
-// everywhere.
+// Two runners, one protocol. A console-only starter runs in a dedicated Worker
+// (src/sandbox/worker.ts): `terminate()` ends a synchronous `while (true)` in every
+// browser, and the worker script is a same-origin file the service worker precaches, so
+// Run works offline. A starter with a preview, or one that needs the DOM (`needsDom`),
+// runs in the sandbox frame instead.
+//
+// ponytail: the frame path still has the old ceiling. Chrome gives sandboxed opaque-origin
+// frames their own process, so Stop works there; Firefox and Safari share the process and a
+// `while (true)` in a preview starter freezes the tab until the browser offers to stop the
+// page (the draft is saved 300ms after the last keystroke, so little is lost). The frame
+// also has an opaque origin the service worker cannot serve, so a preview Run needs the
+// network. No cheap upgrade path: a preview needs a DOM, and a worker has none. This stays
+// until a preview starter's freeze actually bites.
 export function ScratchPad({ question, shortcuts = false }: { question: Question; shortcuts?: boolean }) {
   const scratch = useDraft(draftKey(question.id, 'scratch'), question.code ?? '');
+  // Decided per question, not per run: the iframe is mounted (hidden) for the frame path
+  // and absent for the worker path. jsdom has no Worker, so tests exercise the frame
+  // unless they install one.
+  const inWorker = !question.preview && !question.needsDom && typeof Worker !== 'undefined';
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const workerRef = useRef<Worker | null>(null);
   // Every Run reloads the frame (key bump) and posts once it says ready. One mechanism for
   // Run and Stop: no leaked globals, no React root to unmount, no stray timers between
-  // attempts. Reloading a cached same-host page costs tens of milliseconds.
+  // attempts. Reloading a cached same-host page costs tens of milliseconds. The worker
+  // path gets the same clean slate by terminating and constructing a fresh Worker.
   const [frameKey, setFrameKey] = useState(0);
   const pending = useRef<ToSandbox | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -44,35 +57,45 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
   const [frameReady, setFrameReady] = useState(false);
   const runRef = useRef<HTMLButtonElement>(null);
 
+  // Output handling shared by both runners. The source proves where a message came from,
+  // not what it is: pad code has postMessage and can send anything. A non-string `text`
+  // rendered as a React child threw straight through to the app-wide ErrorBoundary.
+  const receive = useCallback((data: unknown) => {
+    const msg = data as Partial<FromSandbox> | null;
+    if (typeof msg !== 'object' || msg === null) return;
+    if (msg.type === 'log') {
+      const level: LogLevel = msg.level === 'warn' || msg.level === 'error' || msg.level === 'info' ? msg.level : 'log';
+      setLines((prev) => [...prev, { level, text: asText(msg.text) }]);
+    } else if (msg.type === 'error') {
+      setLines((prev) => [...prev, { level: 'error', text: `✗ ${asText(msg.text)}` }]);
+    } else if (msg.type === 'done') {
+      setStatus('done');
+    }
+  }, []);
+
   useEffect(() => {
     const onMessage = (e: MessageEvent<unknown>) => {
       const frame = iframeRef.current;
       // `event.origin` is 'null' for an opaque frame and proves nothing; the source does.
       if (!frame || e.source !== frame.contentWindow) return;
-      // The source proves where it came from, not what it is: pad code has
-      // window.parent.postMessage and can send anything. A non-string `text` rendered as
-      // a React child threw straight through to the app-wide ErrorBoundary.
       const msg = e.data as Partial<FromSandbox> | null;
-      if (typeof msg !== 'object' || msg === null) return;
-      if (msg.type === 'ready') {
+      if (typeof msg === 'object' && msg !== null && msg.type === 'ready') {
         if (timer.current) clearTimeout(timer.current);
         if (pending.current) frame.contentWindow?.postMessage(pending.current, '*');
         pending.current = null;
         setFrameReady(true);
-      } else if (msg.type === 'log') {
-        const level: LogLevel = msg.level === 'warn' || msg.level === 'error' || msg.level === 'info' ? msg.level : 'log';
-        setLines((prev) => [...prev, { level, text: asText(msg.text) }]);
-      } else if (msg.type === 'error') {
-        setLines((prev) => [...prev, { level: 'error', text: `✗ ${asText(msg.text)}` }]);
-      } else if (msg.type === 'done') {
-        setStatus('done');
+        return;
       }
+      receive(e.data);
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, []);
+  }, [receive]);
 
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
+    workerRef.current?.terminate();
+  }, []);
 
   const reload = useCallback((next: ToSandbox | null) => {
     pending.current = next;
@@ -90,8 +113,37 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
         }, READY_TIMEOUT_MS)
       : null;
   }, []);
-  const run = () => reload({ type: 'run', code: scratch.draft, preview: question.preview });
-  const stop = () => reload(null);
+
+  const stopWorker = () => {
+    workerRef.current?.terminate();
+    workerRef.current = null;
+    setLines([]);
+  };
+  const runInWorker = (code: string) => {
+    stopWorker();
+    setStatus('running');
+    const worker = new Worker(new URL('../sandbox/worker.ts', import.meta.url), { type: 'module' });
+    worker.onmessage = (e: MessageEvent<unknown>) => receive(e.data);
+    // Uncaught throws inside the pad's code are reported by the worker itself and never
+    // reach here; this is the script failing to load at all.
+    worker.onerror = () => {
+      worker.terminate();
+      setLines([{ level: 'error', text: '✗ The runner did not start — check the browser console.' }]);
+      setStatus('done');
+    };
+    worker.postMessage({ type: 'run', code } satisfies ToSandbox);
+    workerRef.current = worker;
+  };
+
+  const run = () => (inWorker ? runInWorker(scratch.draft) : reload({ type: 'run', code: scratch.draft, preview: question.preview }));
+  const stop = () => {
+    if (inWorker) {
+      stopWorker();
+      setStatus('idle');
+    } else {
+      reload(null);
+    }
+  };
 
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -155,16 +207,18 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
       </div>
 
       {/* Kept in the DOM even when hidden: the code still runs there. */}
-      <iframe
-        key={frameKey}
-        ref={iframeRef}
-        src={SANDBOX_URL}
-        sandbox="allow-scripts allow-forms"
-        title="Preview"
-        aria-hidden={showPreview ? undefined : true}
-        tabIndex={showPreview ? undefined : -1}
-        className={showPreview ? 'mt-2 min-h-48 w-full rounded border border-zinc-300 dark:border-zinc-700' : 'h-0 w-0 border-0'}
-      />
+      {!inWorker && (
+        <iframe
+          key={frameKey}
+          ref={iframeRef}
+          src={SANDBOX_URL}
+          sandbox="allow-scripts allow-forms"
+          title="Preview"
+          aria-hidden={showPreview ? undefined : true}
+          tabIndex={showPreview ? undefined : -1}
+          className={showPreview ? 'mt-2 min-h-48 w-full rounded border border-zinc-300 dark:border-zinc-700' : 'h-0 w-0 border-0'}
+        />
+      )}
     </div>
   );
 }

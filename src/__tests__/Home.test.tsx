@@ -63,6 +63,53 @@ describe('Home', () => {
     expect(screen.queryByText(/^Round \d$/)).not.toBeInTheDocument();
   });
 
+  test('a loop date in the past stops counting and drops the urgency sort', () => {
+    const progress: Progress = {};
+    for (const q of questions) progress[q.id] = { rating: 3, seen: 1, lastSeen: 1 };
+    const [firstHoe] = questionsByRound('hoe');
+    progress[firstHoe!.id] = { rating: 1, seen: 1, lastSeen: 1 };
+    render(<Harness initial={{ ...EMPTY, progress }} />);
+    fireEvent.change(screen.getByLabelText(/loop date/i), { target: { value: '2020-01-01' } });
+    expect(screen.getByText('Loop date has passed')).toBeInTheDocument();
+    expect(screen.queryByText(/-\d+ days/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/days left/i)).not.toBeInTheDocument();
+    // Data order again, with the Round N labels back.
+    expect(roundOrder()[0]).toBe('HR screen');
+    expect(screen.getByText('Round 1')).toBeInTheDocument();
+  });
+
+  test('a loop date of today reads as today, and one day out is singular', () => {
+    render(<Harness initial={EMPTY} />);
+    const local = (offsetDays: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() + offsetDays);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+    fireEvent.change(screen.getByLabelText(/loop date/i), { target: { value: local(0) } });
+    expect(screen.getByText('Loop day is today')).toBeInTheDocument();
+    expect(screen.getAllByText(/unseen · today/i).length).toBeGreaterThan(0);
+    fireEvent.change(screen.getByLabelText(/loop date/i), { target: { value: local(1) } });
+    expect(screen.getByText('1 day left')).toBeInTheDocument();
+  });
+
+  test('rated-today and last-7-days counts come from lastSeen, once per question', () => {
+    const now = Date.now();
+    const [a, b, c, d] = questionsByRound('hr');
+    const progress: Progress = {
+      [a!.id]: { rating: 3, seen: 2, lastSeen: now - 1000 },
+      [b!.id]: { rating: 1, seen: 1, lastSeen: now - 1000 },
+      [c!.id]: { rating: 2, seen: 1, lastSeen: now - 3 * 86_400_000 },
+      [d!.id]: { rating: 2, seen: 1, lastSeen: now - 30 * 86_400_000 },
+    };
+    render(<Harness initial={{ ...EMPTY, progress }} />);
+    expect(screen.getByText('2 questions rated today · 3 in the last 7 days')).toBeInTheDocument();
+  });
+
+  test('the drilled-today line is hidden with no progress at all', () => {
+    render(<Harness initial={EMPTY} />);
+    expect(screen.queryByText(/rated today/i)).not.toBeInTheDocument();
+  });
+
   test('export nudge is hidden with no progress', () => {
     localStorage.removeItem(LAST_EXPORT_KEY);
     render(<Harness initial={EMPTY} />);
