@@ -5,7 +5,7 @@ import { useStoredValue } from './useStoredValue';
 // index.html (which values flash-avoid before first paint), the `@custom-variant dark`
 // selector in index.css (which theme values ride on the dark: utilities), and
 // ThemeToggle's LABELS (that one is type-checked against this array already).
-export const THEMES = ['dark', 'gruvbox', 'light'] as const;
+export const THEMES = ['dark', 'gruvbox', 'gruvbox-light', 'light'] as const;
 export type Theme = (typeof THEMES)[number];
 
 // Separate from the progress store on purpose: the theme is a per-device preference,

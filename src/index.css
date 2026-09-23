@@ -39,8 +39,12 @@
 /* Gruvbox is a palette swap and nothing else: redefining Tailwind's color variables
    on the theme root remaps every existing zinc/emerald/red/amber utility in place,
    so no component needs to know a second theme exists. The neutral ramp stays
-   monotonic light -> dark so the light/dark halves of each pair keep their roles. */
-[data-theme='gruvbox'] {
+   monotonic light -> dark so the light/dark halves of each pair keep their roles.
+   gruvbox-light shares this exact ramp: it isn't part of the `dark:` custom variant
+   below, so components render their undecorated (bg-zinc-50/text-zinc-900/etc)
+   classes instead of the dark: ones — which, on this same ramp, already reads as a
+   light theme (zinc-50 light bg, zinc-900 dark text) with no separate block needed. */
+[data-theme='gruvbox'], [data-theme='gruvbox-light'] {
   --color-white: #fbf1c7;
   --color-black: #1d2021;
   --color-zinc-50: #fbf1c7;
@@ -59,6 +63,10 @@
   --color-emerald-400: #b8bb26;
   --color-emerald-500: #b8bb26;
   --color-emerald-600: #98971a;
+  /* Only rendered by gruvbox-light's undecorated text-emerald-700 (ratingText.solid,
+     controlStyles' active border label) — gruvbox proper never reaches past -600
+     since it stays on the dark:text-emerald-400 path. */
+  --color-emerald-700: #5f5c0e;
   --color-emerald-950: #3c3a15;
 
   /* Lightened from gruvbox's #fb4934 (~4.3:1 on this bg, below AA text contrast)
@@ -66,6 +74,8 @@
   --color-red-400: #ff6b5b;
   --color-red-500: #fb4934;
   --color-red-600: #cc241d;
+  /* Same reasoning as emerald-700 above, for ratingText.weak on gruvbox-light. */
+  --color-red-700: #9d0006;
 
   --color-amber-100: #f9e2a0;
   --color-amber-400: #fabd2f;
@@ -78,7 +88,7 @@
    default font size gets it scaled up rather than pinned back to 18. */
 html { font-size: 112.5%; }
 :root { color-scheme: dark; }
-[data-theme='light'] { color-scheme: light; }
+[data-theme='light'], [data-theme='gruvbox-light'] { color-scheme: light; }
 body { @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 antialiased; }
 
 /* Pointer cursor on every clickable control, plus smooth color/border transitions on
