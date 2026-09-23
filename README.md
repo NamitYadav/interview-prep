@@ -142,8 +142,8 @@ week.
 - Ratings, notes and stories stay in your browser (localStorage). Nothing is sent
   anywhere. **Export** / **Import** to back up or move devices; **Reset progress**
   clears everything.
-- **Theme**: Dark, Gruvbox or Light, switchable from the top of any page. Stored per
-  device, outside the backup.
+- **Theme**: Dark, Gruvbox, Gruvbox Light or Light, switchable from the top of any
+  page. Stored per device, outside the backup.
 - **Strict mode**: switchable from the top of any page. When on, running out of a
   round's target time auto-reveals the answer instead of waiting for you to click
   Reveal. Stored per device, outside the backup.
