@@ -174,14 +174,4 @@ describe('RoundView', () => {
     render(<DesignHarness />);
     expect(screen.getByRole('tab', { name: /45-min prompt/i })).toBeInTheDocument();
   });
-
-  test('an unknown round id renders a not-found message instead of throwing', () => {
-    function BadHarness() {
-      const [state, dispatch] = useReducer(reducer, EMPTY);
-      // @ts-expect-error deliberately invalid RoundId to exercise the guard
-      return <RoundView roundId="not-a-round" state={state} dispatch={dispatch} strictMode={false} role="staff" />;
-    }
-    render(<BadHarness />);
-    expect(screen.getByText(/round not found/i)).toBeInTheDocument();
-  });
 });

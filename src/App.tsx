@@ -1,11 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import type { Action } from './hooks/useAppState';
 import { ROUND_IDS, forRole, rounds } from './data';
 import type { Route, RoundId } from './types';
 import { useAppState } from './hooks/useAppState';
 import { useHashRoute } from './hooks/useHashRoute';
-import { useStrictMode } from './hooks/useStrictMode';
-import { useRole } from './hooks/useRole';
-import { useShortcuts } from './hooks/useShortcuts';
+import { useRole, useShortcuts, useStrictMode } from './hooks/prefs';
 import { Home } from './components/Home';
 import { RoundView } from './components/RoundView';
 import { WeakDrill } from './components/WeakDrill';
@@ -18,7 +17,7 @@ import { Settings } from './components/Settings';
 
 const isRoundId = (r: Route): r is RoundId => (ROUND_IDS as readonly string[]).includes(r);
 
-export const APP_NAME = 'Interview Prep';
+const APP_NAME = 'Interview Prep';
 
 const SAVE_FAILED_MESSAGE = 'Progress is not being saved (storage unavailable). Export before closing the tab.';
 const STALE_TAB_MESSAGE = 'Another tab changed your progress. Reload to see it — saving from here will overwrite that change.';
@@ -43,6 +42,13 @@ export default function App() {
   const [shortcuts, setShortcuts] = useShortcuts();
   const [role, setRole] = useRole();
   const { rounds: roleRounds } = forRole(role);
+  // Import and Reset clear every stored lap, but a mounted drill still held its lap in
+  // memory and wrote it back on the next keypress. Bumping this remounts the views.
+  const [epoch, setEpoch] = useState(0);
+  const settingsDispatch = (action: Action) => {
+    dispatch(action);
+    if (action.type === 'import' || action.type === 'reset') setEpoch((n) => n + 1);
+  };
   const isActiveRoundId = (r: Route): r is RoundId => roleRounds.some((round) => round.id === r);
 
   // Move focus to the new view's heading after a route change — but not on first
@@ -97,23 +103,25 @@ export default function App() {
       <header className="sticky top-0 z-20 mx-auto flex max-w-3xl items-center justify-end bg-zinc-50 px-4 py-2 print:hidden sm:px-6 dark:bg-zinc-950">
         <Settings
           state={state}
-          dispatch={dispatch}
+          dispatch={settingsDispatch}
           strictMode={strictMode}
           setStrictMode={setStrictMode}
           shortcuts={shortcuts}
           setShortcuts={setShortcuts}
         />
       </header>
-      {showHome && <Home state={state} role={role} setRole={setRole} />}
-      {route === 'weak' && <WeakDrill state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />}
-      {route === 'notes' && <NotesView state={state} role={role} />}
-      {route === 'stories' && <StoriesView state={state} dispatch={dispatch} />}
-      {route === 'mock' && <MockSession state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />}
-      {route === 'search' && <SearchView state={state} dispatch={dispatch} role={role} />}
-      {route === 'print' && <PrintView state={state} role={role} />}
-      {activeRoundId !== null && (
-        <RoundView key={activeRoundId} roundId={activeRoundId} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />
-      )}
+      <Fragment key={epoch}>
+        {showHome && <Home state={state} role={role} setRole={setRole} />}
+        {route === 'weak' && <WeakDrill state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />}
+        {route === 'notes' && <NotesView state={state} role={role} />}
+        {route === 'stories' && <StoriesView state={state} dispatch={dispatch} />}
+        {route === 'mock' && <MockSession state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />}
+        {route === 'search' && <SearchView state={state} dispatch={dispatch} role={role} />}
+        {route === 'print' && <PrintView state={state} role={role} />}
+        {activeRoundId !== null && (
+          <RoundView key={activeRoundId} roundId={activeRoundId} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />
+        )}
+      </Fragment>
     </>
   );
 }

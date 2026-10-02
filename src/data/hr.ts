@@ -218,7 +218,7 @@ export const hr: Question[] = [
       'Then give a range, never a single number: "Based on current market data for staff-level frontend in Berlin, I am looking at [€X-€Y] base plus the equity component — what is the band for this level?" Anchor on market rate and role scope, never on your current salary.',
     ],
     deeper: [
-      'The EU Pay Transparency Directive (2023/970) requires employers to give applicants the pay range before or at the first interview. Its 7 June 2026 transposition deadline has passed, but member states routinely lag on bringing national law into force, so treat it as a strong norm you can invoke rather than a right you can enforce on the call. A flat refusal to share a band is a data point about the process, not just a tactic.',
+      'The EU Pay Transparency Directive (2023/970) requires employers to give applicants the pay range before or at the first interview. Germany missed the 7 June 2026 transposition deadline and its implementing law is expected around 2027, so treat it as a strong norm you can invoke rather than a right you can enforce on the call. A flat refusal to share a band is a data point about the process, not just a tactic.',
       'Mixing a base source with a total-compensation source is how candidates arrive at nonsense ranges, so label every figure you collect with which one it is. Total compensation, not base, is what decides it at this level, and the spread between employer types is real rather than noise: the Berlin offices of US big tech and the best-funded scale-ups sit far above a Series B startup that matches the base with equity worth nothing for years. Quote a base range, then get the equity detail — instrument, vesting, refresh — before calling any offer competitive. The mechanics of valuing it are the RSU-versus-VSOP question.',
     ],
     keyPoints: [
@@ -235,12 +235,12 @@ export const hr: Question[] = [
     category: 'Compensation',
     question: 'What is your current compensation?',
     answer: [
-      'In Germany you are not obligated to disclose current compensation, and the EU Pay Transparency Directive (2023/970) bars employers from asking about pay history once transposed into national law — the transposition deadline (7 June 2026) has passed, though whether Germany\'s implementing law is actually in force yet is worth a quick check, since member states often lag past the deadline. Either way, decline politely: "I would prefer to focus on the expectations for this role rather than share current pay."',
+      'In Germany you are not obligated to disclose current compensation, and the EU Pay Transparency Directive (2023/970) bars employers from asking about pay history once transposed into national law — Germany missed the 7 June 2026 deadline and its implementing law is expected around 2027, so the ban is not yet enforceable here, though the direction is clear. Either way, decline politely: "I would prefer to focus on the expectations for this role rather than share current pay."',
       'Redirect immediately and constructively to the researched range from the salary-expectations question, so the conversation keeps moving rather than stalling on a refusal.',
       'If you choose to share, keep it factual and brief, but the stronger staff-level move is usually the polite decline plus redirect, since current pay at a different market/company is not a reliable anchor anyway.',
     ],
     keyPoints: [
-      'States that disclosure is not obligatory, and that pay-history questions are being phased out by EU law',
+      'States that disclosure is not obligatory, and that the EU pay-history ban is coming but not yet enforceable in Germany',
       'Declines in one sentence, without apologising or over-explaining',
       'Moves straight to the forward-looking range in the same breath',
       'Does not let the refusal become a negotiation about the refusal',
@@ -277,7 +277,7 @@ export const hr: Question[] = [
       'Weigh it as speculative upside, not a cash-equivalent: discount it heavily against a lower cash offer, and treat how clearly the company explains the plan as a signal in itself.',
     ],
     deeper: [
-      'The trade-off in one line: VSOP gives full income-tax treatment with no dry income, real equity a better capital-gains upside carrying dry-income risk. §19a EStG addresses the share-transfer case specifically: it defers taxation on shares transferred to employees of qualifying young companies, and the Zukunftsfinanzierungsgesetz (ZuFinG) widened who can use it. The deferral is not permanent — it ends at the earliest of a sale of the shares, the end of the employment relationship, or fifteen years after the transfer, a ceiling ZuFinG raised from twelve. So real equity only beats VSOP on tax treatment if a deferral actually applies to you; confirm that rather than assuming it.',
+      'The trade-off in one line: VSOP gives full income-tax treatment with no dry income, real equity a better capital-gains upside carrying dry-income risk. §19a EStG addresses the share-transfer case specifically: it defers taxation on shares transferred to employees of qualifying young companies, and the Zukunftsfinanzierungsgesetz (ZuFinG) widened who can use it. By default the deferral ends at the earliest of a sale of the shares, the end of the employment relationship, or fifteen years after the transfer, a ceiling ZuFinG raised from twelve. ZuFinG also added §19a(4a): if the employer irrevocably declares it will be liable for the wage tax, leaving the job or reaching fifteen years no longer triggers it, and tax stays deferred until the shares are sold or otherwise transferred. So real equity only beats VSOP on tax treatment if a deferral actually applies to you; confirm that rather than assuming it.',
       'If the company is far enough along to offer real shares or options rather than a virtual plan, ask about it directly, since the upside tax treatment is better. A company that will not explain why it chose a virtual plan is usually telling you something about how much the instrument is expected to pay.',
     ],
     keyPoints: [
@@ -508,7 +508,7 @@ export const hr: Question[] = [
     question: 'Would you ask your current employer for an Arbeitszeugnis before you leave?',
     answer: [
       'Yes, and explain why it matters in Germany specifically: an Arbeitszeugnis (a formal, legally regulated reference letter) is standard practice, often expected by future employers, and you are legally entitled to one on request when leaving a role.',
-      'Know the coded-language convention: German reference letters use a well-known scale of stock phrases where subtly different wording signals very different performance ratings (e.g. "stets zu unserer vollsten Zufriedenheit" reads as top marks, "zu unserer Zufriedenheit" alone reads as merely average) — worth knowing so you can sanity-check your own letter.',
+      'Know the coded-language convention: German reference letters use a well-known scale of stock phrases where subtly different wording signals very different performance ratings (e.g. "stets zu unserer vollsten Zufriedenheit" reads as top marks, "zu unserer Zufriedenheit" alone is grade 4, ausreichend, below average; average is "zur vollen Zufriedenheit") — worth knowing so you can sanity-check your own letter.',
       'Request it in writing, ideally timed near your last working day so it reflects your final role and responsibilities accurately, and review it carefully before accepting it, since a poorly worded one can be pushed back on and revised.',
       'If you are early in a relocation process and have not yet resigned, note that this is a forward-looking habit to build, not something to worry about mid-interview, unless directly asked about references.',
     ],
@@ -528,7 +528,7 @@ export const hr: Question[] = [
     answer: [
       'Two conditions switch the protection on. The Kündigungsschutzgesetz applies once employment has lasted longer than six months (§1 KSchG) and the establishment regularly employs more than ten people (§23 KSchG). Miss either and an ordinary dismissal needs no social justification, only correct notice and written form, so a small Berlin startup and a 3,000-person scale-up are different risk profiles for the same job title.',
       'Once it applies, a dismissal must be sozial gerechtfertigt on one of three grounds: personenbedingt, verhaltensbedingt, or betriebsbedingt — the layoff case, which forces a Sozialauswahl among comparable employees.',
-      'The fixed-term interaction is what people get wrong. A befristet contract does not end by notice; the term runs out, and that expiry is not a dismissal, so KSchG never engages at all. §15(3) TzBfG allows early ordinary notice only if the contract or a collective agreement expressly says so.',
+      'The fixed-term interaction is what people get wrong. A befristet contract does not end by notice; the term runs out, and that expiry is not a dismissal, so KSchG never engages at all. §15(4) TzBfG allows early ordinary notice only if the contract or a collective agreement expressly says so.',
       'A fixed term is therefore the real issue when weighing an offer: for a relocation it removes protection exactly when your permit and housing depend on the job. So ask how many people this entity employs, whether the contract is befristet, and if so whether it carries an ordinary-termination clause.',
     ],
     deeper: [
@@ -539,7 +539,7 @@ export const hr: Question[] = [
     keyPoints: [
       'States both KSchG conditions: more than six months tenure and more than ten employees in the establishment',
       'Names the three sozial gerechtfertigt grounds and that betriebsbedingt requires a Sozialauswahl',
-      'States that a fixed term expiring is not a dismissal, and that §15(3) TzBfG requires an express clause for early ordinary notice',
+      'States that a fixed term expiring is not a dismissal, and that §15(4) TzBfG requires an express clause for early ordinary notice',
       'Asks the headcount of the employing entity and whether the contract has an early-termination clause',
     ],
     followUps: ['How would a works council change this picture?', 'What would you want in the contract if you were relocating for a fixed-term role?'],

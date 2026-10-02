@@ -69,7 +69,8 @@ between roles; only the round list and the visible question set change.
   loop, in one queue. The set is frozen on entry; re-enter it to rebuild.
 - **Mock session** — a cross-round set in one sitting, in round order, like a real
   loop day. Two presets: *Full loop* (a slice of every round) and *Technical rounds*
-  (hiring manager, live coding, system design). A banner marks each round
+  (hiring manager, live coding, system design, plus architecture or backend & data where
+  the role has them), each a fresh random draw per round. A banner marks each round
   transition. Ends in a recap, either by hitting Finish or once you have gone
   through the whole set: the counts, then the questions you rated Weak listed by
   round, and the ones you never rated folded under them.

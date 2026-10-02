@@ -106,13 +106,13 @@ export const arch: Question[] = [
     answer: [
       'Start with an honest inventory before committing to a timeline: which apps use which deprecated APIs or patterns, which depend on third-party libraries that haven\'t caught up yet, and which are effectively unmaintained — the plan is only as real as this inventory, and skipping it produces a timeline nobody can actually hit.',
       'Migrate a pilot app first — ideally one that\'s representative but not the most complex or most critical — to surface the real gotchas cheaply, and write the playbook (a mechanical list of changes, a codemod where possible) from that experience rather than from the framework\'s own release notes alone, which rarely cover your codebase\'s specific patterns.',
-      'Roll out in dependency-aware order, migrating apps whose only consumers have already migrated before apps deep in the dependency graph, and keep the two versions running in parallel across the portfolio for a defined window rather than forcing a single cutover date across every team at once.',
+      'Roll out from the bottom of the dependency graph: first make the shared libraries and design system work on both versions and widen their peer range to accept old and new, so each app can then upgrade on its own schedule without waiting on anyone else. Narrow the range again only once the last app has moved. That keeps the two versions running in parallel across the portfolio for a defined window rather than forcing a single cutover date across every team at once.',
       'Track progress as a visible, shared dashboard (apps migrated, apps blocked and why) rather than a status nobody can see, since a portfolio-wide migration that\'s invisible to leadership is the first thing deprioritized when a deadline gets tight elsewhere.',
     ],
     keyPoints: [
       'Starts from an honest inventory of blockers before committing to a timeline',
       'Migrates a representative pilot first and writes the playbook from real experience',
-      'Rolls out in dependency-aware order rather than one org-wide cutover date',
+      'Widens the shared libraries\' peer range to both versions first, so apps migrate independently rather than on one org-wide cutover date',
       'Tracks progress on a visible shared dashboard, not a status only the platform team sees',
     ],
     followUps: ['What do you do about an app whose team has no bandwidth to migrate at all?', 'How do you handle a critical third-party dependency that never ships compatibility with the new version?'],
@@ -450,13 +450,13 @@ export const arch: Question[] = [
     category: 'Build & runtime architecture',
     question: 'How do you decide on a bundling and tree-shaking strategy for a shared library consumed by many apps with different bundlers and build setups?',
     answer: [
-      'Ship multiple output formats deliberately rather than picking one — ESM for consumers that can tree-shake properly, a CommonJS fallback for older toolchains that still need it — since forcing every consumer onto a single format either breaks the ones that can\'t consume it or silently disables tree-shaking for the ones that can.',
+      'Default to ESM and treat a CommonJS build as an exception you justify, not a reflex. require(esm) is stable in every supported Node line, so CommonJS consumers on current Node can load an ESM-only package, and shipping one format avoids the dual-package hazard of two copies of the library with separate state. Add a CommonJS fallback only for a named consumer on an older toolchain that still needs it; ESM is also what lets consumers that can tree-shake actually do so.',
       'Structure the library\'s own exports to be tree-shakeable by construction: genuinely side-effect-free modules marked as such in the package metadata, and named exports over one large default export object, since a bundler can only remove what it can prove is unused, and both of those are prerequisites for that proof.',
       'Avoid deep internal coupling between unrelated pieces of the library\'s public surface — a consumer importing one small utility shouldn\'t transitively pull in an unrelated, much larger dependency because the two happen to live in the same internal module — since that\'s one of the most common and hardest-to-spot ways a "tree-shakeable" library fails to actually shrink a consumer\'s bundle in practice.',
       'Verify the claim continuously rather than assuming it holds: a CI check that tracks the actual bundle-size impact of importing a single small piece of the library, since tree-shakeability silently regresses with an innocent-looking internal refactor and nobody notices until a consumer\'s bundle report flags it.',
     ],
     keyPoints: [
-      'Ships multiple output formats (ESM and a CommonJS fallback) rather than forcing one',
+      'Defaults to ESM-only now that require(esm) is stable, adding a CommonJS build only for a named older consumer',
       'Structures exports to be tree-shakeable by construction — side-effect-free, named exports',
       'Avoids hidden coupling that pulls unrelated large dependencies into a small import',
       'Verifies tree-shakeability continuously via a CI bundle-size check, not a one-time assumption',

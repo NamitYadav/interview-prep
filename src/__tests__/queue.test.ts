@@ -30,6 +30,11 @@ describe('orderQueue', () => {
     expect(orderQueue([q('a'), q('c')], progress, SOLID_DECAY_MS + 1).map((x) => x.id)).toEqual(['a', 'c']);
   });
 
+  // Clock skew or a hand-edited import: a future lastSeen never aged, so it stayed Solid.
+  test('a solid rated in the future counts as decayed', () => {
+    expect(roundStats([q('a')], { a: { rating: 3, seen: 1, lastSeen: 2000 } }, 1000)).toMatchObject({ solid: 0, ok: 1 });
+  });
+
   test('a decayed solid still ranks behind weak and unrated', () => {
     const progress: Progress = { a: { rating: 3, seen: 1, lastSeen: 0 }, b: { rating: 1, seen: 1, lastSeen: 0 } };
     expect(orderQueue(qs, progress, SOLID_DECAY_MS + 1, () => 0).map((x) => x.id)).toEqual(['b', 'c', 'd', 'e', 'a']);

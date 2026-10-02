@@ -5,6 +5,7 @@ import { backupFilename, parseBackup } from '../lib/storage';
 import { clearAllLaps } from '../lib/lap';
 import { clearAllDrafts } from '../lib/drafts';
 import { pageButton, panelButton, panelDangerButton } from './controlStyles';
+import { plural } from './ProgressBar';
 
 export const LAST_EXPORT_KEY = 'interview-prep:last-export';
 
@@ -87,10 +88,9 @@ export function ImportReset({ state, dispatch }: { state: Persisted; dispatch: D
     // Name everything this destroys. It wipes stories too — emptyState() clears all
     // three — and the old copy mentioned only ratings and notes, so someone clearing
     // ratings to start a fresh cycle lost every STAR story they had written.
-    const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
     const counts = [
-      plural(Object.keys(state.progress).length, 'rating', 'ratings'),
-      plural(Object.keys(state.notes).length, 'note', 'notes'),
+      plural(Object.keys(state.progress).length, 'rating'),
+      plural(Object.keys(state.notes).length, 'note'),
       plural(Object.keys(state.stories).length, 'story', 'stories'),
     ];
     // Laps and drafts are named too, and actually cleared. Clearing only the ratings

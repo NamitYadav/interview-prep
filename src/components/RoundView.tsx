@@ -18,7 +18,8 @@ export function RoundView({
   roundId, state, dispatch, strictMode, shortcuts = true, role,
 }: { roundId: RoundId; state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean; shortcuts?: boolean; role: RoleId }) {
   const { rounds, byRound } = forRole(role);
-  const round = rounds.find((r) => r.id === roundId);
+  // App only mounts this for a round in the active role's loop.
+  const round = rounds.find((r) => r.id === roundId)!;
   const all = useMemo(() => byRound(roundId), [byRound, roundId]);
   const categories = useMemo(() => [...new Set(all.map((q) => q.category))], [all]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -59,15 +60,6 @@ export function RoundView({
 
   const tabBtn = (active: boolean) =>
     `border-b-2 px-3 py-2 text-sm ${active ? 'border-emerald-500 font-medium' : 'border-transparent text-zinc-500 dark:text-zinc-400'}`;
-
-  if (!round) {
-    return (
-      <main className="mx-auto max-w-3xl p-4 sm:p-6">
-        <p className="mb-2">Round not found.</p>
-        <BackLink className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline" />
-      </main>
-    );
-  }
 
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6">

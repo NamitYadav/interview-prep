@@ -59,10 +59,23 @@ export function parseBackup(text: string): Persisted {
   } catch {
     throw new Error('Not valid JSON');
   }
-  return validate(raw);
+  const data = validate(raw);
+  // A lastSeen more than a day ahead is a broken clock or a hand-edited file, and it would
+  // count as "rated today" for good. Import only: load() must not bin a whole store your
+  // own clock wrote.
+  for (const [id, entry] of Object.entries(data.progress)) {
+    if (entry.lastSeen > Date.now() + 86_400_000) throw new Error(`Invalid progress entry for ${id}`);
+  }
+  return data;
 }
 
+// Set by load() when the stored blob is from a newer version of the app (a deploy rolled
+// back). Moving it aside and saving an empty v2 over it lost it for good once the newer
+// version returned, so until a reload save() leaves it alone.
+let newerOnDisk = false;
+
 export function load(storage: Storage = localStorage): Persisted {
+  newerOnDisk = false;
   let text: string | null;
   try {
     text = storage.getItem(STORAGE_KEY);
@@ -71,7 +84,12 @@ export function load(storage: Storage = localStorage): Persisted {
   }
   if (text === null) return emptyState();
   try {
-    return parseBackup(text);
+    const raw: unknown = JSON.parse(text);
+    if (isRecord(raw) && typeof raw.version === 'number' && raw.version > 2) {
+      newerOnDisk = true;
+      return emptyState();
+    }
+    return validate(raw);
   } catch {
     try {
       storage.setItem(CORRUPT_KEY, text);
@@ -84,6 +102,7 @@ export function load(storage: Storage = localStorage): Persisted {
 }
 
 export function save(data: Persisted, storage: Storage = localStorage): boolean {
+  if (newerOnDisk) return false;
   try {
     storage.setItem(STORAGE_KEY, JSON.stringify(data));
     return true;

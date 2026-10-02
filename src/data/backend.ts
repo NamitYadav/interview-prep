@@ -51,13 +51,13 @@ export const backend: Question[] = [
     answer: [
       'First, avoid needing a version: most changes can be additive. New optional fields, new endpoints and new enum values the client is told to tolerate are not breaking, so publish a compatibility rule that clients must ignore unknown fields and the bar for a new version gets high.',
       'When a change genuinely breaks the contract, such as renaming a field, changing a type or tightening validation, version explicitly. A path prefix like /v2 is the easiest to route, cache and debug; a date-based header version, where each client pins the version it was built against, gives finer steps but needs translation layers between versions on the server.',
-      'The real work is retiring the old version: measure who still calls it per client id, announce a deprecation date with a Sunset header, contact the remaining callers directly, and only then remove it. A version you can never remove is just permanent maintenance.',
+      'The real work is retiring the old version: measure who still calls it per client id, mark it deprecated with a Deprecation header (RFC 9745) and announce the removal date with a Sunset header (RFC 8594), contact the remaining callers directly, and only then remove it. A version you can never remove is just permanent maintenance.',
     ],
     keyPoints: [
       'Prefers additive change and a tolerant-reader rule over new versions',
       'Lists what actually breaks a contract',
       'Compares path versioning with pinned header or date versions',
-      'Plans deprecation with usage metrics, a Sunset date and direct outreach',
+      'Plans deprecation with usage metrics, Deprecation and Sunset headers and direct outreach',
     ],
     followUps: ['Is adding a value to an enum a breaking change?', 'How would you test that v1 still behaves after a v2 change?'],
   },
@@ -165,14 +165,14 @@ export const backend: Question[] = [
     question: 'You need to rename a column and make it NOT NULL on a busy table without downtime. How do you roll it out?',
     answer: [
       'Never in one migration, because the old application version is still running during a deploy and would break the moment the column it reads disappears. Use expand, migrate, contract, with each step shipped and verified on its own.',
-      'Expand: add the new nullable column and deploy code that writes both columns. Migrate: backfill old rows in small batches, a few thousand at a time with pauses, so you do not hold long locks or flood replication. Then switch reads to the new column. To make it NOT NULL cheaply, add a CHECK (new_col IS NOT NULL) NOT VALID constraint, VALIDATE it, which scans without blocking writes, and then SET NOT NULL, which Postgres can prove from the validated check.',
+      'Expand: add the new nullable column and deploy code that writes both columns. Migrate: backfill old rows in small batches, a few thousand at a time with pauses, so you do not hold long locks or flood replication. Then switch reads to the new column. To make it NOT NULL cheaply on Postgres 18, add the NOT NULL constraint itself as NOT VALID and then VALIDATE it, which scans without blocking writes. On older versions, add a CHECK (new_col IS NOT NULL) NOT VALID constraint, VALIDATE it, then SET NOT NULL, which Postgres can prove from the validated check without another scan, and drop the helper CHECK afterwards.',
       'Contract: once nothing reads the old column, remove the dual write and drop the column in a later release. Set a lock_timeout on every migration so a migration waiting behind a long query fails fast instead of queueing every write behind it.',
     ],
     keyPoints: [
       'Expand, migrate, contract across separate deploys',
       'Dual write while old and new code coexist',
       'Batched backfill to avoid long locks and replication lag',
-      'NOT VALID check, then VALIDATE, then SET NOT NULL',
+      'NOT NULL ... NOT VALID then VALIDATE on Postgres 18; before that, a helper CHECK, SET NOT NULL, then drop the CHECK',
       'lock_timeout so a blocked migration fails fast',
     ],
     followUps: ['How do you roll back halfway through?', 'Which ALTER TABLE operations take an exclusive lock?'],
@@ -505,15 +505,15 @@ export const backend: Question[] = [
 	return out
 }`,
     answer: [
-      'The range over results never ends, because nothing closes the channel, so the function blocks forever after the last result: a goroutine leak and a hung caller. Closing it needs a sync.WaitGroup: Add before each goroutine, Done when it sends, and a separate goroutine that waits and then closes the channel.',
+      'The range over results never ends, because nothing closes the channel, so the function blocks forever after the last result: a goroutine leak and a hung caller. Closing it needs a sync.WaitGroup: Add before each goroutine, Done when it sends, or wg.Go on Go 1.25 and later, which does both, and a separate goroutine that waits and then closes the channel.',
       'It also starts one goroutine per job with no limit. Goroutines are cheap, but handle probably calls a database or an API, so ten thousand jobs means ten thousand concurrent calls. A real pool starts a fixed number of workers reading from a jobs channel, or uses a semaphore channel or errgroup with SetLimit.',
-      'Two smaller points: before Go 1.22 the closure captured the loop variable j, so every goroutine could see the last job; it is fixed in modern Go, but worth saying. And there is no error path or cancellation: I would pass a context and use errgroup so the first error cancels the rest.',
+      'Two smaller points: the closure captures the loop variable j, and the Go 1.22 per-iteration fix applies only when the module\'s go.mod declares go 1.22 or later, not merely when a newer toolchain builds it; under an older go line, every goroutine could see the last job. And there is no error path or cancellation: I would pass a context and use errgroup so the first error cancels the rest.',
     ],
     keyPoints: [
       'Unclosed channel: range blocks forever, goroutine leak',
-      'WaitGroup plus a closer goroutine',
+      'WaitGroup (or wg.Go on Go 1.25+) plus a closer goroutine',
       'Unbounded concurrency; fixed workers or SetLimit',
-      'Loop variable capture before Go 1.22',
+      'Loop variable capture unless go.mod declares go 1.22 or later',
       'errgroup with context for errors and cancellation',
     ],
     followUps: ['How would you keep the results in the same order as the jobs?', 'What would the Node equivalent of this bug be?'],
@@ -654,7 +654,8 @@ export const backend: Question[] = [
     followUps: ['How would you sync the two tabs without a server round trip?', 'What changes if drafts can be edited offline for days?'],
   },
 
-  // Backend live coding (6)
+  // Backend live coding (6). Ids skip 034/035 (the first-draft LRU and retry pads, replaced
+  // by 039/040); not renumbered, since ids are persisted in users' progress.
   {
     id: 'backend-033',
     round: 'backend',
@@ -681,13 +682,13 @@ console.log(limiter.take('b')); // expect: true (keys have separate buckets)`,
     answer: [
       'State the model before typing: a bucket per key holding a fractional token count and the time it was last touched. There is no timer; refill is computed lazily on each call from the elapsed time, which is what keeps it O(1) per request and free when idle.',
       'On take: look up or create the bucket full, add elapsed seconds times refillPerSec, cap at capacity, set last to now. If tokens is at least one, subtract one and return true; otherwise return false. Mention the cap explicitly, because without it an idle key banks unlimited burst.',
-      'Then name what changes in production: the Map grows with every key ever seen, so evict idle buckets, and across several server instances the state has to live in Redis, updated atomically in a Lua script or with a single INCR-style operation, or each instance enforces its own limit.',
+      'Then name what changes in production: the Map grows with every key ever seen, so evict idle buckets, and across several server instances the state has to live in Redis, read, refilled and written in one atomic step by a Lua script or a Redis Function, or each instance enforces its own limit. A plain INCR with an expiry is atomic too, but it gives you a fixed window, not a token bucket.',
     ],
     keyPoints: [
       'Lazy refill from elapsed time, no background timer',
       'Caps tokens at capacity so idle keys cannot bank unlimited burst',
       'O(1) time per call and O(keys) memory, with eviction for idle keys',
-      'Moves state to Redis with an atomic update once there is more than one instance',
+      'Moves state to Redis behind a Lua script or Redis Function once there is more than one instance; INCR alone is a fixed window',
     ],
     followUps: ['How would you return a Retry-After header from this?', 'Token bucket or sliding window: when would you pick each?'],
   },
@@ -845,12 +846,12 @@ Promise.allSettled([loadUser(1), loadUser(2), loadUser(1), loadUser(9)]).then((r
   console.log(calls); // expect: [[1,2,9]] (one batch, the duplicate 1 collapsed)
 });`,
     answer: [
-      'Say the trick first: load does not fetch. It pushes the key and its promise\'s resolve and reject onto a queue, and the first load in a tick schedules one flush with queueMicrotask. Every load made synchronously after it, such as fifty resolvers asking for fifty authors, lands in the same queue before the flush runs.',
+      'Say the trick first: load does not fetch. It pushes the key and its promise\'s resolve and reject onto a queue, and the first load in a tick schedules one flush with queueMicrotask. Every load made synchronously after it, such as fifty resolvers asking for fifty authors, lands in the same queue before the flush runs. Say that queueMicrotask is a simplification that batches synchronous loads only: a nested resolver that awaits anything before calling load runs after the flush and starts a second batch. The real DataLoader defers its dispatch until after the pending promise jobs have run, so those loads still join the batch.',
       'The flush takes the queue, swaps in a fresh empty one, dedupes the keys with a Map from key to its waiting callers, and calls batchFn once. The contract that makes it work is positional: batchFn returns exactly one result per key in key order, so result i settles every caller of key i. An undefined result rejects just those callers, and if batchFn itself rejects, every caller in the batch rejects with that error.',
       'Then connect it to the server: this is the fix for N+1 in GraphQL resolvers, turning one query per row into one WHERE id IN query. The cache, if you add one, must live per request rather than per process, or one user\'s loader serves another user\'s data and never sees updates. The flush is O(n) in the batch size, and each load is O(1).',
     ],
     keyPoints: [
-      'Queues keys and schedules one flush per tick with queueMicrotask',
+      'Queues keys and schedules one flush with queueMicrotask, knowing it batches synchronous loads only while DataLoader waits until after promise jobs',
       'Dedupes keys and settles callers by position: one result per key, same order',
       'A missing result rejects only its own callers; a failed batch rejects all',
       'Per-request cache, never per-process, to avoid cross-user leaks',

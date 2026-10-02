@@ -1,22 +1,14 @@
 import * as React from 'react';
 import type { ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { compile, formatArgs } from './compile';
+import { compile, formatArgs, forwardConsole } from './compile';
 import type { FromSandbox, ToSandbox } from './protocol';
 
 const post = (msg: FromSandbox) => window.parent.postMessage(msg, '*');
 
 const root = createRoot(document.getElementById('root')!);
 
-// Forward console output to the parent's Output panel. The original still runs so the
-// browser devtools show it too.
-for (const level of ['log', 'info', 'warn', 'error'] as const) {
-  const original = console[level].bind(console);
-  console[level] = (...args: unknown[]) => {
-    original(...args);
-    post({ type: 'log', level, text: formatArgs(args) });
-  };
-}
+forwardConsole(post);
 
 // Async failures never pass through the try/catch below: a rejected promise in the pad,
 // or a throw inside a React event handler / effect, surfaces here instead.

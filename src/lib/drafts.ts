@@ -11,7 +11,7 @@ const KEY = 'interview-prep:drafts';
 // eventually stops RATINGS from saving, not just scratch. Oldest-saved is evicted.
 //
 // The cap is here to bound pathological growth, NOT to ration normal use: the bank has
-// 21 scratch questions today, so a low cap would silently evict the code you wrote at
+// 27 scratch questions today, so a low cap would silently evict the code you wrote at
 // the start of a round while you were still working through it. At a few KB each this
 // is well inside a 5MB origin quota, and data.test.ts asserts the cap stays comfortably
 // above the number of scratch questions in the bank.

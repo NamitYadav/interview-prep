@@ -32,6 +32,19 @@ describe('load', () => {
     expect(localStorage.getItem(CORRUPT_KEY)).toBe('{not json');
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
   });
+  // After a rollback the stored blob is from a newer app: moved aside and overwritten by
+  // an empty v2, it was gone once the newer version came back.
+  test('leaves a newer-version blob in place and refuses to save over it', () => {
+    const newer = JSON.stringify({ version: 3, progress: {} });
+    localStorage.setItem(STORAGE_KEY, newer);
+    expect(load()).toEqual(EMPTY);
+    expect(save(EMPTY)).toBe(false);
+    expect(localStorage.getItem(STORAGE_KEY)).toBe(newer);
+    expect(localStorage.getItem(CORRUPT_KEY)).toBeNull();
+    localStorage.clear();
+    load(); // the guard lasts until the next load; don't leak it into later tests
+  });
+
   test('treats wrong shape as corrupt', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 2 }));
     expect(load()).toEqual(EMPTY);
@@ -80,6 +93,8 @@ describe('parseBackup', () => {
     // 1e999 overflows to Infinity on JSON.parse — must be rejected, not accepted as a
     // "number" that later serializes to `null` and fails re-validation on next load.
     ['{"version":2,"progress":{"a":{"rating":1,"seen":1,"lastSeen":1e999}},"notes":{},"stories":{}}', 'Invalid progress entry for a'],
+    // A future lastSeen counted as "rated today" for good.
+    [JSON.stringify({ version: 2, progress: { a: { rating: 3, seen: 1, lastSeen: Date.now() + 2 * 86_400_000 } }, notes: {}, stories: {} }), 'Invalid progress entry for a'],
     [JSON.stringify({ version: 1, progress: {}, notes: { a: 1 } }), 'Invalid note for a'],
     [JSON.stringify({ version: 2, progress: {}, notes: {}, stories: [] }), 'stories must be an object'],
     [JSON.stringify({ version: 2, progress: {}, notes: {}, stories: { a: { title: 1 } } }), 'Invalid story for a'],

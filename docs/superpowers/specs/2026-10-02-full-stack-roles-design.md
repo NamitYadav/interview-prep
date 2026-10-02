@@ -101,11 +101,14 @@ Starters are plain TS with a small `console.log` self-check at the bottom, and u
 no `node:` imports or DOM APIs.
 
 1. Token-bucket rate limiter
-2. LRU cache with TTL
-3. Retry with exponential backoff and jitter
-4. Cursor pagination over an in-memory table
-5. Batched writer (flush on size or interval)
-6. Idempotency-key store for a payment endpoint
+2. Cursor pagination over an in-memory table
+3. Batched writer (flush on size or interval)
+4. Idempotency-key store for a payment endpoint
+5. DataLoader-style batcher (one backend call per tick)
+6. Circuit breaker around an async call
+
+(LRU-with-TTL and retry-with-backoff were the first draft; they became the batcher and
+the circuit breaker before shipping.)
 
 No sandbox or worker code changes.
 

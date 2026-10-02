@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { compile, formatArgs } from './compile';
+import { compile, formatArgs, forwardConsole } from './compile';
 import type { FromSandbox, ToSandbox } from './protocol';
 
 // The runner for console-only starters: a dedicated Worker instead of the sandbox frame.
@@ -25,13 +25,7 @@ const scope = self as unknown as {
 
 const post = (msg: FromSandbox) => scope.postMessage(msg);
 
-for (const level of ['log', 'info', 'warn', 'error'] as const) {
-  const original = console[level].bind(console);
-  console[level] = (...args: unknown[]) => {
-    original(...args);
-    post({ type: 'log', level, text: formatArgs(args) });
-  };
-}
+forwardConsole(post);
 
 // preventDefault keeps an uncaught throw from also surfacing as the parent Worker's
 // `error` event, which the pad reads as "the runner failed to start".
