@@ -172,4 +172,13 @@ describe('Home', () => {
     await userEvent.selectOptions(screen.getByLabelText('Role'), 'Senior frontend');
     expect(screen.queryByText('Head of engineering')).not.toBeInTheDocument();
   });
+
+  test('switching to a full-stack role adds the Backend & data card', async () => {
+    const userEvent = (await import('@testing-library/user-event')).default;
+    render(<Harness initial={EMPTY} />);
+    expect(screen.queryByText('Backend & data')).not.toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByLabelText('Role'), 'Senior full-stack');
+    expect(screen.getByText('Backend & data')).toBeInTheDocument();
+    expect(screen.getByText('Live coding')).toBeInTheDocument();
+  });
 });

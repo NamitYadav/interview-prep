@@ -19,10 +19,11 @@ const KEY = 'interview-prep:laps';
 const BASELINE_KEY = 'interview-prep:mock-baseline';
 
 // One lap per possible question set — every round's Practice tab and every category
-// chip (53 today), the Weak drill and the mock presets — with headroom. Oldest-saved is
-// evicted past that; data.test.ts asserts the cap stays above the count, since a lap
-// carries the pending weak requeues and eviction is silent.
-export const MAX_LAPS = 64;
+// chip, the Weak drill and the mock presets — for the largest role (Staff full-stack,
+// about 65), with headroom. Oldest-saved is evicted past that; data.test.ts asserts
+// the cap stays above the count, since a lap carries the pending weak requeues and
+// eviction is silent.
+export const MAX_LAPS = 80;
 
 export interface SavedLap {
   key: string;

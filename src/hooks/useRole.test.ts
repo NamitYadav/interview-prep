@@ -23,6 +23,12 @@ describe('useRole', () => {
     expect(result.current[0]).toBe('lead');
   });
 
+  test('restores a stored full-stack role on mount', () => {
+    localStorage.setItem(ROLE_KEY, 'fs-staff');
+    const { result } = renderHook(() => useRole());
+    expect(result.current[0]).toBe('fs-staff');
+  });
+
   test('garbage stored value falls back to staff', () => {
     localStorage.setItem(ROLE_KEY, 'not-a-role');
     const { result } = renderHook(() => useRole());
