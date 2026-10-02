@@ -107,9 +107,10 @@ between roles; only the round list and the visible question set change.
 - `[bracket slots]` in an answer are yours to fill from your own experience — the
   answers are coaching scaffolds, not a script to memorise.
 - Every question takes a **note**.
-- The **Live coding** build prompts and the data-structures questions give you an
-  editable scratch pad pre-filled with the starter code, instead of a read-only
-  snippet — write your approach out before revealing, then **Run** it (`⌘↩` /
+- The **Live coding** build prompts, the data-structures questions and the
+  **Backend & data** live-coding pads give you an editable scratch pad pre-filled
+  with the starter code, instead of a read-only snippet — write your approach out
+  before revealing, then **Run** it (`⌘↩` /
   `Ctrl+↩` inside the pad). Console output and errors show up under the pad; the
   React component prompts (Autocomplete, Tabs, VirtualList and friends) also render
   live in a preview with sample props once the sandbox reports in. Every Run starts
