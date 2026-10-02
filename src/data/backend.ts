@@ -692,90 +692,6 @@ console.log(limiter.take('b')); // expect: true (keys have separate buckets)`,
     followUps: ['How would you return a Retry-After header from this?', 'Token bucket or sliding window: when would you pick each?'],
   },
   {
-    id: 'backend-034',
-    round: 'backend',
-    category: 'Backend live coding',
-    scratch: true,
-    question: 'Implement an LRU cache with a per-entry TTL: get and set in O(1), evicting the least recently used entry past capacity, and treating expired entries as missing.',
-    code: `// \`now\` is injectable so the checks below run without a real clock.
-class LRUCache<K, V> {
-  constructor(private capacity: number, private ttlMs: number, private now: () => number = Date.now) {}
-
-  get(key: K): V | undefined {
-    // TODO: return undefined for a missing or expired entry, and drop the expired one
-    // TODO: on a hit, mark the key as most recently used
-    return undefined;
-  }
-
-  set(key: K, value: V): void {
-    // TODO: store the value with an expiry; past capacity, evict the least recently used key
-  }
-}
-
-let t = 0;
-const cache = new LRUCache<string, number>(2, 1000, () => t);
-cache.set('a', 1);
-cache.set('b', 2);
-cache.get('a');
-cache.set('c', 3);
-console.log(cache.get('a'), cache.get('b'), cache.get('c')); // expect: 1 undefined 3
-t = 1500;
-console.log(cache.get('a')); // expect: undefined (expired)`,
-    answer: [
-      'In JavaScript a Map already remembers insertion order, so it can be the whole data structure: delete and re-insert a key to mark it most recently used, and the first key from map.keys() is always the least recently used. That gives O(1) get and set without writing a linked list; I would mention that in other languages you pair a hash map with a doubly linked list for the same effect.',
-      'Each entry stores the value and expiresAt. get checks the entry, and if now is past expiresAt it deletes it and returns undefined; otherwise it re-inserts and returns the value. set deletes any existing entry, inserts the new one, and while size exceeds capacity deletes the first key.',
-      'Talk through the edge cases: setting an existing key must refresh both its position and its TTL; expired entries are only removed when touched, which is fine for correctness but means a full cache can be holding dead entries, so mention a periodic sweep if memory matters.',
-    ],
-    keyPoints: [
-      'Uses Map insertion order for recency: O(1) get and set',
-      'Names the hash map plus doubly linked list equivalent',
-      'Lazy expiry on read, with an optional sweep',
-      'Updating an existing key refreshes position and TTL',
-      'O(capacity) memory',
-    ],
-    followUps: ['How would you make this safe across several Node processes?', 'What would you change for an LFU policy?'],
-  },
-  {
-    id: 'backend-035',
-    round: 'backend',
-    category: 'Backend live coding',
-    scratch: true,
-    question: 'Write retry(fn, options) that retries a failing async call with exponential backoff and full jitter, and gives up after a number of retries.',
-    code: `// \`sleep\` and \`random\` are injectable so the checks run instantly and deterministically.
-async function retry<T>(
-  fn: () => Promise<T>,
-  { retries = 3, baseMs = 100, sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms)), random = Math.random } = {},
-): Promise<T> {
-  // TODO: on failure, wait random() * baseMs * 2 ** attempt, then call fn again
-  // TODO: after \`retries\` retries, rethrow the last error
-  return fn();
-}
-
-let calls = 0;
-const flaky = async () => {
-  calls++;
-  if (calls < 3) throw new Error('boom ' + calls);
-  return 'ok';
-};
-const waits: number[] = [];
-retry(flaky, { sleep: async (ms) => { waits.push(ms); }, random: () => 0.5 })
-  .then((v) => console.log(v, calls, waits)) // expect: ok 3 [50,100]
-  .catch((e) => console.log('failed:', e.message));`,
-    answer: [
-      'A loop is clearer than recursion here: for attempt from 0 to retries, try to return await fn(); in the catch, if this was the last attempt rethrow, otherwise await sleep for the backoff and loop. Keep the last error so the caller sees the real failure, not a generic "retries exhausted".',
-      'The delay is random() times baseMs times 2 to the attempt, which is full jitter. Say why the jitter matters: without it, every client that failed at the same moment retries at the same moment and the recovering service is hit by synchronised waves. A cap on the maximum delay keeps late attempts reasonable.',
-      'Then say what a production version adds: only retry errors that are worth retrying, such as timeouts, 429 and 503, never a 400; respect a Retry-After header when present; and accept an AbortSignal so a cancelled request stops retrying. Total time is bounded by the sum of the delays, roughly O(baseMs times 2 to the retries) in the worst case.',
-    ],
-    keyPoints: [
-      'Loop with await and rethrow of the last error',
-      'Full jitter and why synchronised retries hurt',
-      'Delay cap; O(retries) calls and exponential worst-case wait',
-      'Retries only retryable errors; honours Retry-After',
-      'AbortSignal for cancellation',
-    ],
-    followUps: ['How would you add a circuit breaker on top of this?', 'Why is retrying a non-idempotent POST dangerous?'],
-  },
-  {
     id: 'backend-036',
     round: 'backend',
     category: 'Backend live coding',
@@ -902,5 +818,106 @@ const store = new IdempotencyStore();
       'Maps to a unique constraint in a real database',
     ],
     followUps: ['What should happen if the charge times out rather than failing?', 'How would you hash the request body consistently?'],
+  },
+  {
+    id: 'backend-039',
+    round: 'backend',
+    category: 'Backend live coding',
+    scratch: true,
+    question: 'Build a DataLoader-style batcher: createLoader(batchFn) returns load(key), and every load made in the same tick goes to the backend as one batchFn call. Each caller gets its own result, and a key with no result fails only that caller.',
+    code: `// batchFn gets unique keys and returns one result per key, in the same order (undefined = not found).
+function createLoader<K, V>(batchFn: (keys: K[]) => Promise<(V | undefined)[]>): (key: K) => Promise<V> {
+  // TODO: queue each { key, resolve, reject } and schedule a single flush with queueMicrotask
+  // TODO: flush: call batchFn once with the unique keys, then settle every caller by its key's position
+  // TODO: a key whose result is undefined rejects only its own callers
+  return (key) => batchFn([key]).then((results) => results[0] as V);
+}
+
+const calls: number[][] = [];
+const users = new Map([[1, 'ada'], [2, 'grace'], [3, 'linus']]);
+const loadUser = createLoader<number, string>(async (ids) => {
+  calls.push(ids);
+  return ids.map((id) => users.get(id));
+});
+
+Promise.allSettled([loadUser(1), loadUser(2), loadUser(1), loadUser(9)]).then((results) => {
+  console.log(results.map((r) => (r.status === 'fulfilled' ? r.value : 'missing'))); // expect: ["ada","grace","ada","missing"]
+  console.log(calls); // expect: [[1,2,9]] (one batch, the duplicate 1 collapsed)
+});`,
+    answer: [
+      'Say the trick first: load does not fetch. It pushes the key and its promise\'s resolve and reject onto a queue, and the first load in a tick schedules one flush with queueMicrotask. Every load made synchronously after it, such as fifty resolvers asking for fifty authors, lands in the same queue before the flush runs.',
+      'The flush takes the queue, swaps in a fresh empty one, dedupes the keys with a Map from key to its waiting callers, and calls batchFn once. The contract that makes it work is positional: batchFn returns exactly one result per key in key order, so result i settles every caller of key i. An undefined result rejects just those callers, and if batchFn itself rejects, every caller in the batch rejects with that error.',
+      'Then connect it to the server: this is the fix for N+1 in GraphQL resolvers, turning one query per row into one WHERE id IN query. The cache, if you add one, must live per request rather than per process, or one user\'s loader serves another user\'s data and never sees updates. The flush is O(n) in the batch size, and each load is O(1).',
+    ],
+    keyPoints: [
+      'Queues keys and schedules one flush per tick with queueMicrotask',
+      'Dedupes keys and settles callers by position: one result per key, same order',
+      'A missing result rejects only its own callers; a failed batch rejects all',
+      'Per-request cache, never per-process, to avoid cross-user leaks',
+      'O(1) per load, O(n) per flush',
+    ],
+    followUps: ['What would you do if batchFn returns rows in a different order than the keys?', 'How would you cap the batch size for a backend that limits IN lists?'],
+  },
+  {
+    id: 'backend-040',
+    round: 'backend',
+    category: 'Backend live coding',
+    scratch: true,
+    question: 'Build a circuit breaker around an async call: after a number of consecutive failures it opens and fails fast, after a cooldown it lets one trial call through, and the trial\'s result decides whether it closes or opens again.',
+    code: `// \`now\` is injectable so the checks below run without a real clock.
+class CircuitBreaker<T> {
+  constructor(
+    private fn: () => Promise<T>,
+    private failureThreshold: number,
+    private cooldownMs: number,
+    private now: () => number = Date.now,
+  ) {}
+
+  state(): 'closed' | 'open' | 'half-open' {
+    // TODO: open after failureThreshold consecutive failures; half-open once cooldownMs has passed since opening
+    return 'closed';
+  }
+
+  async call(): Promise<T> {
+    // TODO: open -> reject with new Error('circuit open') without calling fn
+    // TODO: half-open -> one trial call; success closes, failure reopens and restarts the cooldown
+    // TODO: closed -> call fn; a success resets the failure count
+    return this.fn();
+  }
+}
+
+let t = 0;
+let healthy = false;
+let hits = 0;
+const breaker = new CircuitBreaker(async () => {
+  hits++;
+  if (!healthy) throw new Error('down');
+  return 'ok';
+}, 2, 1000, () => t);
+const attempt = () => breaker.call().then((v) => v, (e: Error) => e.message);
+
+(async () => {
+  console.log(await attempt(), await attempt(), breaker.state()); // expect: down down open
+  console.log(await attempt(), hits); // expect: circuit open 2 (fn was not called)
+  t = 1000;
+  console.log(breaker.state()); // expect: half-open
+  console.log(await attempt(), breaker.state()); // expect: down open (trial failed, cooldown restarts)
+  t = 2000;
+  healthy = true;
+  console.log(await attempt(), breaker.state(), hits); // expect: ok closed 4
+})();`,
+    answer: [
+      'Name the three states and why the thing exists before writing it. Closed passes calls through and counts consecutive failures. Open rejects immediately without touching the dependency, because a service that is already failing gets worse when every caller keeps hammering it, and fast failures free your own threads and connections. Half-open, after the cooldown, lets one trial call test whether the dependency has recovered.',
+      'The state needs only three fields: a consecutive-failure count, the time it opened, and a flag for a trial in flight. state() can be derived: open if the count has reached the threshold and the cooldown has not passed, half-open if it has. In call, a success resets the count to zero and closes; a failure increments it and, at the threshold or after a failed trial, records openedAt as now, which restarts the cooldown.',
+      'Then say what production adds: while one trial is in flight, other callers in half-open should fail fast too, or the recovering service gets a flood; count failures in a time window rather than consecutively for noisy traffic; and decide which errors count, since a 404 is not the dependency being down. Put retries outside the breaker, so every attempt passes through it: failed attempts count toward opening it, and once it is open, retries fail fast instead of piling on. Each call is O(1).',
+    ],
+    keyPoints: [
+      'Names closed, open and half-open and what each protects',
+      'Open fails fast without calling the dependency',
+      'One trial in half-open; success closes, failure reopens with a fresh cooldown',
+      'Only dependency failures count, not client errors',
+      'O(1) per call with three fields of state',
+    ],
+    followUps: ['How would breaker state work across twenty instances of the service?', 'How do you pick the threshold and cooldown values?'],
   },
 ];
