@@ -22,6 +22,16 @@ const asText = (v: unknown): string => (typeof v === 'string' ? v : String(v));
 
 const READY_TIMEOUT_MS = 3000;
 
+// A logging loop (`while (true) console.log(i)`) posted lines faster than the tab could
+// copy an ever-growing array into an ever-growing live region, and it hung before Stop
+// could be clicked. The last MAX_LINES are kept, under one marker line.
+const MAX_LINES = 500;
+const TRUNCATED: Line = { level: 'warn', text: '… earlier output truncated' };
+const append = (line: Line) => (prev: Line[]): Line[] => {
+  const next = [...(prev[0] === TRUNCATED ? prev.slice(1) : prev), line];
+  return next.length > MAX_LINES ? [TRUNCATED, ...next.slice(-MAX_LINES)] : next;
+};
+
 // Two runners, one protocol. A console-only starter runs in a dedicated Worker
 // (src/sandbox/worker.ts): `terminate()` ends a synchronous `while (true)` in every
 // browser, and the worker script is a same-origin file the service worker precaches, so
@@ -65,9 +75,9 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
     if (typeof msg !== 'object' || msg === null) return;
     if (msg.type === 'log') {
       const level: LogLevel = msg.level === 'warn' || msg.level === 'error' || msg.level === 'info' ? msg.level : 'log';
-      setLines((prev) => [...prev, { level, text: asText(msg.text) }]);
+      setLines(append({ level, text: asText(msg.text) }));
     } else if (msg.type === 'error') {
-      setLines((prev) => [...prev, { level: 'error', text: `✗ ${asText(msg.text)}` }]);
+      setLines(append({ level: 'error', text: `✗ ${asText(msg.text)}` }));
     } else if (msg.type === 'done') {
       setStatus('done');
     }

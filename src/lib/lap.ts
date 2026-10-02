@@ -104,6 +104,12 @@ export function clearBaseline(key: string): void {
   baselineStore.remove(key);
 }
 
+// The questions a mock session drew, keyed `${role}:${presetId}`, so re-picking the preset
+// after a reload gets the same set back — and with it the same lap and baseline — rather
+// than a fresh draw. Reused only while that set still has a lap, like the baseline; one
+// entry per role and preset, overwritten by the next draw, so it needs no clearing.
+export const mockSets = keyedStore<string[]>('interview-prep:mock-set', (_key, v) => (isStringArray(v) ? v : undefined));
+
 // The 45-minute design session in progress: which prompt, when its clock started and
 // which phases are ticked. One slot, since only one runs at a time; Finish clears it.
 // Same per-device class as the lap — a position, not prep data — and the reason it
@@ -111,7 +117,7 @@ export function clearBaseline(key: string): void {
 // remounted the prompt at 45:00 with nothing ticked.
 const DESIGN_KEY = 'interview-prep:design-session';
 
-export interface DesignSessionState { questionId: string; startedAt: number; phases: number[] }
+interface DesignSessionState { questionId: string; startedAt: number; phases: number[] }
 
 const parseDesignSession = (_key: string, v: unknown): DesignSessionState | undefined => {
   if (typeof v !== 'object' || v === null) return undefined;

@@ -40,13 +40,12 @@
    on the theme root remaps every existing zinc/emerald/red/amber utility in place,
    so no component needs to know a second theme exists. The neutral ramp stays
    monotonic light -> dark so the light/dark halves of each pair keep their roles.
-   gruvbox-light shares this exact ramp: it isn't part of the `dark:` custom variant
-   below, so components render their undecorated (bg-zinc-50/text-zinc-900/etc)
-   classes instead of the dark: ones — which, on this same ramp, already reads as a
-   light theme (zinc-50 light bg, zinc-900 dark text) with no separate block needed. */
+   gruvbox-light shares this ramp: it isn't part of the `dark:` custom variant, so
+   components render their undecorated (bg-zinc-50/text-zinc-900/etc) classes instead
+   of the dark: ones — which, on this same ramp, already reads as a light theme. Only
+   the mid-tones that light text sits on are darkened, in the block after this one. */
 [data-theme='gruvbox'], [data-theme='gruvbox-light'] {
   --color-white: #fbf1c7;
-  --color-black: #1d2021;
   --color-zinc-50: #fbf1c7;
   --color-zinc-100: #ebdbb2;
   --color-zinc-200: #d5c4a1;
@@ -80,8 +79,21 @@
   --color-amber-100: #f9e2a0;
   --color-amber-400: #fabd2f;
   --color-amber-500: #fabd2f;
-  --color-amber-600: #d79921;
   --color-amber-900: #5c4a11;
+}
+
+/* The undecorated mid-tones on gruvbox-light's #fbf1c7 page were below AA: zinc-500
+   meta text 3.24:1 (2.68 on a zinc-100 badge), zinc-600 blurbs 4.29, the focus ring
+   ~1.8, and amber-700 fell back to Tailwind's orange. Darkened to gruvbox-light's own
+   tones: 5.74 (4.75 on the badge), 7.78, 4.29 (the ring needs 3) and 6.59. The ramps
+   stay monotonic: zinc-600 now equals -700, and emerald-600 (hover text, 2.73 before)
+   equals -700 (6.12). */
+[data-theme='gruvbox-light'] {
+  --color-zinc-500: #665c54;
+  --color-zinc-600: #504945;
+  --color-emerald-500: #79740e;
+  --color-emerald-600: #5f5c0e;
+  --color-amber-700: #7a4a05;
 }
 
 /* 18px on a default browser, but as a percentage so a reader who raised their own
@@ -94,13 +106,13 @@ body { @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 antia
 /* Pointer cursor on every clickable control, plus smooth color/border transitions on
    the hover states already defined per-component — one global rule instead of adding
    `cursor-pointer`/`transition-colors` to every button, link, and card individually. */
-button, a, label, select, summary, [role='button'], input[type='checkbox'], input[type='radio'] {
+button, a, label, select, summary, input[type='checkbox'], input[type='radio'] {
   cursor: pointer;
 }
-button:disabled, [role='button'][aria-disabled='true'] {
+button:disabled {
   cursor: not-allowed;
 }
-a, button, [role='button'], input, textarea, select {
+a, button, input, textarea, select {
   transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease, opacity 150ms ease;
 }
 

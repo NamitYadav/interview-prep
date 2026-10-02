@@ -147,6 +147,22 @@ describe('Practice', () => {
     }
   });
 
+  // The Category filter is a <select>: typing "n" to jump to an option skipped the
+  // question, and Space revealed the answer instead of opening the list.
+  test('keyboard shortcuts are ignored while a select has focus', () => {
+    render(<Harness />);
+    const select = document.createElement('select');
+    document.body.appendChild(select);
+    try {
+      fireEvent.keyDown(select, { key: 'n' });
+      fireEvent.keyDown(select, { key: ' ' });
+      expect(screen.getByText('First question?')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /reveal/i })).toBeInTheDocument();
+    } finally {
+      select.remove();
+    }
+  });
+
   // Rating the last question of a lap unmounts the radio that was just activated. Focus
   // fell to <body>: nothing announced, and Tab restarted from the top of the document.
   test('finishing a lap moves focus to the lap-done heading', async () => {

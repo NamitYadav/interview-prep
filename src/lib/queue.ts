@@ -10,15 +10,18 @@ import type { Progress, Question } from '../types';
 // is the whole benefit of spacing for this use case, without carrying a scheduler.
 export const SOLID_DECAY_MS = 7 * 24 * 60 * 60 * 1000;
 
-// Exported so the status filters name the same five states the queue orders by — a
-// Solid that has decayed back into the OK bucket filters as OK, exactly as the progress
+// Shared by the queue, the stats and the status filters, so they name the same states —
+// a Solid that has decayed back into the OK bucket filters as OK, exactly as the progress
 // bar and the category verdicts already report it.
-export const questionBucket = (progress: Progress, id: string, now: number): number => {
+const questionBucket = (progress: Progress, id: string, now: number): number => {
   const entry = progress[id];
   if (entry?.rating === 1) return 0;
   if (entry === undefined) return 1;
   if (entry.rating === 2) return 2;
-  return now - entry.lastSeen > SOLID_DECAY_MS ? 2 : 3;
+  // A negative age (clock skew, a hand-edited import) counts as decayed rather than
+  // staying Solid forever.
+  const age = now - entry.lastSeen;
+  return age < 0 || age > SOLID_DECAY_MS ? 2 : 3;
 };
 
 const lastSeen = (progress: Progress, id: string): number => progress[id]?.lastSeen ?? 0;

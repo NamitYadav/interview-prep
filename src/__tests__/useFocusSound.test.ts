@@ -24,6 +24,17 @@ describe('fillNoise', () => {
     expect(max).toBeGreaterThan(0.1);
   });
 
+  // The worst case for brown's gain: every draw the same sign drives `last` towards ±1,
+  // and 3.5x that used to clip (about 1 run in 6 by chance).
+  test('brown stays within [-1, 1] even on a run of maximal draws', () => {
+    for (const r of [0, 0.999_999]) {
+      vi.spyOn(Math, 'random').mockReturnValue(r);
+      const buf = fillNoise('brown', new Float32Array(N));
+      vi.restoreAllMocks();
+      expect(Math.max(...buf.map(Math.abs))).toBeLessThanOrEqual(1);
+    }
+  });
+
   test('pink is smoother than white, brown smoother than pink', () => {
     const white = roughness(fillNoise('white', new Float32Array(N)));
     const pink = roughness(fillNoise('pink', new Float32Array(N)));

@@ -7,7 +7,7 @@
 // deliberately do NOT use the panel scale — they read at the size of the page around them.
 export const pageButton = 'rounded border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800';
 
-export const panelControl = 'rounded border px-2 py-1 text-xs';
+const panelControl = 'rounded border px-2 py-1 text-xs';
 
 const idle = 'border-zinc-300 text-zinc-500 hover:border-emerald-500 dark:border-zinc-700 dark:text-zinc-400';
 const active = 'border-emerald-500 text-emerald-700 dark:text-emerald-400';

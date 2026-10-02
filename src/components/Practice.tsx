@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type Dispatch } from 'react';
-import type { Persisted, Question, Rating, RoleId, RoundId } from '../types';
+import type { Persisted, Question, Rating, RoleId } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { nextQuestion, roundStats } from '../lib/queue';
 import { rounds } from '../data';
@@ -11,7 +11,8 @@ import { QuestionCard } from './QuestionCard';
 // Single-character shortcuts on `window` are only safe while nothing else on the page
 // wants that key. A focused <audio> is the one that bit: the recording player owns the
 // arrow keys AND Space, and `n` while scrubbing your own take skipped the question.
-// contenteditable is here for the same reason a textarea is.
+// contenteditable is here for the same reason a textarea is, and a focused <select> (the
+// Category filter) for the same reason as <audio>: it owns its letters, arrows and Space.
 //
 // A checkbox or radio is an INPUT too, but it wants only Space and the arrows: ticking a
 // key point used to leave focus there and silently kill 1/2/3, which is exactly the
@@ -20,7 +21,7 @@ const isToggle = (target: EventTarget | null) =>
   target instanceof HTMLInputElement && (target.type === 'checkbox' || target.type === 'radio');
 const ownsKeys = (target: EventTarget | null) =>
   target instanceof HTMLElement && !isToggle(target) &&
-  (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT' ||
+  (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT' || target.tagName === 'SELECT' ||
     target.tagName === 'AUDIO' || target.tagName === 'VIDEO' ||
     // closest, not isContentEditable: it covers a focused descendant of an editable
     // host the same way, and unlike the property it is implemented in jsdom.
@@ -117,11 +118,7 @@ export function Practice({
 
   // The distinct rounds present in this set, in the order they first appear —
   // used for the "Round k of n" boundary banner in ordered (mock-session) mode.
-  const distinctRounds = useMemo(() => {
-    const seen = new Set<RoundId>();
-    for (const q of questions) seen.add(q.round);
-    return [...seen];
-  }, [questions]);
+  const distinctRounds = useMemo(() => [...new Set(questions.map((q) => q.round))], [questions]);
   const previousId = historyPos > 0 ? history[historyPos - 1] : undefined;
   const previousQuestion = useMemo(() => questions.find((q) => q.id === previousId), [questions, previousId]);
   // Only in `ordered` mode does "Round k of n" mean anything — a bucket-sorted set
@@ -272,10 +269,12 @@ export function Practice({
     // scrolling the page instead of being swallowed.
     if (!shortcuts) return;
     const onKey = (e: KeyboardEvent) => {
-      if (ownsKeys(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
-      const isButton = e.target instanceof HTMLElement && e.target.tagName === 'BUTTON';
+      // A held key auto-repeats: holding N burned through the lap.
+      if (e.repeat || ownsKeys(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
+      const isButton = e.target instanceof HTMLElement && (e.target.tagName === 'BUTTON' || e.target.tagName === 'SUMMARY');
       if (e.key === ' ') {
-        // Space activates a focused button and toggles a focused checkbox; both keep it.
+        // Space activates a focused button (or <summary>) and toggles a focused checkbox;
+        // all keep it.
         if (isButton || isToggle(e.target)) return;
         // Only claim Space as the reveal shortcut before reveal — once revealed, a
         // revealed answer can be long enough to scroll, and Space is the standard

@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type Dispatch } from 'react';
 import { BackLink } from './BackLink';
-import type { Persisted, Question, RoleId, Round, RoundId } from '../types';
+import type { Persisted, Question, Rating, RoleId, Round, RoundId } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { forRole } from '../data';
 import { Practice } from './Practice';
-import { clearBaseline, clearLap, lapKey, readBaseline, readLap, writeBaseline, type Baseline } from '../lib/lap';
+import { clearBaseline, clearLap, lapKey, mockSets, readBaseline, readLap, writeBaseline, type Baseline } from '../lib/lap';
+import { orderQueue } from '../lib/queue';
 
 /** No `blurb` means "name the active role's rounds this preset draws from" — one static
  *  string could not describe six roles' technical rounds without "live coding or
@@ -25,8 +26,10 @@ const PRESETS: Preset[] = [
   },
 ];
 
-// Plain array order, not weak-weighted — a real loop doesn't let you pick your
-// weakest questions in each round, so neither does this preset. Order comes from the
+// A random slice of each round, not weak-weighted — a real loop doesn't let you pick your
+// weakest questions in each round, so neither does this preset. Slicing in file order
+// served every session the same questions (backend was always its first six, all API
+// design); orderQueue over empty progress is a pure shuffle. Round order comes from the
 // role's own round sequence, not the composition literal's key order — those only
 // happen to match for Staff/Senior; Lead and Architect reorder rounds relative to it.
 function buildSet(composition: Preset['composition'], roleRounds: Round[], byRound: (r: RoundId) => Question[]): Question[] {
@@ -34,7 +37,7 @@ function buildSet(composition: Preset['composition'], roleRounds: Round[], byRou
   for (const round of roleRounds) {
     const count = composition[round.id];
     if (count === undefined) continue;
-    picked.push(...byRound(round.id).slice(0, count));
+    picked.push(...orderQueue(byRound(round.id), {}).slice(0, count));
   }
   return picked;
 }
@@ -54,7 +57,14 @@ export function MockSession({
   }, [finished]);
 
   const start = (preset: Preset) => {
-    const drill = buildSet(preset.composition, roleRounds, byRound);
+    const setKey = `${role}:${preset.id}`;
+    const ids = mockSets.read(setKey) ?? [];
+    const pool = roleRounds.flatMap((r) => byRound(r.id));
+    const previous = ids.flatMap((id) => pool.filter((q) => q.id === id));
+    const drill = previous.length === ids.length && readLap(lapKey(role, previous))
+      ? previous
+      : buildSet(preset.composition, roleRounds, byRound);
+    mockSets.write(setKey, drill.map((q) => q.id));
     const key = lapKey(role, drill);
     // Frozen on entry, like the weak drill: freezing the baseline too, so the recap can
     // tell "rated this session" apart from ratings you already had. Persisted rather
@@ -132,30 +142,20 @@ export function MockSession({
   const { preset, drill, baseline } = session;
 
   if (finished) {
-    // flatMap over the entry itself (not the question) so a mid-session Reset —
-    // which clears state.progress entirely — drops these rather than crashing on
-    // a non-null assertion against an entry that no longer exists.
-    const rated = drill.flatMap((q) => {
-      const e = state.progress[q.id];
-      // `seen` is bumped by every rating, so a count that differs from the baseline is
-      // exactly "rated since this session started" — and unlike the entry-identity
-      // check this replaces, it still means that after a reload.
-      return e && e.seen !== baseline[q.id] ? [e] : [];
-    });
-    const counts = { weak: 0, ok: 0, solid: 0 };
-    for (const entry of rated) {
-      if (entry.rating === 1) counts.weak++;
-      else if (entry.rating === 2) counts.ok++;
-      else counts.solid++;
-    }
-    // The counts say how it went; these say what to do about it. Weak stays open — it is
-    // the next day's list. Not-rated is what Finish skipped over, and after an early
-    // Finish that can be most of the set, so it folds away.
+    // `seen` is bumped by every rating, so a count that differs from the baseline is
+    // exactly "rated since this session started" — and unlike the entry-identity check
+    // this replaces, it still means that after a reload. Read off the entry itself, so a
+    // mid-session Reset (which empties state.progress) just drops these.
     const ratedThisSession = (q: Question) => {
       const e = state.progress[q.id];
       return e !== undefined && e.seen !== baseline[q.id];
     };
-    const weakQs = drill.filter((q) => ratedThisSession(q) && state.progress[q.id]?.rating === 1);
+    const rated = drill.filter(ratedThisSession);
+    const ratedAs = (r: Rating) => rated.filter((q) => state.progress[q.id]?.rating === r);
+    // The counts say how it went; these say what to do about it. Weak stays open — it is
+    // the next day's list. Not-rated is what Finish skipped over, and after an early
+    // Finish that can be most of the set, so it folds away.
+    const weakQs = ratedAs(1);
     const unratedQs = drill.filter((q) => !ratedThisSession(q));
     // The drill is already in the role's round order, so grouping is a filter per round.
     const groupByRound = (qs: Question[]) =>
@@ -175,7 +175,7 @@ export function MockSession({
         <BackLink />
         <h1 ref={recapRef} tabIndex={-1} className="text-2xl font-semibold">Session recap</h1>
         <p className="mb-1 text-sm text-zinc-600 dark:text-zinc-400">{preset.title} · {rated.length} of {drill.length} rated</p>
-        <p className="mb-4 text-sm">{counts.solid} solid · {counts.ok} ok · {counts.weak} weak</p>
+        <p className="mb-4 text-sm">{ratedAs(3).length} solid · {ratedAs(2).length} ok · {weakQs.length} weak</p>
         {weakQs.length > 0 && (
           <section className="mb-4">
             <h2 className="mb-2 font-medium">Rated weak</h2>

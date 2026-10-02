@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useEffect, useReducer } from 'react';
@@ -6,6 +6,7 @@ import type { Persisted, RoleId } from '../types';
 import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { MockSession } from '../components/MockSession';
+import { forRole } from '../data';
 
 function Harness({ role = 'staff' }: { role?: RoleId } = {}) {
   const [state, dispatch] = useReducer(reducer, EMPTY);
@@ -73,6 +74,25 @@ describe('MockSession', () => {
     await userEvent.click(screen.getByRole('button', { name: /finish session/i }));
     expect(screen.queryByRole('heading', { name: /rated weak/i })).not.toBeInTheDocument();
     expect(screen.getByText(/not rated \(28\)/i)).toBeInTheDocument();
+  });
+
+  // Slicing each round in file order served every session the same questions. A
+  // constant draw keeps file order; a falling one reverses the round, so a fresh
+  // session opens on its last question instead.
+  test('each new session draws its own slice of a round', async () => {
+    const hm = forRole('staff').byRound('hm');
+    const opener = async (draw: () => number) => {
+      vi.spyOn(Math, 'random').mockImplementation(draw);
+      const view = render(<Harness />);
+      await userEvent.click(screen.getByRole('button', { name: /technical rounds/i }));
+      const heading = screen.getByRole('heading', { level: 2 }).textContent;
+      view.unmount();
+      vi.restoreAllMocks();
+      return heading;
+    };
+    let n = 0;
+    expect(await opener(() => 0)).toBe(hm[0]!.question);
+    expect(await opener(() => 1 - ++n / 1e6)).toBe(hm[hm.length - 1]!.question);
   });
 
   test('full loop serves questions in round order, not re-shuffled across rounds', async () => {

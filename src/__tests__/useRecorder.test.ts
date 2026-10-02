@@ -10,7 +10,8 @@ class MockMediaRecorder {
   mimeType = 'audio/webm';
   ondataavailable: ((e: { data: Blob }) => void) | null = null;
   onstop: (() => void) | null = null;
-  constructor(public stream: MediaStream) {}
+  static last: MockMediaRecorder | null = null;
+  constructor(public stream: MediaStream) { MockMediaRecorder.last = this; }
   start() {
     this.state = 'recording';
   }
@@ -66,6 +67,19 @@ describe('useRecorder', () => {
     setup({ supported: false });
     const { result } = renderHook(() => useRecorder());
     expect(result.current.supported).toBe(false);
+  });
+
+  test('a recording that ends on its own (mic unplugged) flips back to idle', async () => {
+    const { getUserMedia } = setup();
+    const { result } = renderHook(() => useRecorder());
+    await act(async () => result.current.toggle());
+    await act(async () => MockMediaRecorder.last!.stop());
+    expect(result.current.recording).toBe(false);
+    expect(result.current.url).toBe('blob:mock-url');
+    // Intent was reset too, so the next press records again rather than "stopping".
+    await act(async () => result.current.toggle());
+    expect(getUserMedia).toHaveBeenCalledTimes(2);
+    expect(result.current.recording).toBe(true);
   });
 
   test('toggling on requests the mic; toggling off produces a url', async () => {

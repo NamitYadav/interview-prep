@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { STORAGE_KEY, emptyState } from '../lib/storage';
-import { ROLE_KEY } from '../hooks/useRole';
+import { ROLE_KEY } from '../hooks/prefs';
 import App from '../App';
 
 // Ties in the practice queue are broken at random (lib/queue); a constant draw keeps the
@@ -259,4 +259,19 @@ test('the backend round hash renders Home under a frontend role', () => {
   render(<App />);
   expect(screen.getByRole('heading', { name: /interview prep/i })).toBeInTheDocument();
   expect(screen.queryByRole('heading', { name: /backend & data/i })).not.toBeInTheDocument();
+});
+
+// Reset clears every stored lap, but the open drill still held its lap in memory and
+// wrote it back under the cleared key on the next keypress.
+test('Reset restarts a drill that is open behind the settings panel', async () => {
+  vi.spyOn(window, 'confirm').mockReturnValue(true);
+  window.location.hash = '#hm';
+  render(<App />);
+  await userEvent.keyboard('nn');
+  expect(screen.getByText(/^3 of \d+$/)).toBeInTheDocument();
+
+  await openSettings();
+  await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
+  expect(screen.getByText(/^1 of \d+$/)).toBeInTheDocument();
+  expect(localStorage.getItem('interview-prep:laps')).toBeNull();
 });

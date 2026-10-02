@@ -10,7 +10,7 @@ import { forRole, questions } from '../data';
 // Staff sees every question in these rounds (every tag includes Staff), so this is the whole bank's view.
 const questionsByRound = forRole('staff').byRound;
 import { LAST_EXPORT_KEY } from '../components/ExportImport';
-import { LOOP_DATE_KEY } from '../hooks/useLoopDate';
+import { LOOP_DATE_KEY } from '../hooks/prefs';
 import { Home } from '../components/Home';
 
 function Harness({ initial }: { initial: Persisted }) {
@@ -147,12 +147,13 @@ describe('Home', () => {
     expect(blurb.className).not.toMatch(/line-clamp/);
   });
 
-  // Seven cards in two columns left the last one alone on its row.
-  test('the last round card spans the full row', () => {
+  // Seven cards in two columns left the last one alone on its row. Only when it is odd:
+  // the 6- and 8-card grids used to span it too and leave a hole.
+  test('the last round card spans the full row when it is the odd one out', () => {
     render(<Harness initial={EMPTY} />);
     const cards = within(screen.getByRole('list')).getAllByRole('listitem');
     expect(cards.length % 2).toBe(1);
-    expect(cards[cards.length - 1]).toHaveClass('sm:last:col-span-2');
+    expect(cards[cards.length - 1]).toHaveClass('sm:last:odd:col-span-2');
   });
 
   // Sorted by urgency the wide card should be the most urgent round, not the least.
@@ -160,8 +161,8 @@ describe('Home', () => {
     localStorage.setItem(LOOP_DATE_KEY, '2030-01-01');
     render(<Harness initial={EMPTY} />);
     const cards = within(screen.getByRole('list')).getAllByRole('listitem');
-    expect(cards[0]).toHaveClass('sm:first:col-span-2');
-    expect(cards[cards.length - 1]).not.toHaveClass('sm:last:col-span-2');
+    expect(cards[0]).toHaveClass('sm:first:nth-last-[odd]:col-span-2');
+    expect(cards[cards.length - 1]).not.toHaveClass('sm:last:odd:col-span-2');
   });
 
   test('switching roles changes the visible round cards and readiness counts', async () => {

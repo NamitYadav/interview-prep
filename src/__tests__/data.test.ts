@@ -159,8 +159,8 @@ describe('question bank', () => {
         const run = new Function('React', '__render', compile(q.code!));
         expect(() => run(React, () => {}), q.id).not.toThrow();
       }
-      // Async pads (retry, idempotency) log after a microtask or a timer; flush both so
-      // their output lands on the spy and a rejected promise surfaces here.
+      // Async pads (the batchers, circuit breaker, idempotency) log after a microtask or a
+      // timer; flush both so their output lands on the spy and a rejected promise surfaces.
       await vi.runAllTimersAsync();
       expect(log).toHaveBeenCalled();
     } finally {

@@ -1,4 +1,5 @@
 import { transform } from 'sucrase';
+import type { FromSandbox } from './protocol';
 
 // The pad is the whole file: no imports, React's exports as globals. The classic JSX
 // runtime emits `React.createElement`, which resolves to the `React` parameter the sandbox
@@ -26,4 +27,16 @@ export function formatArgs(args: unknown[]): string {
       }
     })
     .join(' ');
+}
+
+// Both runners forward console output to the pad's Output panel the same way. The
+// original still runs so the browser devtools show it too.
+export function forwardConsole(post: (msg: FromSandbox) => void): void {
+  for (const level of ['log', 'info', 'warn', 'error'] as const) {
+    const original = console[level].bind(console);
+    console[level] = (...args: unknown[]) => {
+      original(...args);
+      post({ type: 'log', level, text: formatArgs(args) });
+    };
+  }
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 // Read-a-localStorage-preference-into-useState, then write it back on every change —
-// four hooks (theme, strict mode, shortcuts, loop date) each did this by hand, only
+// the theme, focus sound and prefs.ts hooks each did this by hand, only
 // differing in how a raw string decodes to a value and back. `decode`/`encode` are
 // expected to be stable, pure, module-level functions (each caller defines its own
 // once, outside the hook body) — that is what lets the write effect depend on `encode`

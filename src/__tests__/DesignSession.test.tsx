@@ -26,13 +26,11 @@ function Harness({ role = 'staff' }: { role?: RoleId } = {}) {
 }
 
 describe('DesignSession', () => {
-  // design-007/design-011 carry `deeper`; the session view rendered only `answer`,
-  // so that material was invisible in the one mode built for the design round.
-  // The prompt is picked at random, so assert against whichever one rendered —
-  // either way this is a real assertion, never a vacuous pass.
+  // The session view rendered only `answer`, so `deeper` was invisible in the one mode
+  // built for the design round. Round 6 trimmed the only design `deeper` blocks (they
+  // repeated the answer), so today this pins the other half: no empty section.
   test('shows deeper material exactly when the shown prompt has it', async () => {
     const design = questionsByRound('design');
-    expect(design.some((q) => q.deeper?.length), 'no design question carries deeper material').toBe(true);
     render(<Harness />);
     const shown = design.find((q) => screen.queryByText(q.question) !== null);
     expect(shown, 'no design prompt rendered').toBeDefined();
@@ -196,8 +194,8 @@ describe('design scratch survives a reload across attempts', () => {
     await userEvent.click(screen.getByRole('button', { name: /another prompt/i }));
 
     expect(screen.getByText(design1!.question)).toBeInTheDocument(); // attempt 2: design-001 again
-    expect(screen.getByLabelText(/scratch/i)).toHaveValue('v1'); // the earlier attempt's draft, reloaded
-    await userEvent.clear(screen.getByLabelText(/scratch/i));
+    // Finish cleared attempt 0's write-up: it used to prefill this fresh 45:00.
+    expect(screen.getByLabelText(/scratch/i)).toHaveValue('');
     await userEvent.type(screen.getByLabelText(/scratch/i), 'v2 overwrite');
     fireEvent.blur(screen.getByLabelText(/scratch/i));
     first.unmount(); // simulate a reload
@@ -234,6 +232,24 @@ describe('design scratch survives a reload across attempts', () => {
       expect(screen.getByRole('checkbox', { name: /requirements/i })).toBeChecked();
       act(() => vi.advanceTimersByTime(250));
       expect(screen.getByRole('timer')).toHaveTextContent(/time left: 35:00/i);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // The session restored however old it was, so a prompt abandoned days ago came back
+  // with its phases ticked and the clock stuck at 0:00.
+  test('a session abandoned long ago is not restored', () => {
+    persisted = EMPTY;
+    vi.useFakeTimers();
+    try {
+      const [, design2] = questionsByRound('design');
+      writeDesignSession({ questionId: design2!.id, startedAt: Date.now() - 24 * 60 * 60 * 1000, phases: [0] });
+      render(<ReloadableHarness />);
+      expect(screen.queryByText(design2!.question)).not.toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: /requirements/i })).not.toBeChecked();
+      act(() => vi.advanceTimersByTime(250));
+      expect(screen.getByRole('timer')).toHaveTextContent(/time left: 45:00/i);
     } finally {
       vi.useRealTimers();
     }

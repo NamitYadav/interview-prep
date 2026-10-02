@@ -80,6 +80,12 @@ export function useRecorder() {
         // handler fires. Without this the late handler cleared streamRef for the run
         // that replaced it, so unmount stopped no tracks and the mic stayed live.
         if (recorderRef.current !== recorder) return;
+        // No stop() ran (it bumps runId): the track ended on its own, e.g. the mic was
+        // unplugged. Without this the button stayed on "Stop recording".
+        if (runId === runIdRef.current) {
+          wantRecordingRef.current = false;
+          setRecording(false);
+        }
         streamRef.current = null;
         const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
         const next = URL.createObjectURL(blob);

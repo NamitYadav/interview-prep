@@ -252,6 +252,20 @@ describe('ScratchPad worker runner', () => {
     expect(screen.getByRole('status')).toBeEmptyDOMElement();
   });
 
+  // `while (true) console.log(i)` hung the tab before Stop could be clicked.
+  test('output keeps the latest lines under one truncation marker', () => {
+    render(<ScratchPad question={q} />);
+    fireEvent.click(screen.getByRole('button', { name: /run/i }));
+    act(() => {
+      for (let i = 0; i < 1200; i++) latest().onmessage?.({ data: { type: 'log', level: 'log', text: `line ${i}` } } as MessageEvent<unknown>);
+    });
+    const lines = screen.getByRole('log', { name: /output/i }).children;
+    expect(lines).toHaveLength(501);
+    expect(lines[0]).toHaveTextContent('earlier output truncated');
+    expect(lines[1]).toHaveTextContent('line 700');
+    expect(lines[500]).toHaveTextContent('line 1199');
+  });
+
   test('Run again terminates the previous worker so nothing leaks between attempts', () => {
     render(<ScratchPad question={q} />);
     fireEvent.click(screen.getByRole('button', { name: /run/i }));

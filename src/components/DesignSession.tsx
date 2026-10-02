@@ -5,7 +5,7 @@ import { forRole } from '../data';
 import { nextQuestion } from '../lib/queue';
 import { useQuestionTimer } from '../hooks/useQuestionTimer';
 import { DRAFT_SAVE_FAILED, useDraft } from '../hooks/useDraft';
-import { draftKey } from '../lib/drafts';
+import { clearDraft, draftKey } from '../lib/drafts';
 import { clearDesignSession, readDesignSession, writeDesignSession } from '../lib/lap';
 import { formatTime } from '../lib/format';
 import { RatingRadios } from './RatingRadios';
@@ -17,6 +17,9 @@ const PHASES = [
 ];
 
 const TARGET_SECONDS = 45 * 60;
+// Past twice its 45 minutes a session was abandoned, not paused: restoring it days later
+// showed a clock stuck at 0:00.
+const RESUMABLE_MS = 2 * TARGET_SECONDS * 1000;
 
 const noop = () => {};
 
@@ -34,7 +37,9 @@ export function DesignSession({ state, dispatch, role }: { state: Persisted; dis
   // weakest prompt, which is not necessarily the one whose clock is running.
   const [questionId, setQuestionId] = useState(() => {
     const saved = readDesignSession();
-    if (saved !== undefined && designQuestions.some((q) => q.id === saved.questionId)) return saved.questionId;
+    if (saved !== undefined && Date.now() - saved.startedAt < RESUMABLE_MS && designQuestions.some((q) => q.id === saved.questionId)) {
+      return saved.questionId;
+    }
     if (saved !== undefined) clearDesignSession();
     return pickQuestionId();
   });
@@ -43,10 +48,8 @@ export function DesignSession({ state, dispatch, role }: { state: Persisted; dis
   // relying on question.id alone wouldn't force a remount in that case.
   const [attempt, setAttempt] = useState(0);
 
-  const question = designQuestions.find((q) => q.id === questionId);
-  if (!question) {
-    return <p className="rounded border border-dashed p-6 text-center text-zinc-500 dark:text-zinc-400">No design prompts available.</p>;
-  }
+  // Only mounted on the design round of a role that has one, so there is always a prompt.
+  const question = designQuestions.find((q) => q.id === questionId)!;
 
   return (
     <DesignPrompt
@@ -77,17 +80,22 @@ function DesignPrompt({
   });
   const [startedAt] = useState(() => saved?.startedAt ?? Date.now());
   const [checkedPhases, setCheckedPhases] = useState<Set<number>>(() => new Set(saved?.phases));
+  const scratchKey = draftKey(question.id, 'design-scratch');
   useEffect(() => {
-    if (finished) clearDesignSession();
-    else writeDesignSession({ questionId: question.id, startedAt, phases: [...checkedPhases] });
-  }, [question.id, startedAt, checkedPhases, finished]);
+    // The write-up has done its job once the model answer is out; kept, it prefilled the
+    // next attempt at this prompt under a fresh 45:00.
+    if (finished) {
+      clearDesignSession();
+      clearDraft(scratchKey);
+    } else writeDesignSession({ questionId: question.id, startedAt, phases: [...checkedPhases] });
+  }, [question.id, scratchKey, startedAt, checkedPhases, finished]);
   // Keyed by question id alone, not id+attempt: `attempt` is an in-memory counter that
   // restarts at 0 on every fresh mount, so a reload after "Another prompt" (attempt 1+)
   // read back attempt 0's key — which for that question may hold nothing, or an older
   // draft — making whatever was written at the later attempt unreachable, not merely
   // reset. Keying by question id means a reload always finds this question's latest
   // scratch, and a genuinely fresh prompt naturally starts empty since it has none yet.
-  const scratch = useDraft(draftKey(question.id, 'design-scratch'));
+  const scratch = useDraft(scratchKey);
 
   // Finish unmounts the button under the user, dropping focus to <body> with nothing
   // announced. Send it to the heading of the answer that replaced the working area.

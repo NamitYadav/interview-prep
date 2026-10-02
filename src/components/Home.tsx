@@ -3,7 +3,7 @@ import type { Persisted, RoleId } from '../types';
 import { forRole } from '../data';
 import { roles } from '../data/roles';
 import { roundStats } from '../lib/queue';
-import { useLoopDate } from '../hooks/useLoopDate';
+import { useLoopDate } from '../hooks/prefs';
 import { ExportButton, useLastExport } from './ExportImport';
 import { ProgressBar, plural, statsCaption } from './ProgressBar';
 import { Select } from './Select';
@@ -124,12 +124,13 @@ export function Home({ state, role, setRole }: { state: Persisted; role: RoleId;
         </p>
       )}
 
-      {/* Seven cards in two columns: the odd one out spans the row rather than sitting alone.
-          In data order that is the last card; sorted by urgency it is the first, so the
+      {/* Two columns, and with an odd card count (six to eight rounds, by role) the odd one out
+          spans the row rather than sitting alone; an even count leaves no hole to fill. In
+          data order that is the last card; sorted by urgency it is the first, so the
           widest card is the round that needs the most work, not the least. */}
       <ol className="grid gap-3 sm:grid-cols-2">
         {orderedCards.map(({ round, index, stats: s }) => (
-          <li key={round.id} className={`flex ${upcoming ? 'sm:first:col-span-2' : 'sm:last:col-span-2'}`}>
+          <li key={round.id} className={`flex ${upcoming ? 'sm:first:nth-last-[odd]:col-span-2' : 'sm:last:odd:col-span-2'}`}>
             <a href={`#${round.id}`} className={`w-full text-left ${cardLink}`}>
               {!upcoming && <div className="mb-1 text-xs text-zinc-500 dark:text-zinc-400">Round {index + 1}</div>}
               <h2 className="font-medium">{round.title}</h2>
@@ -158,7 +159,7 @@ export function Home({ state, role, setRole }: { state: Persisted; role: RoleId;
         </a>
         <a href="#stories" className={drillLink}>
           <span className="font-medium">My stories</span>
-          <span className={drillMeta}>{stories.length} {stories.length === 1 ? 'story' : 'stories'} · {neverRehearsed} never rehearsed</span>
+          <span className={drillMeta}>{plural(stories.length, 'story', 'stories')} · {neverRehearsed} never rehearsed</span>
         </a>
         <a href="#search" className={drillLink}>
           <span className="font-medium">Search</span>

@@ -26,7 +26,7 @@ export function ProgressBar({ stats, label }: { stats: RoundStats; label: string
   );
 }
 
-export const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+export const plural = (n: number, word: string, many = `${word}s`) => `${n} ${n === 1 ? word : many}`;
 
 /** Only the numbers that change what you do next: weak, unseen, and the clock. A past
  *  loop date is the caller's to leave out — "-3 days" is not a countdown. */

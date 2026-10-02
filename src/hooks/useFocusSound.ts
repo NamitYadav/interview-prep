@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useStoredValue } from './useStoredValue';
 
 export const SOUNDS = ['white', 'pink', 'brown'] as const;
-export type Sound = (typeof SOUNDS)[number];
+type Sound = (typeof SOUNDS)[number];
 
 /** Fills `out` with one loop of noise. Pure; seeded only by Math.random. */
 export function fillNoise(kind: Sound, out: Float32Array): Float32Array {
@@ -26,12 +26,13 @@ export function fillNoise(kind: Sound, out: Float32Array): Float32Array {
     }
     return out;
   }
-  // Brown: a leaky integrator over white, scaled up so it isn't whisper-quiet.
+  // Brown: a leaky integrator over white, scaled up so it isn't whisper-quiet. `last` can
+  // drift towards ±1, so the gain alone overshoots on a rare run; clamped back into [-1, 1].
   let last = 0;
   for (let i = 0; i < out.length; i++) {
     const w = Math.random() * 2 - 1;
     last = (last + 0.02 * w) / 1.02;
-    out[i] = last * 3.5;
+    out[i] = Math.max(-1, Math.min(1, last * 3.5));
   }
   return out;
 }
@@ -43,7 +44,7 @@ const LOOP_SECONDS = 2;
 
 export type SoundChoice = Sound | 'off';
 
-// Per-device preferences, same shape as useTheme/useStrictMode: not prep data, so they stay
+// Per-device preferences, same shape as useTheme and prefs.ts: not prep data, so they stay
 // out of export/import backups.
 const decodeSound = (raw: string | null): SoundChoice =>
   (SOUNDS as readonly string[]).includes(raw ?? '') ? (raw as Sound) : 'off';

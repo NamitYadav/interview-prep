@@ -3,14 +3,6 @@
 // differing only in what an entry looks like and whether it's capped. One corrupt or
 // unrecognized entry drops just that entry, not the whole store; a store the caller
 // never opts into capping (`options.max` unset) never evicts anything.
-export interface KeyedStore<T> {
-  read(key: string): T | undefined;
-  /** Returns false if the write could not be stored (quota exceeded, storage
-   *  unavailable), so a caller that needs to tell the user can. */
-  write(key: string, value: T): boolean;
-  remove(key: string): void;
-  clear(): void;
-}
 
 export function keyedStore<T>(
   storageKey: string,
@@ -19,7 +11,7 @@ export function keyedStore<T>(
   // baselines has no use for and simply ignores.
   parseEntry: (key: string, value: unknown) => T | undefined,
   options: { max?: number; recencyOf?: (v: T) => number } = {},
-): KeyedStore<T> {
+) {
   const readAll = (): Record<string, T> => {
     try {
       const raw = localStorage.getItem(storageKey);
@@ -38,9 +30,11 @@ export function keyedStore<T>(
   };
 
   return {
-    read: (key) => readAll()[key],
+    read: (key: string): T | undefined => readAll()[key],
 
-    write(key, value) {
+    /** Returns false if the write could not be stored (quota exceeded, storage
+     *  unavailable), so a caller that needs to tell the user can. */
+    write(key: string, value: T): boolean {
       try {
         const all = { ...readAll(), [key]: value };
         const kept = options.max !== undefined && options.recencyOf
@@ -57,7 +51,7 @@ export function keyedStore<T>(
       }
     },
 
-    remove(key) {
+    remove(key: string) {
       try {
         const all = readAll();
         if (!(key in all)) return;
