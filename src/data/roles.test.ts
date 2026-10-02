@@ -16,10 +16,18 @@ describe('role catalogue', () => {
     }
   });
 
-  test('hoe appears in every loop except senior', () => {
+  test('hoe appears in every loop except the two senior ones', () => {
     for (const role of roles) {
-      if (role.id === 'senior') expect(role.rounds).not.toContain('hoe');
+      if (role.id === 'senior' || role.id === 'fs-senior') expect(role.rounds, role.id).not.toContain('hoe');
       else expect(role.rounds, role.id).toContain('hoe');
+    }
+  });
+
+  test('only the full-stack loops have a backend round, and they keep live coding', () => {
+    for (const role of roles) {
+      const fullStack = role.id === 'fs-senior' || role.id === 'fs-staff';
+      expect(role.rounds.includes('backend'), role.id).toBe(fullStack);
+      if (fullStack) expect(role.rounds, role.id).toContain('coding');
     }
   });
 
@@ -73,5 +81,21 @@ describe('forRole', () => {
 
   test('calling forRole twice with the same id returns the same memoised object', () => {
     expect(forRole('staff')).toBe(forRole('staff'));
+  });
+
+  // Full-stack loops are "the frontend loop plus backend". The existing roles tags all
+  // list staff, so a missed 'fs-staff' on one of them would silently drop a staff-scope
+  // question from Staff full-stack — this compares the two sets id for id.
+  test.each([['fs-staff', 'staff'], ['fs-senior', 'senior']] as const)(
+    '%s sees exactly what %s sees, plus backend',
+    (fs, fe) => {
+      const fsIds = forRole(fs).questions.filter((q) => q.round !== 'backend').map((q) => q.id);
+      expect(fsIds).toEqual(forRole(fe).questions.map((q) => q.id));
+      expect(forRole(fs).byRound('backend').length).toBeGreaterThanOrEqual(36);
+    },
+  );
+
+  test('full-stack round order puts backend between live coding and system design', () => {
+    expect(forRole('fs-staff').rounds.map((r) => r.id)).toEqual(['hr', 'hm', 'coding', 'backend', 'design', 'case', 'debrief', 'hoe']);
   });
 });

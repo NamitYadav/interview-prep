@@ -8,9 +8,10 @@ import { debrief } from './debrief';
 import { hoe } from './hoe';
 import { lead } from './lead';
 import { arch } from './arch';
+import { backend } from './backend';
 import { roles } from './roles';
 
-export const ROUND_IDS = ['hr', 'hm', 'coding', 'design', 'case', 'debrief', 'hoe', 'lead', 'arch'] as const satisfies readonly RoundId[];
+export const ROUND_IDS = ['hr', 'hm', 'coding', 'design', 'case', 'debrief', 'hoe', 'lead', 'arch', 'backend'] as const satisfies readonly RoundId[];
 
 export const ROUTES = [...ROUND_IDS, 'weak', 'notes', 'stories', 'mock', 'search', 'print'] as const satisfies readonly Route[];
 
@@ -24,11 +25,12 @@ export const rounds: Round[] = [
   { id: 'hoe', title: 'Head of engineering', blurb: 'Vision, org impact, culture, and the questions you ask them.', targetSeconds: 150 },
   { id: 'lead', title: 'Tech lead round', blurb: 'People management, delivery, hiring, conflict, and running a team\'s technical direction.', targetSeconds: 150 },
   { id: 'arch', title: 'Architecture deep-dive', blurb: 'Cross-team platform decisions, migration strategy, ADRs, design-system governance, build/runtime architecture.', targetSeconds: 240 },
+  { id: 'backend', title: 'Backend & data', blurb: 'APIs, Postgres, caching, queues, auth, Node and Go runtimes, and backend live coding.', targetSeconds: 180 },
 ];
 
 // Only forRole() reads this directly; there is no unscoped per-round accessor on
 // purpose — one would show another role's questions and nothing would fail.
-export const questions: Question[] = [...hr, ...hm, ...coding, ...design, ...caseStudy, ...debrief, ...hoe, ...lead, ...arch];
+export const questions: Question[] = [...hr, ...hm, ...coding, ...design, ...caseStudy, ...debrief, ...hoe, ...lead, ...arch, ...backend];
 
 // Categories whose questions are naturally answered with a real story rather than
 // a technical explanation — QuestionCard offers the story bank pre-reveal for these.

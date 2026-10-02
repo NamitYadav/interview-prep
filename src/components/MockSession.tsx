@@ -7,7 +7,7 @@ import { Practice } from './Practice';
 import { clearBaseline, clearLap, lapKey, readBaseline, readLap, writeBaseline, type Baseline } from '../lib/lap';
 
 /** No `blurb` means "name the active role's rounds this preset draws from" — one static
- *  string could not describe four roles' technical rounds without "live coding or
+ *  string could not describe six roles' technical rounds without "live coding or
  *  architecture" hedging. */
 interface Preset { id: string; title: string; blurb?: string; composition: Partial<Record<RoundId, number>> }
 
@@ -16,12 +16,12 @@ const PRESETS: Preset[] = [
     id: 'full-loop',
     title: 'Full loop',
     blurb: 'A slice of every round, in round order.',
-    composition: { hr: 4, hm: 6, coding: 4, design: 3, case: 4, debrief: 4, hoe: 3, lead: 3, arch: 3 },
+    composition: { hr: 4, hm: 6, coding: 4, design: 3, case: 4, debrief: 4, hoe: 3, lead: 3, arch: 3, backend: 4 },
   },
   {
     id: 'technical',
     title: 'Technical rounds',
-    composition: { hm: 8, coding: 6, design: 6, arch: 6 },
+    composition: { hm: 8, coding: 6, design: 6, arch: 6, backend: 6 },
   },
 ];
 

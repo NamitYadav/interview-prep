@@ -229,6 +229,29 @@ describe('role-scoped mock sessions', () => {
     expect(screen.getByText(/0 of 25 rated/i)).toBeInTheDocument();
   });
 
+  test("Senior full-stack's Full loop adds a backend slice between live coding and system design", async () => {
+    render(<Harness role="fs-senior" />);
+    await userEvent.click(screen.getByRole('button', { name: /full loop/i }));
+    // hr:4 + hm:6 + coding:4 + backend:4 + design:3 + case:4 + debrief:4 = 29.
+    expect(screen.getByText(/29 questions/i)).toBeInTheDocument();
+
+    const bannersSeen: string[] = [];
+    for (let i = 0; i < 29; i++) {
+      const banner = screen.queryByText(/^Round \d+ of \d+/);
+      if (banner?.textContent) bannersSeen.push(banner.textContent);
+      const skipBtn = screen.queryByRole('button', { name: /^skip/i });
+      if (!skipBtn) break;
+      await userEvent.click(skipBtn);
+    }
+
+    const coding = bannersSeen.findIndex((t) => /live coding/i.test(t));
+    const backend = bannersSeen.findIndex((t) => /backend & data/i.test(t));
+    const design = bannersSeen.findIndex((t) => /system design/i.test(t));
+    expect(coding).toBeGreaterThanOrEqual(0);
+    expect(backend).toBeGreaterThan(coding);
+    expect(design).toBeGreaterThan(backend);
+  });
+
   // Lead's own loop order is hr, hm, coding, design, lead, hoe — hoe comes LAST. The old
   // buildSet iterated the composition literal's key order instead (..., hoe, lead, ...),
   // so Lead saw hoe questions before its own lead-round questions. Walking the whole lap

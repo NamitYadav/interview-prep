@@ -1,9 +1,10 @@
 # Interview Prep
 
-Interactive mock-interview drill for frontend engineer loops in Berlin / EU — Senior,
-Staff, Lead or Architect. Nine rounds across the four loops, 355 curated questions
-with model answers, key points and likely follow-ups. Reveal, rate yourself, and
-weak questions come back first.
+Interactive mock-interview drill for frontend and full-stack engineer loops in
+Berlin / EU — Senior, Staff, Lead or Architect frontend, or Senior and Staff
+full-stack. Ten rounds across the six loops, 393 curated questions with model
+answers, key points and likely follow-ups. Reveal, rate yourself, and weak
+questions come back first.
 
 **Live:** https://namityadav.github.io/interview-prep/
 
@@ -18,6 +19,8 @@ between roles; only the round list and the visible question set change.
 | Staff frontend | HR, hiring manager, live coding, system design, case study, debrief, head of engineering |
 | Lead frontend | HR, hiring manager, live coding, system design, tech lead round, head of engineering |
 | Frontend architect | HR, hiring manager, architecture deep-dive, system design, case study, debrief, head of engineering |
+| Senior full-stack | HR, hiring manager, live coding, backend & data, system design, case study, debrief |
+| Staff full-stack | HR, hiring manager, live coding, backend & data, system design, case study, debrief, head of engineering |
 
 ## Rounds
 1. HR screen (compensation, negotiation, German employment basics)
@@ -33,6 +36,9 @@ between roles; only the round list and the visible question set change.
 9. Architecture deep-dive (Architect only) — cross-team platform, migration strategy,
    decision records & governance, design-system ownership, build & runtime architecture,
    trade-off probes
+10. Backend & data (full-stack only) — API design, data & Postgres, caching & performance,
+    async & messaging, auth & security, Node & Go runtime, full-stack design, backend live
+    coding (runnable TS pads; Go appears as read-only snippets)
 
 ## Ways to drill
 - **Role switcher** — the Role select on the home screen swaps the active loop
@@ -169,7 +175,8 @@ Edit `src/data/<round>.ts`. Ids are `<round>-<nnn>`. A question can carry an
 optional `roles: RoleId[]` to opt out of roles whose loop would otherwise show
 it (e.g. a platform-scoped question tagged away from Senior) — leave it off to
 show the question to every role whose loop includes its round. `npm test`
-validates shape and uniqueness.
+validates shape and uniqueness. A tag that lists `staff` also lists `fs-staff`, so
+Staff full-stack keeps seeing everything Staff does.
 
 ## Development
 ```bash

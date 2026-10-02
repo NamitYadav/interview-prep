@@ -252,3 +252,11 @@ test('a round hash outside the active role\'s loop renders Home instead', () => 
   expect(screen.getByRole('heading', { name: /interview prep/i })).toBeInTheDocument();
   expect(screen.queryByRole('heading', { name: /head of engineering/i })).not.toBeInTheDocument();
 });
+
+test('the backend round hash renders Home under a frontend role', () => {
+  localStorage.setItem(ROLE_KEY, 'staff');
+  window.location.hash = '#backend';
+  render(<App />);
+  expect(screen.getByRole('heading', { name: /interview prep/i })).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: /backend & data/i })).not.toBeInTheDocument();
+});

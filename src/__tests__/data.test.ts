@@ -1,15 +1,23 @@
-import { describe, expect, test } from 'vitest';
+import * as React from 'react';
+import { describe, expect, test, vi } from 'vitest';
 import { ROUND_IDS, STORY_CATEGORIES, questions, rounds } from '../data';
 import { ROLE_IDS, roles } from '../data/roles';
 import { MAX_DRAFTS } from '../lib/drafts';
 import { MAX_LAPS } from '../lib/lap';
+import { compile } from '../sandbox/compile';
 import type { RoundId } from '../types';
 
-const ID_RE = /^(hr|hm|coding|design|case|debrief|hoe|lead|arch)-\d{3}$/;
+const ID_RE = /^(hr|hm|coding|design|case|debrief|hoe|lead|arch|backend)-\d{3}$/;
 
 describe('question bank', () => {
   test('rounds cover every RoundId once', () => {
     expect(rounds.map((r) => r.id).sort()).toEqual([...ROUND_IDS].sort());
+  });
+
+  test('the backend round is catalogued with the live-coding target', () => {
+    const backend = rounds.find((r) => r.id === 'backend');
+    expect(backend?.title).toBe('Backend & data');
+    expect(backend?.targetSeconds).toBe(180);
   });
 
   test('ids are unique and well-formed', () => {
@@ -38,7 +46,7 @@ describe('question bank', () => {
   // A floor against accidental loss, not a growth target. Round 4 deliberately cut 17
   // questions that were fully subsumed by a named sibling; these are the post-cut counts.
   test('every round keeps at least its post-round-4 question count', () => {
-    const min: Record<RoundId, number> = { hr: 36, hm: 99, coding: 35, design: 30, case: 30, debrief: 32, hoe: 33, lead: 30, arch: 30 };
+    const min: Record<RoundId, number> = { hr: 36, hm: 99, coding: 35, design: 30, case: 30, debrief: 32, hoe: 33, lead: 30, arch: 30, backend: 36 };
     for (const id of ROUND_IDS) {
       expect(questions.filter((q) => q.round === id).length, id).toBeGreaterThanOrEqual(min[id]);
     }
@@ -133,6 +141,38 @@ describe('question bank', () => {
       maxSets = Math.max(maxSets, sets);
     }
     expect(MAX_LAPS).toBeGreaterThanOrEqual(maxSets);
+  });
+
+  // Backend pads are console-only, so they run in the Web Worker: no DOM, no Node
+  // built-ins. jsdom would happily provide `document` here, so the source check is what
+  // catches a pad that would only fail in the real worker.
+  test('every backend pad is worker-safe and runs its starter to completion', async () => {
+    const pads = questions.filter((q) => q.round === 'backend' && q.scratch);
+    expect(pads.length).toBe(6);
+    vi.useFakeTimers();
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    try {
+      for (const q of pads) {
+        expect(q.preview, q.id).toBeUndefined();
+        expect(q.needsDom, q.id).toBeUndefined();
+        expect(q.code, q.id).not.toMatch(/\bnode:|\brequire\(|\bdocument\.|\bwindow\.|^\s*import\s/m);
+        const run = new Function('React', '__render', compile(q.code!));
+        expect(() => run(React, () => {}), q.id).not.toThrow();
+      }
+      // Async pads (retry, idempotency) log after a microtask or a timer; flush both so
+      // their output lands on the spy and a rejected promise surfaces here.
+      await vi.runAllTimersAsync();
+      expect(log).toHaveBeenCalled();
+    } finally {
+      log.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  test('Go appears only as read-only code', () => {
+    for (const q of questions.filter((x) => x.round === 'backend' && x.code && /^\s*(package|func) /m.test(x.code))) {
+      expect(q.scratch, `${q.id} is Go and cannot run`).toBeUndefined();
+    }
   });
 
   test('every STORY_CATEGORIES entry matches at least one real question category', () => {
