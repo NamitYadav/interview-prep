@@ -1,7 +1,7 @@
 {
   "name": "Interview Prep",
   "short_name": "Interview Prep",
-  "description": "Mock-interview drill for frontend engineer loops.",
+  "description": "Mock-interview drill for frontend and full-stack engineer loops.",
   "start_url": "/interview-prep/",
   "scope": "/interview-prep/",
   "display": "standalone",
