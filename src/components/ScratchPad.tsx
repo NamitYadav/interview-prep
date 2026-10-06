@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import type { Question } from '../types';
+import type { CaseKind, Question } from '../types';
 import { DRAFT_SAVE_FAILED, useDraft } from '../hooks/useDraft';
 import { draftKey } from '../lib/drafts';
 import type { FromSandbox, LogLevel, ToSandbox } from '../sandbox/protocol';
+import { buildCases, score, type CaseResult, type Score } from '../lib/grade';
+import { gradeRun } from '../lib/gradeRun';
+import { GradeReport } from './GradeReport';
 
 // Same host as the app, so it works in dev, `vite preview` and on GitHub Pages alike.
 // `allow-scripts allow-forms` without `allow-same-origin` makes the frame's origin opaque:
@@ -32,6 +35,12 @@ const append = (line: Line) => (prev: Line[]): Line[] => {
   return next.length > MAX_LINES ? [TRUNCATED, ...next.slice(-MAX_LINES)] : next;
 };
 
+const EXAMPLES: ReadonlySet<CaseKind> = new Set(['example']);
+const exampleLine = (r: CaseResult): Line =>
+  r.status === 'pass'
+    ? { level: 'log', text: `✓ ${r.name} (${Math.round(r.ms ?? 0)}ms)` }
+    : { level: 'warn', text: `✗ ${r.name}: ${r.status === 'fail' ? `expected ${r.expected}, got ${r.got}` : r.detail}` };
+
 // Two runners, one protocol. A console-only starter runs in a dedicated Worker
 // (src/sandbox/worker.ts): `terminate()` ends a synchronous `while (true)` in every
 // browser, and the worker script is a same-origin file the service worker precaches, so
@@ -45,8 +54,18 @@ const append = (line: Line) => (prev: Line[]): Line[] => {
 // also has an opaque origin the service worker cannot serve, so a preview Run needs the
 // network. No cheap upgrade path: a preview needs a DOM, and a worker has none. This stays
 // until a preview starter's freeze actually bites.
-export function ScratchPad({ question, shortcuts = false }: { question: Question; shortcuts?: boolean }) {
-  const scratch = useDraft(draftKey(question.id, 'scratch'), question.code ?? '');
+export function ScratchPad({
+  question, shortcuts = false, draftField = 'scratch', submit = true, onGraded,
+}: {
+  question: Question; shortcuts?: boolean;
+  /** Draft slot; the timed test uses its own so a test starts from the blank starter. */
+  draftField?: string;
+  /** Show Submit (hidden tests). The timed test grades at the end instead. */
+  submit?: boolean;
+  onGraded?: (s: Score) => void;
+}) {
+  const scratch = useDraft(draftKey(question.id, draftField), question.code ?? '');
+  const grader = question.grader;
   // Decided per question, not per run: the iframe is mounted (hidden) for the frame path
   // and absent for the worker path. jsdom has no Worker, so tests exercise the frame
   // unless they install one.
@@ -66,6 +85,8 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
   // it fails to load) it was a bright empty rectangle under the editor in the dark theme.
   const [frameReady, setFrameReady] = useState(false);
   const runRef = useRef<HTMLButtonElement>(null);
+  const cancelGrade = useRef<(() => void) | null>(null);
+  const [report, setReport] = useState<CaseResult[] | null>(null);
 
   // Output handling shared by both runners. The source proves where a message came from,
   // not what it is: pad code has postMessage and can send anything. A non-string `text`
@@ -105,6 +126,7 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
   useEffect(() => () => {
     if (timer.current) clearTimeout(timer.current);
     workerRef.current?.terminate();
+    cancelGrade.current?.();
   }, []);
 
   const reload = useCallback((next: ToSandbox | null) => {
@@ -145,9 +167,43 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
     workerRef.current = worker;
   };
 
-  const run = () => (inWorker ? runInWorker(scratch.draft) : reload({ type: 'run', code: scratch.draft, preview: question.preview }));
+  // Graded questions never touch the console runner: Run executes the example cases with
+  // your console shown, Submit executes every case with it muted and renders the report.
+  const runGrader = (all: boolean) => {
+    cancelGrade.current?.();
+    setLines([]);
+    setReport(null);
+    setStatus('running');
+    cancelGrade.current = gradeRun(scratch.draft, grader!.fn, buildCases(grader!, question.id, all ? undefined : EXAMPLES), {
+      console: !all,
+      onLog: (level, text) => setLines(append({ level, text })),
+      onResult: all ? undefined : (r) => setLines(append(exampleLine(r))),
+      onLoadError: (text) => {
+        cancelGrade.current = null;
+        setLines(append({ level: 'error', text: `✗ ${text}` }));
+        setStatus('done');
+      },
+      onDone: (results) => {
+        cancelGrade.current = null;
+        setStatus('done');
+        if (!all) return;
+        setReport(results);
+        onGraded?.(score(results));
+      },
+    });
+  };
+
+  const run = () => {
+    if (grader) runGrader(false);
+    else if (inWorker) runInWorker(scratch.draft);
+    else reload({ type: 'run', code: scratch.draft, preview: question.preview });
+  };
   const stop = () => {
-    if (inWorker) {
+    if (grader) {
+      cancelGrade.current?.();
+      cancelGrade.current = null;
+      setStatus('idle');
+    } else if (inWorker) {
       stopWorker();
       setStatus('idle');
     } else {
@@ -196,11 +252,14 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <button ref={runRef} type="button" onClick={run} className={button}>
-          Run {shortcuts && <kbd className="ml-2 text-xs opacity-70 [@media(hover:none)]:hidden">{modKey}↩</kbd>}
+          {grader ? 'Run examples' : 'Run'} {shortcuts && <kbd className="ml-2 text-xs opacity-70 [@media(hover:none)]:hidden">{modKey}↩</kbd>}
         </button>
         <button type="button" onClick={stop} className={button}>Stop</button>
+        {grader && submit && (
+          <button type="button" onClick={() => runGrader(true)} className={button}>Submit</button>
+        )}
         <span role="status" className="text-xs text-zinc-500 dark:text-zinc-400">
-          {status === 'running' ? 'Running…' : status === 'done' && lines.length === 0 ? 'Ran — no output' : ''}
+          {status === 'running' ? (grader ? 'Grading…' : 'Running…') : status === 'done' && lines.length === 0 && !report ? 'Ran — no output' : ''}
         </span>
       </div>
 
@@ -215,9 +274,10 @@ export function ScratchPad({ question, shortcuts = false }: { question: Question
           <div key={i} className={l.level === 'warn' || l.level === 'error' ? warnText : undefined}>{l.text}</div>
         ))}
       </div>
+      {report && <GradeReport results={report} />}
 
       {/* Kept in the DOM even when hidden: the code still runs there. */}
-      {!inWorker && (
+      {!inWorker && !grader && (
         <iframe
           key={frameKey}
           ref={iframeRef}

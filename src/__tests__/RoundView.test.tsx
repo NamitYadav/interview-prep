@@ -174,4 +174,17 @@ describe('RoundView', () => {
     render(<DesignHarness />);
     expect(screen.getByRole('tab', { name: /45-min prompt/i })).toBeInTheDocument();
   });
+
+  test('the algorithms round gets a third "Timed test" tab; design does not', () => {
+    function RoundHarness({ roundId }: { roundId: 'algo' | 'design' }) {
+      const [state, dispatch] = useReducer(reducer, EMPTY);
+      return <RoundView roundId={roundId} state={state} dispatch={dispatch} strictMode={false} role="staff" />;
+    }
+    const { unmount } = render(<RoundHarness roundId="design" />);
+    expect(screen.queryByRole('tab', { name: /timed test/i })).not.toBeInTheDocument();
+    unmount();
+    render(<RoundHarness roundId="algo" />);
+    expect(screen.getByRole('tab', { name: /timed test/i })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: /45-min prompt/i })).not.toBeInTheDocument();
+  });
 });

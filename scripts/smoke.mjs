@@ -1,6 +1,8 @@
 // Real-browser smoke check for the parts jsdom cannot exercise: the opaque-origin sandbox
 // frame (CORS on module scripts, postMessage round trip), the console-only Worker runner
-// (output, and that `terminate()` really ends an infinite loop), and the built app booting.
+// (output, and that `terminate()` really ends an infinite loop), the hidden-test grader Worker
+// (one case answered, and a quadratic solution still spinning at the per-case limit), and the
+// built app booting.
 //
 // Serves `dist/` the way GitHub Pages does (every asset with `Access-Control-Allow-Origin:
 // *`), adds a harness page on the same origin, opens it in a headless browser and waits for
@@ -36,6 +38,12 @@ if (!workerAsset) {
   process.exit(1);
 }
 
+const graderAsset = readdirSync(join(DIST, 'assets')).find((f) => /^grader-.*\.js$/.test(f));
+if (!graderAsset) {
+  console.error('No grader-*.js in dist/assets — the hidden-test runner did not build.');
+  process.exit(1);
+}
+
 const TYPES = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.woff2': 'font/woff2', '.txt': 'text/plain',
@@ -44,6 +52,10 @@ const TYPES = {
 // The pad's code, as the app would send it: TS + JSX, no imports.
 const FRAME_CODE = "const n: number = 1 + 1;\nconsole.log('frame', n);\nfunction App() { return <p>hi</p>; }";
 const WORKER_CODE = "const xs: number[] = [1, 2];\nconsole.log('worker', xs.map((x) => x * 2));";
+// Passing cars (algo-004) on the alternating 100,000-car input: the linear pass answers -1
+// in milliseconds; the double loop is ~5·10^9 steps and must still be running at the limit.
+const FAST_CODE = 'function solution(A: number[]): number { let e = 0, p = 0; for (const v of A) { if (v === 0) e++; else if ((p += e) > 1e9) return -1; } return p; }';
+const SLOW_CODE = 'function solution(A: number[]): number { let p = 0; for (let i = 0; i < A.length; i++) for (let j = i + 1; j < A.length; j++) if (A[i] === 0 && A[j] === 1) p++; return p > 1e9 ? -1 : p; }';
 
 const harness = `<!doctype html><meta charset="utf-8"><title>smoke</title>
 <iframe id="app" src="${BASE}" style="width:600px;height:400px"></iframe>
@@ -105,6 +117,29 @@ try {
   // Getting here at all is the assertion: the page's own thread was never blocked.
   results.workerTerminates = true;
 } catch (e) { results.workerRun ??= String(e); results.workerTerminates = String(e); }
+
+// 4. The grader worker: load, one case, answer — and a quadratic solution is still spinning
+//    at the 1.5s limit, which is what lets the page call it a timeout.
+try {
+  const A = Array.from({ length: 100000 }, (_, i) => i % 2);
+  const gradeOnce = (code) => new Promise((resolve) => {
+    const w = new Worker('${BASE}assets/${graderAsset}', { type: 'module' });
+    let t;
+    w.onmessage = (e) => {
+      if (e.data?.type === 'loaded') {
+        t = setTimeout(() => { w.terminate(); resolve('timeout'); }, 1500);
+        w.postMessage({ type: 'case', i: 0, args: [A] });
+      }
+      if (e.data?.type === 'load-error') { w.terminate(); resolve('load-error: ' + e.data.text); }
+      if (e.data?.type === 'result') { clearTimeout(t); w.terminate(); resolve(e.data.ok ? e.data.value : 'error: ' + e.data.error); }
+    };
+    w.postMessage({ type: 'load', code, fn: 'solution', console: false });
+  });
+  const fast = await gradeOnce(${JSON.stringify(FAST_CODE)});
+  results.graderPasses = fast === -1 ? true : 'got ' + JSON.stringify(fast);
+  const slow = await gradeOnce(${JSON.stringify(SLOW_CODE)});
+  results.graderTimesOut = slow === 'timeout' ? true : 'got ' + JSON.stringify(slow);
+} catch (e) { results.graderPasses ??= String(e); results.graderTimesOut ??= String(e); }
 
 await report();
 </script>`;

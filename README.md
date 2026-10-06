@@ -2,7 +2,7 @@
 
 Interactive mock-interview drill for frontend and full-stack engineer loops in
 Berlin / EU — Senior, Staff, Lead or Architect frontend, or Senior and Staff
-full-stack. Ten rounds across the six loops, 393 curated questions with model
+full-stack. Eleven rounds across the six loops, 417 curated questions with model
 answers, key points and likely follow-ups. Reveal, rate yourself, and weak
 questions come back first.
 
@@ -15,28 +15,30 @@ between roles; only the round list and the visible question set change.
 
 | Role | Rounds |
 |---|---|
-| Senior frontend | HR, hiring manager, live coding, system design, case study, debrief |
-| Staff frontend | HR, hiring manager, live coding, system design, case study, debrief, head of engineering |
-| Lead frontend | HR, hiring manager, live coding, system design, tech lead round, head of engineering |
+| Senior frontend | HR, hiring manager, live coding, algorithms, system design, case study, debrief |
+| Staff frontend | HR, hiring manager, live coding, algorithms, system design, case study, debrief, head of engineering |
+| Lead frontend | HR, hiring manager, live coding, algorithms, system design, tech lead round, head of engineering |
 | Frontend architect | HR, hiring manager, architecture deep-dive, system design, case study, debrief, head of engineering |
-| Senior full-stack | HR, hiring manager, live coding, backend & data, system design, case study, debrief |
-| Staff full-stack | HR, hiring manager, live coding, backend & data, system design, case study, debrief, head of engineering |
+| Senior full-stack | HR, hiring manager, live coding, algorithms, backend & data, system design, case study, debrief |
+| Staff full-stack | HR, hiring manager, live coding, algorithms, backend & data, system design, case study, debrief, head of engineering |
 
 ## Rounds
 1. HR screen (compensation, negotiation, German employment basics)
 2. Hiring manager (live code review, web fundamentals, security, regulated & payments FE,
    TypeScript, i18n, reliability, situational, behavioral)
 3. Live coding (pairing, debugging, code review, build prompts)
-4. Frontend system design (one prompt, 45 minutes)
-5. Case study (take-home + presentation)
-6. Case study debrief (panel grilling)
-7. Head of engineering
-8. Tech lead round (Lead only) — people & growth, delivery & process, hiring & team shape,
+4. Algorithms (Codility-style tasks with hidden correctness and performance tests, and a
+   90-minute timed test)
+5. Frontend system design (one prompt, 45 minutes)
+6. Case study (take-home + presentation)
+7. Case study debrief (panel grilling)
+8. Head of engineering
+9. Tech lead round (Lead only) — people & growth, delivery & process, hiring & team shape,
    conflict & stakeholders, technical direction, running the round
-9. Architecture deep-dive (Architect only) — cross-team platform, migration strategy,
-   decision records & governance, design-system ownership, build & runtime architecture,
-   trade-off probes
-10. Backend & data (full-stack only) — API design, data & Postgres, caching & performance,
+10. Architecture deep-dive (Architect only) — cross-team platform, migration strategy,
+    decision records & governance, design-system ownership, build & runtime architecture,
+    trade-off probes
+11. Backend & data (full-stack only) — API design, data & Postgres, caching & performance,
     async & messaging, auth & security, Node & Go runtime, full-stack design, backend live
     coding (runnable TS pads; Go appears as read-only snippets)
 
@@ -69,8 +71,8 @@ between roles; only the round list and the visible question set change.
   loop, in one queue. The set is frozen on entry; re-enter it to rebuild.
 - **Mock session** — a cross-round set in one sitting, in round order, like a real
   loop day. Two presets: *Full loop* (a slice of every round) and *Technical rounds*
-  (hiring manager, live coding, system design, plus architecture or backend & data where
-  the role has them), each a fresh random draw per round. A banner marks each round
+  (hiring manager, live coding, algorithms, system design, plus architecture or backend &
+  data where the role has them), each a fresh random draw per round. A banner marks each round
   transition. Ends in a recap, either by hitting Finish or once you have gone
   through the whole set: the counts, then the questions you rated Weak listed by
   round, and the ones you never rated folded under them.
@@ -79,6 +81,15 @@ between roles; only the round list and the visible question set change.
   components → state → performance → a11y/i18n → observability → rollout phase
   checklist to work through out loud, plus a scratch pad. Finish reveals the model
   answer and lets you rate yourself.
+- **Algorithms → Timed test** — the third tab on the algorithms round, laid out like a
+  Codility session: **Start test** draws three tasks from three different categories,
+  weakest first, and starts one 90-minute countdown for all of them. Switch between Task 1,
+  2 and 3 freely; **Run examples** checks a solution against the example cases only, while
+  the hidden tests stay hidden. **Submit test** — or the clock reaching zero, which
+  submits whatever is in the pads — grades all three at once: a correctness, performance
+  and total score per task, the model answer folded under each, and a rating for each.
+  **New test** resets it. A test in progress survives a reload and is dropped once it is
+  over three hours old; its code is kept apart from the practice pads' drafts.
 - **Search** — every question in the active role's loop, in one search box, with the same status
   filter (Unseen / Weak / OK / Solid).
 - **Print cheat sheet** — everything rated Weak plus everything you have a note on,
@@ -97,6 +108,12 @@ between roles; only the round list and the visible question set change.
   OK. Once revealed, the card shows how long you took and
   the round's target time — a stopwatch, not a countdown, so nothing forces a hide,
   unless you turn on **Strict mode** (below).
+- Algorithms tasks are **graded pads**: **Run examples** runs your solution against the
+  example cases only, with its console output shown; **Submit** runs every hidden case,
+  console muted, and reports *Correctness X% · Performance Y% · Total Z%* with a row per
+  case — ✓, ✗, or ⏱ timed out after 1.5 s, with the input, the expected value and what
+  you got. After a Submit, the suggested rating counts tests passed instead of key points
+  (all passed Solid, under half Weak, otherwise OK).
 - **Back** steps to the previous question if you want to re-rate it; disabled at the
   start of a lap.
 - **Likely follow-ups** — probe yourself on one at a time, before you reveal, each
@@ -168,9 +185,10 @@ week.
   the question.
 - **Offline**: the app installs as a PWA and works without a network after its first
   visit — the build writes a service worker that precaches every file it emits,
-  including the Web Worker that runs console-only scratch pads. The one exception is
-  **Run** on a component starter (or one flagged as needing the DOM): the sandbox frame
-  has an opaque origin the worker cannot serve, so it needs the network.
+  including the Web Workers that run console-only scratch pads and grade algorithm
+  tasks. The one exception is **Run** on a component starter (or one flagged as needing
+  the DOM): the sandbox frame has an opaque origin the worker cannot serve, so it needs
+  the network.
 
 ## Adding questions
 Edit `src/data/<round>.ts`. Ids are `<round>-<nnn>`. A question can carry an
@@ -186,23 +204,26 @@ npm install
 npm run dev        # http://localhost:5173/interview-prep/
 npm test           # vitest watch
 npm run build      # tsc + vite build — emits index.html and sandbox.html (the code-runner frame)
-npm run smoke      # build, then drive the built app in headless Zen (Firefox): app boot, sandbox frame, worker
+npm run smoke      # build, then drive the built app in headless Zen (Firefox): app boot, sandbox frame, workers
 ```
 The smoke check covers what jsdom cannot: the opaque-origin frame loading its module
 script cross-origin and answering over postMessage, the worker compiling and reporting
-output and dying on `terminate()`, the built app rendering. It is local-only — CI has
+output and dying on `terminate()`, the grader worker answering a case and a quadratic
+solution still spinning at its time limit, the built app rendering. It is local-only — CI has
 no browser — and `SMOKE_BROWSER` points it at any Firefox or Chromium binary.
 
 ## Stack
 Vite · React 19 · TypeScript · Tailwind CSS 4 · GeistMono Nerd Font (self-hosted from
 public/fonts) · Vitest · GitHub Pages
 
-Two JS chunks for the app itself — the app and the React runtime, ~335KB gzipped
-together, most of it the question bank's own text, not code — plus two runners the app
-only fetches on Run: the `sandbox.html` page that runs component starters in a
-sandboxed iframe, and a self-contained Web Worker for the console-only ones. Both
-carry Sucrase to strip types and compile JSX; React is shared between the two pages,
-and the compiler is never downloaded by the app. Measured, not optimized:
+Two JS chunks for the app itself — the app and the React runtime, ~385KB gzipped
+together, most of it the question bank's own text, not code — plus three runners the app
+only fetches on Run or Submit: the `sandbox.html` page that runs component starters in a
+sandboxed iframe, a self-contained Web Worker for the console-only ones, and a second
+Web Worker, the grader, that runs the algorithm tasks' hidden tests one case at a time
+so the page can time each and terminate a runaway. All carry Sucrase to strip types and
+compile JSX; React is shared between the two pages, and the compiler is never downloaded
+by the app. Measured, not optimized:
 further code-splitting would trim the initial load, but this is a single-user app run
 from a laptop, so it isn't worth the added complexity.
 The service worker is written by a ~40-line plugin in `vite.config.ts` rather than

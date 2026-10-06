@@ -31,6 +31,18 @@ describe('role catalogue', () => {
     }
   });
 
+  test('every loop with live coding has algorithms right after it; architect has neither', () => {
+    for (const role of roles) {
+      const coding = role.rounds.indexOf('coding');
+      if (role.id === 'architect') {
+        expect(coding, role.id).toBe(-1);
+        expect(role.rounds, role.id).not.toContain('algo');
+      } else {
+        expect(role.rounds[coding + 1], role.id).toBe('algo');
+      }
+    }
+  });
+
   test('DEFAULT_ROLE is staff and is a valid role id', () => {
     expect(DEFAULT_ROLE).toBe('staff');
     expect(ROLE_IDS).toContain(DEFAULT_ROLE);
@@ -46,7 +58,7 @@ import { forRole } from './index';
 describe('forRole', () => {
   test('rounds come back in the role\'s own order, not catalogue order', () => {
     const lead = forRole('lead');
-    expect(lead.rounds.map((r) => r.id)).toEqual(['hr', 'hm', 'coding', 'design', 'lead', 'hoe']);
+    expect(lead.rounds.map((r) => r.id)).toEqual(['hr', 'hm', 'coding', 'algo', 'design', 'lead', 'hoe']);
   });
 
   test('questions are limited to the role\'s rounds', () => {
@@ -95,7 +107,7 @@ describe('forRole', () => {
     },
   );
 
-  test('full-stack round order puts backend between live coding and system design', () => {
-    expect(forRole('fs-staff').rounds.map((r) => r.id)).toEqual(['hr', 'hm', 'coding', 'backend', 'design', 'case', 'debrief', 'hoe']);
+  test('full-stack round order puts algorithms then backend between live coding and system design', () => {
+    expect(forRole('fs-staff').rounds.map((r) => r.id)).toEqual(['hr', 'hm', 'coding', 'algo', 'backend', 'design', 'case', 'debrief', 'hoe']);
   });
 });

@@ -3,11 +3,12 @@ import { describe, expect, test, vi } from 'vitest';
 import { ROUND_IDS, STORY_CATEGORIES, questions, rounds } from '../data';
 import { ROLE_IDS, roles } from '../data/roles';
 import { MAX_DRAFTS } from '../lib/drafts';
+import { buildCases, DEFAULT_LIMIT_MS, judge, preview, same, score } from '../lib/grade';
 import { MAX_LAPS } from '../lib/lap';
 import { compile } from '../sandbox/compile';
 import type { RoundId } from '../types';
 
-const ID_RE = /^(hr|hm|coding|design|case|debrief|hoe|lead|arch|backend)-\d{3}$/;
+const ID_RE = /^(hr|hm|coding|algo|design|case|debrief|hoe|lead|arch|backend)-\d{3}$/;
 
 describe('question bank', () => {
   test('rounds cover every RoundId once', () => {
@@ -46,7 +47,7 @@ describe('question bank', () => {
   // A floor against accidental loss, not a growth target. Round 4 deliberately cut 17
   // questions that were fully subsumed by a named sibling; these are the post-cut counts.
   test('every round keeps at least its post-round-4 question count', () => {
-    const min: Record<RoundId, number> = { hr: 36, hm: 99, coding: 35, design: 30, case: 30, debrief: 32, hoe: 33, lead: 30, arch: 30, backend: 36 };
+    const min: Record<RoundId, number> = { hr: 36, hm: 99, coding: 35, algo: 24, design: 30, case: 30, debrief: 32, hoe: 33, lead: 30, arch: 30, backend: 36 };
     for (const id of ROUND_IDS) {
       expect(questions.filter((q) => q.round === id).length, id).toBeGreaterThanOrEqual(min[id]);
     }
@@ -58,7 +59,9 @@ describe('question bank', () => {
   // in `deeper`, which is uncounted because you only say it if the interviewer digs.
   test('every answer can be spoken inside its round target', () => {
     const SPOKEN_WPM = 130;
-    const budget = new Map(rounds.map((r) => [r.id, Math.round((r.targetSeconds / 60) * SPOKEN_WPM)]));
+    // Algorithms tasks give 30 minutes to code; the talk-track still has to be sayable in
+    // the live-coding round's three.
+    const budget = new Map(rounds.map((r) => [r.id, Math.round(((r.id === 'algo' ? 180 : r.targetSeconds) / 60) * SPOKEN_WPM)]));
     for (const q of questions) {
       const words = q.answer.join(' ').split(/\s+/).filter(Boolean).length;
       const max = budget.get(q.round)!;
@@ -186,5 +189,87 @@ describe('question bank', () => {
       expect(q.roles.length, q.id).toBeGreaterThan(0);
       for (const r of q.roles) expect(ROLE_IDS, `${q.id}:${r}`).toContain(r);
     }
+  });
+});
+
+describe('algorithms round', () => {
+  const algo = questions.filter((q) => q.round === 'algo');
+  // The pad as the grader worker loads it: compiled, evaluated, the named function handed back.
+  const load = (code: string, fn: string) =>
+    new Function('React', `${compile(code)}\n;return typeof ${fn} === 'function' ? ${fn} : undefined;`)({}) as ((...a: unknown[]) => unknown) | undefined;
+
+  test('is catalogued with a 30-minute target', () => {
+    expect(rounds.find((r) => r.id === 'algo')).toMatchObject({ title: 'Algorithms', targetSeconds: 1800 });
+  });
+
+  test('every task is a graded scratch pad whose starter defines the graded function', () => {
+    expect(algo.length).toBeGreaterThan(0);
+    for (const q of algo) {
+      expect(q.scratch && q.statement?.trim() && q.grader, q.id).toBeTruthy();
+      expect(q.preview ?? q.needsDom, q.id).toBeUndefined();
+      expect(q.grader!.fn, q.id).toMatch(/^[A-Za-z_$][\w$]*$/);
+      expect(typeof load(q.code!, q.grader!.fn), q.id).toBe('function');
+    }
+  });
+
+  test('every task has an example, a correctness and a performance case', () => {
+    for (const q of algo) {
+      for (const kind of ['example', 'correctness', 'performance'] as const) {
+        expect(q.grader!.cases.some((c) => c.kind === kind), `${q.id} has no ${kind} case`).toBe(true);
+      }
+    }
+  });
+
+  // A wrong hand-written expected would grade a correct solution as failing.
+  test('the reference returns every hand-written expected value', () => {
+    for (const q of algo) {
+      const reference = q.grader!.reference as (...a: unknown[]) => unknown;
+      for (const c of q.grader!.cases) {
+        if ('gen' in c || c.expected === undefined) continue;
+        expect(same(reference(...structuredClone(c.args)), c.expected), `${q.id}: ${c.name}`).toBe(true);
+      }
+    }
+  });
+
+  test('generated inputs come from the seeded draw, not Math.random', () => {
+    for (const q of algo) {
+      const fingerprint = () => buildCases(q.grader!, q.id).map((c) => preview(c.args));
+      expect(fingerprint(), q.id).toEqual(fingerprint());
+    }
+  });
+
+  // The limits are only meaningful if a good solution is nowhere near them; a gen that
+  // builds a 10^7 input would time out the reference on a slow laptop.
+  test('the reference clears every case at a fifth of its time limit', () => {
+    for (const q of algo) {
+      const reference = q.grader!.reference as (...a: unknown[]) => unknown;
+      for (const c of buildCases(q.grader!, q.id)) {
+        const args = structuredClone(c.args);
+        const t0 = performance.now();
+        reference(...args);
+        expect(performance.now() - t0, `${q.id}: ${c.name}`).toBeLessThan(Math.min(c.limitMs, DEFAULT_LIMIT_MS) / 5);
+      }
+    }
+  });
+
+  test('the starter alone does not pass', () => {
+    for (const q of algo) {
+      const solution = load(q.code!, q.grader!.fn)!;
+      const results = buildCases(q.grader!, q.id).map((c) => judge(c, { value: solution(...structuredClone(c.args)), ms: 0 }));
+      expect(score(results).total, q.id).toBeLessThan(100);
+    }
+  });
+
+  test('every task names a complexity in its key points', () => {
+    for (const q of algo) expect(q.keyPoints.join(' '), q.id).toMatch(/O\(/);
+  });
+
+  test('every category has exactly three tasks', () => {
+    const byCategory = new Map<string, number>();
+    for (const q of algo) byCategory.set(q.category, (byCategory.get(q.category) ?? 0) + 1);
+    expect([...byCategory.entries()]).toEqual([
+      ['Arrays & hashing', 3], ['Prefix sums', 3], ['Two pointers & sliding window', 3], ['Sorting', 3],
+      ['Stacks & queues', 3], ['Binary search', 3], ['Greedy', 3], ['Dynamic programming', 3],
+    ]);
   });
 });

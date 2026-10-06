@@ -138,14 +138,42 @@ export function clearDesignSession(): void {
   designStore.clear();
 }
 
+// The timed test in progress: which three tasks, when its 90 minutes started, whether it
+// has been handed in. Same class as the design session — a position, not prep data — and
+// for the same reason: a reload mid-test must come back to the same tasks and clock.
+// Results are not stored; once submitted, they are re-graded from the test drafts.
+const TIMED_KEY = 'interview-prep:timed-test';
+
+export interface TimedTestState { questionIds: string[]; startedAt: number; submitted: boolean }
+
+const parseTimedTest = (_key: string, v: unknown): TimedTestState | undefined => {
+  if (typeof v !== 'object' || v === null) return undefined;
+  const s = v as Record<string, unknown>;
+  if (!isStringArray(s.questionIds) || typeof s.startedAt !== 'number' || typeof s.submitted !== 'boolean') return undefined;
+  return { questionIds: s.questionIds, startedAt: s.startedAt, submitted: s.submitted };
+};
+
+const timedStore = keyedStore<TimedTestState>(TIMED_KEY, parseTimedTest);
+
+export const readTimedTest = (): TimedTestState | undefined => timedStore.read('current');
+
+export function writeTimedTest(session: TimedTestState): void {
+  timedStore.write('current', session);
+}
+
+export function clearTimedTest(): void {
+  timedStore.clear();
+}
+
 // Reset and Import replace the whole data set, so a lap pointing into the old one is
 // worse than no lap: after a reset you resume mid-lap with everything unrated, and
 // after an import your position belongs to somebody else's data. Baselines go with
 // them — they are the same session, and one without the other is just wrong counts.
 // The design session is the same class of thing: after a reset it resumed the old prompt
-// with its phases still ticked and a clock already at 00:00.
+// with its phases still ticked and a clock already at 00:00. The timed test likewise.
 export function clearAllLaps(): void {
   lapStore.clear();
   baselineStore.clear();
   designStore.clear();
+  timedStore.clear();
 }

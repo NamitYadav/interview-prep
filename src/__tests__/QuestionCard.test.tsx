@@ -1,9 +1,11 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { render, renderHook, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import type { Question } from '../types';
 import { QuestionCard } from '../components/QuestionCard';
+import { algoQ, FakeGraderWorker } from './helpers';
+import { useQuestionTimer } from '../hooks/useQuestionTimer';
 
 const base: Question = {
   id: 'coding-001', round: 'coding', category: 'Debugging',
@@ -201,6 +203,45 @@ describe('QuestionCard strict mode', () => {
       act(() => vi.advanceTimersByTime(200_000)); // well past the 3:00 target
       expect(screen.getByText(/answered in 0:05/i)).toBeInTheDocument();
       expect(screen.queryByText(/out of time/i)).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // Background throttling or laptop sleep can delay the one long timeout well past the
+  // deadline, while the 250 ms tick keeps the visible clock honest. Here only the
+  // interval and Date are faked — the timeout never fires — so the hand-in has to
+  // come from the tick, exactly once (the revealed flag is never flipped, so a
+  // second fire would show up as a second call).
+  test('auto-reveals from the tick when the long timeout never fires, and only once', () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+    try {
+      const onAutoReveal = vi.fn();
+      const { result } = renderHook(() => useQuestionTimer({
+        targetSeconds: 180, strictMode: true, revealed: false, onAutoReveal,
+      }));
+      act(() => vi.advanceTimersByTime(179_000));
+      expect(onAutoReveal).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(1_000));
+      expect(onAutoReveal).toHaveBeenCalledOnce();
+      expect(result.current.autoRevealed).toBe(true);
+      act(() => vi.advanceTimersByTime(60_000));
+      expect(onAutoReveal).toHaveBeenCalledOnce();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('timeout and tick landing together still fire the auto-reveal once', () => {
+    vi.useFakeTimers();
+    try {
+      const onAutoReveal = vi.fn();
+      renderHook(() => useQuestionTimer({
+        targetSeconds: 180, strictMode: true, revealed: false, onAutoReveal,
+      }));
+      act(() => vi.advanceTimersByTime(180_000));
+      act(() => vi.advanceTimersByTime(60_000));
+      expect(onAutoReveal).toHaveBeenCalledOnce();
     } finally {
       vi.useRealTimers();
     }
@@ -436,5 +477,28 @@ describe('QuestionCard recording is not stranded by a reveal', () => {
     // The other half of the defect: the take used to be discarded, so the post-reveal
     // player never appeared. onstop fires on a microtask, hence findBy.
     expect(await screen.findByText(/your recording/i)).toBeInTheDocument();
+  });
+});
+
+describe('QuestionCard algo grading', () => {
+  beforeEach(() => {
+    FakeGraderWorker.reset();
+    vi.stubGlobal('Worker', FakeGraderWorker);
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  test('an algo card shows its statement and suggests a rating from the grade', async () => {
+    render(<QuestionCard question={algoQ} revealed={false} note="" onReveal={() => {}} onNote={() => {}} onRate={() => {}} />);
+    expect(screen.getByText('Return the sum of A.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /^submit$/i }));
+    await screen.findByRole('region', { name: 'Test report' });
+  });
+
+  test('after a Submit the suggestion line counts tests, not key points', async () => {
+    const { rerender } = render(<QuestionCard question={algoQ} revealed={false} note="" onReveal={() => {}} onNote={() => {}} onRate={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: /^submit$/i }));
+    await screen.findByRole('region', { name: 'Test report' });
+    rerender(<QuestionCard question={algoQ} revealed note="" onReveal={() => {}} onNote={() => {}} onRate={() => {}} />);
+    expect(screen.getByText(/1\/3 tests passed · suggested: Weak/)).toBeInTheDocument();
   });
 });
