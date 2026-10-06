@@ -69,13 +69,18 @@ export function parseBackup(text: string): Persisted {
   return data;
 }
 
-// Set by load() when the stored blob is from a newer version of the app (a deploy rolled
-// back). Moving it aside and saving an empty v2 over it lost it for good once the newer
-// version returned, so until a reload save() leaves it alone.
-let newerOnDisk = false;
+// Set by load() when saving would destroy something still on disk, and holding the
+// banner that says why. A blob from a newer version of the app (a deploy rolled back)
+// was moved aside and overwritten by an empty v2, so it was lost for good once the newer
+// version returned. A corrupt blob that could not be copied aside (quota full) was
+// overwritten by the very next save. Until a reload, or an explicit Import or Reset —
+// the user choosing to overwrite — save() leaves it alone.
+let saveBlocked: string | null = null;
+export const saveBlockedReason = (): string | null => saveBlocked;
+export const unblockSave = (): void => { saveBlocked = null; };
 
 export function load(storage: Storage = localStorage): Persisted {
-  newerOnDisk = false;
+  saveBlocked = null;
   let text: string | null;
   try {
     text = storage.getItem(STORAGE_KEY);
@@ -86,23 +91,28 @@ export function load(storage: Storage = localStorage): Persisted {
   try {
     const raw: unknown = JSON.parse(text);
     if (isRecord(raw) && typeof raw.version === 'number' && raw.version > 2) {
-      newerOnDisk = true;
+      saveBlocked = "Your saved data is from a newer version of the app — reload to use it; changes here won't be saved.";
       return emptyState();
     }
     return validate(raw);
   } catch {
     try {
       storage.setItem(CORRUPT_KEY, text);
+    } catch {
+      saveBlocked = "Your saved data could not be read, and there was no room to set it aside — changes here won't be saved, so it isn't overwritten.";
+      return emptyState();
+    }
+    try {
       storage.removeItem(STORAGE_KEY);
     } catch {
-      /* nothing else to do */
+      /* the copy is safe under CORRUPT_KEY; the next save overwrites the original */
     }
     return emptyState();
   }
 }
 
 export function save(data: Persisted, storage: Storage = localStorage): boolean {
-  if (newerOnDisk) return false;
+  if (saveBlocked !== null) return false;
   try {
     storage.setItem(STORAGE_KEY, JSON.stringify(data));
     return true;
@@ -111,6 +121,9 @@ export function save(data: Persisted, storage: Storage = localStorage): boolean 
   }
 }
 
+// The local date, not toISOString's UTC one: an export just after midnight in Berlin
+// was named for yesterday.
 export function backupFilename(date: Date = new Date()): string {
-  return `interview-prep-backup-${date.toISOString().slice(0, 10)}.json`;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `interview-prep-backup-${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}.json`;
 }

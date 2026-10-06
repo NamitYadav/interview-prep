@@ -5,7 +5,7 @@ import { EMPTY, FakeGraderWorker } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { forRole } from '../data';
 import { readTimedTest, writeTimedTest } from '../lib/lap';
-import { TEST_SECONDS, TimedTest, drawTest } from '../components/TimedTest';
+import { TEST_SECONDS, TimedTest, drawTest, testRunning } from '../components/TimedTest';
 
 const pool = forRole('staff').byRound('algo');
 
@@ -49,6 +49,18 @@ describe('TimedTest', () => {
     expect(readTimedTest()?.questionIds).toHaveLength(3);
   });
 
+  // padButton's dark:border-zinc-700 used to outrank the active border in the dark themes.
+  test('the active task is marked without the idle dark border', () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: /start test/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Task 2' }));
+    const active = screen.getByRole('button', { name: 'Task 2' });
+    expect(active).toHaveAttribute('aria-pressed', 'true');
+    expect(active).toHaveClass('border-emerald-500');
+    expect(active.className).not.toContain('dark:border-zinc-700');
+    expect(screen.getByRole('button', { name: 'Task 1' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
   test('a reload resumes the same tasks', () => {
     const ids = drawTest(pool, {}, () => 0).map((q) => q.id);
     writeTimedTest({ questionIds: ids, startedAt: Date.now() - 60_000, submitted: false });
@@ -62,16 +74,29 @@ describe('TimedTest', () => {
     expect(screen.getByRole('button', { name: /start test/i })).toBeInTheDocument();
   });
 
-  test('Submit test grades all three and offers ratings', async () => {
+  test('Submit test asks first, and Cancel keeps the test running', () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
     render(<Harness />);
     fireEvent.click(screen.getByRole('button', { name: /start test/i }));
     fireEvent.click(screen.getByRole('button', { name: /submit test/i }));
+    expect(confirm).toHaveBeenCalledOnce();
+    expect(readTimedTest()?.submitted).toBe(false);
+    expect(screen.getByRole('button', { name: /submit test/i })).toBeInTheDocument();
+  });
+
+  test('Submit test grades all three, offers ratings, and moves focus to the results', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: /start test/i }));
+    fireEvent.click(screen.getByRole('button', { name: /submit test/i }));
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: /^Task 1:/ }));
     expect(await screen.findAllByRole('region', { name: 'Test report' }, { timeout: 5000 })).toHaveLength(3);
     expect(screen.getAllByRole('radiogroup')).toHaveLength(3);
     expect(readTimedTest()?.submitted).toBe(true);
   });
 
   test('the clock running out submits, including code typed under 300ms before it', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'] });
     const ids = drawTest(pool, {}, () => 0).map((q) => q.id);
     writeTimedTest({ questionIds: ids, startedAt: Date.now() - TEST_SECONDS * 1000 + 1000, submitted: false });
@@ -82,9 +107,11 @@ describe('TimedTest', () => {
     expect(readTimedTest()?.submitted).toBe(true);
     await act(async () => { await vi.advanceTimersByTimeAsync(50); });
     expect(FakeGraderWorker.loads[0]).toContain('// LAST SECOND');
+    expect(confirm).not.toHaveBeenCalled();
   });
 
   test('New test clears the session and the test drafts', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
     render(<Harness />);
     fireEvent.click(screen.getByRole('button', { name: /start test/i }));
     fireEvent.change(screen.getByRole('textbox', { name: /scratch editor/i }), { target: { value: 'draft' } });
@@ -92,5 +119,15 @@ describe('TimedTest', () => {
     fireEvent.click(await screen.findByRole('button', { name: /new test/i }));
     expect(readTimedTest()).toBeUndefined();
     expect(localStorage.getItem('interview-prep:drafts') ?? '').not.toContain(':test');
+  });
+});
+
+describe('testRunning', () => {
+  test('only while the clock runs and the test is not handed in', () => {
+    const base = { questionIds: ['a'], startedAt: Date.now() - 60_000, submitted: false };
+    expect(testRunning(base)).toBe(true);
+    expect(testRunning({ ...base, submitted: true })).toBe(false);
+    expect(testRunning({ ...base, startedAt: Date.now() - TEST_SECONDS * 1000 - 1 })).toBe(false);
+    expect(testRunning(undefined)).toBe(false);
   });
 });

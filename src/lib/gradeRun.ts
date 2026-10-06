@@ -5,7 +5,7 @@ import { judge, type BuiltCase, type CaseResult } from './grade';
 // leave the run waiting on `loaded` forever.
 export const LOAD_LIMIT_MS = 3000;
 
-export interface GradeCallbacks {
+interface GradeCallbacks {
   onDone: (results: CaseResult[]) => void;
   /** The pad did not compile, did not define the function, or did not finish loading. */
   onLoadError: (text: string) => void;

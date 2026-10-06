@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState, type Dispatch } from 'react';
+import { useEffect, useMemo, useRef, useState, type Dispatch } from 'react';
 import type { Persisted, Progress, Question, RoleId } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { forRole } from '../data';
 import { orderQueue } from '../lib/queue';
 import { useQuestionTimer } from '../hooks/useQuestionTimer';
-import { clearDraft, draftKey, readDraft } from '../lib/drafts';
+import { draftKey, drafts, readDraft } from '../lib/drafts';
 import { clearTimedTest, readTimedTest, writeTimedTest, type TimedTestState } from '../lib/lap';
 import { buildCases, type CaseResult } from '../lib/grade';
 import { gradeRun } from '../lib/gradeRun';
@@ -12,6 +12,7 @@ import { formatTime } from '../lib/format';
 import { ScratchPad } from './ScratchPad';
 import { GradeReport } from './GradeReport';
 import { RatingRadios } from './RatingRadios';
+import { padButton } from './controlStyles';
 
 export const TEST_TASKS = 3;
 export const TEST_SECONDS = 90 * 60;
@@ -21,7 +22,13 @@ const RESUMABLE_MS = 2 * TEST_SECONDS * 1000;
 const DRAFT_FIELD = 'test';
 
 const primary = 'rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300';
-const secondary = 'rounded border border-zinc-300 px-3 py-1 text-sm hover:border-emerald-500 dark:border-zinc-700';
+// Spelled out rather than appended to padButton: its dark:border-zinc-700 outranks a plain
+// border-emerald-500 in Dark and Gruvbox, and the active task looked like the others.
+const activeTask = 'rounded border border-emerald-500 px-3 py-1 text-sm font-medium';
+
+/** A test whose clock is still running — RoundView opens its tab after a reload. */
+export const testRunning = (s = readTimedTest()): boolean =>
+  s !== undefined && !s.submitted && Date.now() - s.startedAt < TEST_SECONDS * 1000;
 
 /** Weakest first, one task per category — a real Codility test mixes topics. */
 export function drawTest(questions: Question[], progress: Progress, random: () => number = Math.random): Question[] {
@@ -37,7 +44,7 @@ export function drawTest(questions: Question[], progress: Progress, random: () =
 }
 
 const clearTestDrafts = (ids: string[]) => {
-  for (const id of ids) clearDraft(draftKey(id, DRAFT_FIELD));
+  for (const id of ids) drafts.remove(draftKey(id, DRAFT_FIELD));
 };
 
 export function TimedTest({ state, dispatch, role }: { state: Persisted; dispatch: Dispatch<Action>; role: RoleId }) {
@@ -138,14 +145,23 @@ function TestSession({
     };
   }, [session.submitted, tasks]);
 
+  // Submitting unmounts the button that was just pressed and focus fell to <body>; hand it
+  // to the first result heading instead, as Practice does for "Lap done".
+  const resultsRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (session.submitted) resultsRef.current?.focus();
+  }, [session.submitted]);
+
   if (!session.submitted) {
     const q = tasks[active]!;
     return (
       <article className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        {/* Sticky so the clock stays in view down a long pad; top-11.5 is the sticky header's
+            height (Settings), so the row tucks under it instead of behind it. */}
+        <div className="sticky top-11.5 z-10 -mx-4 mb-3 flex flex-wrap items-center justify-between gap-2 bg-white px-4 py-2 dark:bg-zinc-900">
           <div role="group" aria-label="Tasks" className="flex gap-2">
             {tasks.map((t, i) => (
-              <button key={t.id} type="button" aria-pressed={i === active} onClick={() => setActive(i)} className={i === active ? `${secondary} border-emerald-500` : secondary}>
+              <button key={t.id} type="button" aria-pressed={i === active} onClick={() => setActive(i)} className={i === active ? activeTask : padButton}>
                 Task {i + 1}
               </button>
             ))}
@@ -157,7 +173,11 @@ function TestSession({
         <h2 className="mb-2 text-lg font-medium">{q.question}</h2>
         <pre className="mb-4 max-w-prose whitespace-pre-wrap rounded bg-zinc-100 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-800">{q.statement}</pre>
         <ScratchPad key={q.id} question={q} draftField={DRAFT_FIELD} submit={false} />
-        <button type="button" onClick={onSubmit} className={primary}>Submit test</button>
+        {/* One click ended 90 minutes, right under the pad's Run/Stop. The clock's own
+            submit at zero (onAutoReveal) skips this. */}
+        <button type="button" onClick={() => window.confirm('Submit the test? The hidden tests run now and the tasks can no longer be edited.') && onSubmit()} className={primary}>
+          Submit test
+        </button>
       </article>
     );
   }
@@ -168,7 +188,7 @@ function TestSession({
         const report = reports[q.id];
         return (
           <article key={q.id} className="rounded-lg border border-zinc-200 bg-white p-4 text-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <h2 className="mb-2 text-lg font-medium">Task {i + 1}: {q.question}</h2>
+            <h2 ref={i === 0 ? resultsRef : undefined} tabIndex={-1} className="mb-2 text-lg font-medium">Task {i + 1}: {q.question}</h2>
             {report === undefined ? (
               <p role="status">Grading…</p>
             ) : 'error' in report ? (

@@ -450,13 +450,13 @@ export const arch: Question[] = [
     category: 'Build & runtime architecture',
     question: 'How do you decide on a bundling and tree-shaking strategy for a shared library consumed by many apps with different bundlers and build setups?',
     answer: [
-      'Default to ESM and treat a CommonJS build as an exception you justify, not a reflex. require(esm) is stable in every supported Node line, so CommonJS consumers on current Node can load an ESM-only package, and shipping one format avoids the dual-package hazard of two copies of the library with separate state. Add a CommonJS fallback only for a named consumer on an older toolchain that still needs it; ESM is also what lets consumers that can tree-shake actually do so.',
+      'Default to ESM and treat a CommonJS build as an exception you justify, not a reflex. require(esm) is available unflagged in every supported Node line (marked stable in 24.15+ and 25.4+), so CommonJS consumers on current Node can load an ESM-only package, and shipping one format avoids the dual-package hazard of two copies of the library with separate state. Add a CommonJS fallback only for a named consumer on an older toolchain that still needs it; ESM is also what lets consumers that can tree-shake actually do so.',
       'Structure the library\'s own exports to be tree-shakeable by construction: genuinely side-effect-free modules marked as such in the package metadata, and named exports over one large default export object, since a bundler can only remove what it can prove is unused, and both of those are prerequisites for that proof.',
       'Avoid deep internal coupling between unrelated pieces of the library\'s public surface — a consumer importing one small utility shouldn\'t transitively pull in an unrelated, much larger dependency because the two happen to live in the same internal module — since that\'s one of the most common and hardest-to-spot ways a "tree-shakeable" library fails to actually shrink a consumer\'s bundle in practice.',
       'Verify the claim continuously rather than assuming it holds: a CI check that tracks the actual bundle-size impact of importing a single small piece of the library, since tree-shakeability silently regresses with an innocent-looking internal refactor and nobody notices until a consumer\'s bundle report flags it.',
     ],
     keyPoints: [
-      'Defaults to ESM-only now that require(esm) is stable, adding a CommonJS build only for a named older consumer',
+      'Defaults to ESM-only now that require(esm) works unflagged in every supported Node line, adding a CommonJS build only for a named older consumer',
       'Structures exports to be tree-shakeable by construction — side-effect-free, named exports',
       'Avoids hidden coupling that pulls unrelated large dependencies into a small import',
       'Verifies tree-shakeability continuously via a CI bundle-size check, not a one-time assumption',

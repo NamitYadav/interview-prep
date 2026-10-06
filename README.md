@@ -47,7 +47,8 @@ between roles; only the round list and the visible question set change.
   (see [Roles](#roles) above): the round list, readiness counts and every drill
   below re-scope to it immediately, without touching your ratings, notes or stories.
 - **Round practice** — a priority queue for one round: weak questions come first,
-  then unseen, then ok, then solid; within a bucket the order is shuffled, so a first
+  then unseen, then ok, then solid; within a bucket the one you saw longest ago comes
+  first, and exact ties (in practice, every unseen question) are shuffled, so a first
   lap mixes categories instead of walking the bank in file order. Rating a question Weak doesn't just leave it —
   it comes back around roughly 8 questions later, in the same lap, instead of
   waiting for a whole different lap (on the last question of a lap it simply comes
@@ -85,11 +86,13 @@ between roles; only the round list and the visible question set change.
   Codility session: **Start test** draws three tasks from three different categories,
   weakest first, and starts one 90-minute countdown for all of them. Switch between Task 1,
   2 and 3 freely; **Run examples** checks a solution against the example cases only, while
-  the hidden tests stay hidden. **Submit test** — or the clock reaching zero, which
-  submits whatever is in the pads — grades all three at once: a correctness, performance
-  and total score per task, the model answer folded under each, and a rating for each.
-  **New test** resets it. A test in progress survives a reload and is dropped once it is
-  over three hours old; its code is kept apart from the practice pads' drafts.
+  the hidden tests stay hidden. **Submit test** (it asks you to confirm first) — or the
+  clock reaching zero, which submits whatever is in the pads without asking — grades all
+  three at once: a correctness, performance and total score per task, the model answer
+  folded under each, and a rating for each. **New test** resets it. A test in progress
+  survives a reload — the round reopens on its tab while the clock is running — and is
+  dropped once it is over three hours old; its code is kept apart from the practice pads'
+  drafts.
 - **Search** — every question in the active role's loop, in one search box, with the same status
   filter (Unseen / Weak / OK / Solid).
 - **Print cheat sheet** — everything rated Weak plus everything you have a note on,
@@ -100,8 +103,8 @@ between roles; only the round list and the visible question set change.
   stays visible above the model answer once revealed, so you're comparing what you
   actually said, not just reading key points cold. It is kept on this device until
   you rate the question, so a reload mid-answer (or Back) does not lose it.
-- If your browser supports it, **hold to record** a spoken answer; play it back
-  once revealed. Nothing is saved or sent anywhere — it's gone the moment you move
+- If your browser supports it, **click to record** a spoken answer (click again to
+  stop); play it back once revealed. Nothing is saved or sent anywhere — it's gone the moment you move
   to the next question.
 - **Reveal** the model answer, then tick off the key points you actually said out loud.
   The hit count suggests a rating: all of them Solid, fewer than half Weak, otherwise

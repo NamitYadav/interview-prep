@@ -7,6 +7,7 @@ import type { FromSandbox, LogLevel, ToSandbox } from '../sandbox/protocol';
 import { buildCases, score, type CaseResult, type Score } from '../lib/grade';
 import { gradeRun } from '../lib/gradeRun';
 import { GradeReport } from './GradeReport';
+import { padButton as button, ratingText } from './controlStyles';
 
 // Same host as the app, so it works in dev, `vite preview` and on GitHub Pages alike.
 // `allow-scripts allow-forms` without `allow-same-origin` makes the frame's origin opaque:
@@ -14,9 +15,8 @@ import { GradeReport } from './GradeReport';
 // AmountForm starter (coding-034) is a React 19 form Action, which needs the `submit` event.
 const SANDBOX_URL = `${import.meta.env.BASE_URL}sandbox.html`;
 
-const button = 'rounded border border-zinc-300 px-3 py-1 text-sm hover:border-emerald-500 dark:border-zinc-700';
 const mono = 'rounded bg-zinc-100 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-800';
-const warnText = 'text-amber-700 dark:text-amber-400';
+const warnText = ratingText.ok;
 const modKey = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+';
 
 type Line = { level: LogLevel; text: string };

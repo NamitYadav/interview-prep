@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { MAX_DRAFTS, clearAllDrafts, clearDraft, draftKey, readDraft, writeDraft } from '../lib/drafts';
+import { MAX_DRAFTS, draftKey, drafts, readDraft, writeDraft } from '../lib/drafts';
 
 beforeEach(() => localStorage.clear());
 
@@ -27,10 +27,10 @@ describe('drafts', () => {
     expect(readDraft(k)).toBe('');
   });
 
-  test('clearDraft drops it so the starter value returns', () => {
+  test('drafts.remove drops it so the starter value returns', () => {
     const k = draftKey('coding-001', 'scratch');
     writeDraft(k, '');
-    clearDraft(k);
+    drafts.remove(k);
     expect(readDraft(k)).toBeUndefined();
   });
 
@@ -89,9 +89,9 @@ describe('drafts do not grow without limit', () => {
     expect(writeDraft('q:scratch', 'lost')).toBe(false);
   });
 
-  test('clearAllDrafts empties the store', () => {
+  test('drafts.clear empties the store', () => {
     writeDraft('a:scratch', 'x');
-    clearAllDrafts();
+    drafts.clear();
     expect(readDraft('a:scratch')).toBeUndefined();
   });
 });

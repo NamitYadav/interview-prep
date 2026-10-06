@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
-import { STORAGE_KEY } from '../lib/storage';
+import { STORAGE_KEY, load } from '../lib/storage';
 import { EMPTY } from './helpers';
-import { reducer, useAppState } from '../hooks/useAppState';
+import { SAVE_FAILED_MESSAGE, reducer, useAppState } from '../hooks/useAppState';
 
 beforeEach(() => localStorage.clear());
 
@@ -93,7 +93,7 @@ describe('useAppState', () => {
       expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).progress.b).toEqual({
         rating: 3, seen: 1, lastSeen: 5,
       });
-      expect(result.current.saveFailed).toBe(false);
+      expect(result.current.saveFailed).toBeNull();
     } finally {
       vi.useRealTimers();
     }
@@ -180,9 +180,23 @@ describe('useAppState', () => {
       const { result } = renderHook(() => useAppState());
       act(() => result.current.dispatch({ type: 'rate', id: 'a', rating: 1, now: 1 }));
       act(() => vi.advanceTimersByTime(500));
-      expect(result.current.saveFailed).toBe(true);
+      expect(result.current.saveFailed).toBe(SAVE_FAILED_MESSAGE);
     } finally {
       vi.useRealTimers();
+    }
+  });
+
+  test('a save refused over a newer-version blob says so, not "storage unavailable"', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 3, progress: {} }));
+    vi.useFakeTimers();
+    try {
+      const { result } = renderHook(() => useAppState());
+      act(() => vi.advanceTimersByTime(500));
+      expect(result.current.saveFailed).toMatch(/newer version of the app/);
+    } finally {
+      vi.useRealTimers();
+      localStorage.clear();
+      load(); // the guard lasts until the next load; don't leak it into later tests
     }
   });
 });

@@ -74,6 +74,10 @@ describe('judge / score', () => {
     expect(judge(large, 'timeout')).toMatchObject({ status: 'timeout', detail: 'timed out after 500ms' });
   });
 
+  test('a right answer that took longer than the limit is a timeout — the page timer can be throttled', () => {
+    expect(judge(large, { value: sum(large.args[0] as number[]), ms: 9000 })).toMatchObject({ status: 'timeout', detail: 'took 9000ms, limit 500ms' });
+  });
+
   test('scores correctness (example + correctness) and performance separately', () => {
     const results = [judge(example, { value: 3, ms: 1 }), judge(empty, { value: 1, ms: 1 }), judge(large, 'timeout')];
     expect(score(results)).toEqual({ correctness: 50, performance: 0, total: 33, passed: 1, count: 3 });

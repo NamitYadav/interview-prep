@@ -1,6 +1,6 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import type { Persisted, Rating } from '../types';
-import { STORAGE_KEY, emptyState, load, save } from '../lib/storage';
+import { STORAGE_KEY, emptyState, load, save, saveBlockedReason } from '../lib/storage';
 
 export type Action =
   | { type: 'rate'; id: string; rating: Rating; now: number }
@@ -80,9 +80,16 @@ export function reducer(state: Persisted, action: Action): Persisted {
 
 const SAVE_DEBOUNCE_MS = 500;
 
+export const SAVE_FAILED_MESSAGE = 'Progress is not being saved (storage unavailable). Export before closing the tab.';
+
+// The banner text, or null when the save landed. A save refused on purpose says why:
+// "storage unavailable" over a newer-version blob sent people clearing site data, which
+// is the one thing that does destroy it.
+const saveError = (ok: boolean): string | null => (ok ? null : saveBlockedReason() ?? SAVE_FAILED_MESSAGE);
+
 export function useAppState() {
   const [state, dispatch] = useReducer(reducer, undefined, () => load());
-  const [saveFailed, setSaveFailed] = useState(false);
+  const [saveFailed, setSaveFailed] = useState<string | null>(null);
   const stateRef = useRef(state);
   useEffect(() => {
     stateRef.current = state;
@@ -96,7 +103,7 @@ export function useAppState() {
   useEffect(() => {
     timerRef.current = setTimeout(() => {
       timerRef.current = null;
-      setSaveFailed(!save(state));
+      setSaveFailed(saveError(save(state)));
     }, SAVE_DEBOUNCE_MS);
     return () => {
       if (timerRef.current !== null) clearTimeout(timerRef.current);
@@ -112,7 +119,7 @@ export function useAppState() {
       if (timerRef.current === null) return;
       clearTimeout(timerRef.current);
       timerRef.current = null;
-      setSaveFailed(!save(stateRef.current));
+      setSaveFailed(saveError(save(stateRef.current)));
     };
     const onVisibilityChange = () => {
       if (document.visibilityState === 'hidden') flush();

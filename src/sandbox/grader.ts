@@ -1,4 +1,4 @@
-import { forwardConsole } from './compile';
+import { formatArgs, forwardConsole } from './compile';
 import { createGrader } from './graderCore';
 import type { FromGrader, ToGrader } from './protocol';
 
@@ -7,9 +7,18 @@ import type { FromGrader, ToGrader } from './protocol';
 const scope = self as unknown as {
   postMessage(msg: FromGrader): void;
   addEventListener(type: 'message', fn: (e: MessageEvent<ToGrader>) => void): void;
+  addEventListener(type: 'error', fn: (e: ErrorEvent) => void): void;
 };
 const post = (msg: FromGrader) => scope.postMessage(msg);
 const handle = createGrader(post);
+
+// A throw from a pad's setTimeout or microtask lands here after its case has already
+// answered. Unhandled, it fires the page's Worker `error`, which gradeRun reads as "the
+// grader did not start" and abandons every remaining case — same guard as worker.ts.
+scope.addEventListener('error', (e) => {
+  e.preventDefault();
+  post({ type: 'log', level: 'error', text: formatArgs([e.error ?? e.message]) });
+});
 
 scope.addEventListener('message', (e) => {
   const msg = e.data;

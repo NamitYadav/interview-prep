@@ -139,6 +139,15 @@ describe('Home', () => {
     localStorage.removeItem(LAST_EXPORT_KEY);
   });
 
+  // NaN compared false both ways, so a garbled timestamp silenced the nudge for good.
+  test('export nudge shows when the last-export timestamp is not a number', () => {
+    localStorage.setItem(LAST_EXPORT_KEY, 'garbage');
+    const seeded: Persisted = { ...EMPTY, progress: { 'hr-001': { rating: 2, seen: 1, lastSeen: 1 } } };
+    render(<Harness initial={seeded} />);
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    localStorage.removeItem(LAST_EXPORT_KEY);
+  });
+
   // Round 2 and 3's blurbs clipped mid-word on a laptop under line-clamp-2; the grid
   // row already stretches to its tallest card, so the clamp bought nothing.
   test('round blurbs are not clamped', () => {

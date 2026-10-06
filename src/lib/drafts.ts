@@ -29,27 +29,19 @@ const parseDraft = (_key: string, v: unknown): Draft | undefined => {
   return { text: d.text, savedAt: typeof d.savedAt === 'number' ? d.savedAt : 0 };
 };
 
-const store = keyedStore<Draft>(KEY, parseDraft, { max: MAX_DRAFTS, recencyOf: (d) => d.savedAt });
+// `remove` drops a draft so its field falls back to the starter value; `clear` is for
+// Reset and Import, which replace the whole data set — scratch written against the old
+// one would survive as stale code in the editor of a question you have never seen.
+export const drafts = keyedStore<Draft>(KEY, parseDraft, { max: MAX_DRAFTS, recencyOf: (d) => d.savedAt });
 
 export const draftKey = (questionId: string, field: string) => `${questionId}:${field}`;
 
-export const readDraft = (key: string): string | undefined => store.read(key)?.text;
+export const readDraft = (key: string): string | undefined => drafts.read(key)?.text;
 
 /** Returns false if the draft could not be stored, so the caller can say so. */
 export function writeDraft(key: string, value: string, now: number = Date.now()): boolean {
   // An empty draft is stored, not deleted: the scratch editor starts pre-filled with
   // the question's code, so treating "" as absent meant deliberately clearing it
   // brought the starter text straight back on the next remount.
-  return store.write(key, { text: value, savedAt: now });
-}
-
-// Drop a draft entirely, so the field falls back to its starter value again.
-export function clearDraft(key: string): void {
-  store.remove(key);
-}
-
-// Reset and Import both replace the whole data set; scratch written against the old
-// one survives as stale code in the editor of a question you have never seen.
-export function clearAllDrafts(): void {
-  store.clear();
+  return drafts.write(key, { text: value, savedAt: now });
 }

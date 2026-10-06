@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 import type { Persisted } from '../types';
-import { CORRUPT_KEY, STORAGE_KEY, backupFilename, load, parseBackup, save } from '../lib/storage';
+import { CORRUPT_KEY, STORAGE_KEY, backupFilename, load, parseBackup, save, saveBlockedReason, unblockSave } from '../lib/storage';
 import { EMPTY } from './helpers';
 
 const valid: Persisted = {
@@ -59,6 +59,24 @@ describe('load', () => {
     expect(() => load(stub)).not.toThrow();
     expect(load(stub)).toEqual(EMPTY);
   });
+  // With no room to copy it aside, the next save overwrote the only copy with empty state.
+  test('a corrupt blob that could not be set aside is not saved over', () => {
+    const stub = { getItem: () => '{not json', setItem: () => { throw new Error('quota'); } } as unknown as Storage;
+    load(stub);
+    expect(saveBlockedReason()).toMatch(/no room to set it aside/);
+    expect(save(EMPTY)).toBe(false);
+    unblockSave();
+  });
+  // Import and Reset are the user choosing to overwrite; the guard used to make both
+  // silently never save, under a banner blaming storage.
+  test('a newer-version blob explains itself, and unblockSave lets an explicit overwrite through', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 3, progress: {} }));
+    load();
+    expect(saveBlockedReason()).toMatch(/newer version/);
+    unblockSave();
+    expect(saveBlockedReason()).toBeNull();
+    expect(save(valid)).toBe(true);
+  });
   test('mutating a loaded EMPTY does not affect later loads', () => {
     const first = load();
     (first.progress as Record<string, unknown>)['x'] = { rating: 1, seen: 1, lastSeen: 1 };
@@ -103,8 +121,9 @@ describe('parseBackup', () => {
   });
 });
 
-test('backupFilename uses the date', () => {
-  expect(backupFilename(new Date('2026-09-08T10:00:00Z'))).toBe('interview-prep-backup-2026-09-08.json');
+test('backupFilename uses the local date', () => {
+  // 00:30 local is still the previous day in UTC anywhere east of Greenwich.
+  expect(backupFilename(new Date(2026, 8, 8, 0, 30))).toBe('interview-prep-backup-2026-09-08.json');
 });
 
 describe('backward compatibility', () => {

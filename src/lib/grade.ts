@@ -69,6 +69,9 @@ export function judge(
   const base = { name: c.name, kind: c.kind, input: preview(c.args.length === 1 ? c.args[0] : c.args), expected: preview(c.expected) };
   if (outcome === 'timeout') return { ...base, status: 'timeout', detail: `timed out after ${c.limitMs}ms` };
   if ('error' in outcome) return { ...base, status: 'error', ms: outcome.ms, detail: outcome.error };
+  // The page's timer is the hard stop, but a background tab throttles it to about once a
+  // minute — an auto-submit while you are away would otherwise score a 10s loop as a pass.
+  if (outcome.ms > c.limitMs) return { ...base, status: 'timeout', ms: outcome.ms, detail: `took ${Math.round(outcome.ms)}ms, limit ${c.limitMs}ms` };
   return { ...base, status: same(outcome.value, c.expected) ? 'pass' : 'fail', ms: outcome.ms, got: preview(outcome.value) };
 }
 

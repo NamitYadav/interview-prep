@@ -155,7 +155,8 @@ Constraints:
         { name: 'only extremes', kind: 'correctness', args: [[-1e6, 1e6]], expected: 1 },
         { name: 'duplicates', kind: 'correctness', args: [[2, 2, 1, 1]], expected: 3 },
         { name: 'shuffled 1..N', kind: 'performance', gen: (rng) => [shuffle(range(N, 1), rng)] },
-        { name: 'random in range', kind: 'performance', gen: (rng) => [ints(rng, N, -1e6, 1e6)] },
+        // A scale check: the missing value is small, so even a per-value scan finishes fast here.
+        { name: 'random in range', kind: 'correctness', gen: (rng) => [ints(rng, N, -1e6, 1e6)] },
       ],
     },
     answer: [
@@ -210,7 +211,9 @@ Constraints:
         { name: 'east then west', kind: 'correctness', args: [[0, 1]], expected: 1 },
         { name: 'random', kind: 'performance', gen: (rng) => [ints(rng, N, 0, 1)] },
         { name: 'alternating, over 10^9 pairs', kind: 'performance', gen: () => [range(N).map((i) => i % 2)] },
-        { name: 'just under the cap', kind: 'performance', gen: () => [[...Array<number>(10_000).fill(0), ...Array<number>(90_000).fill(1)]] },
+        { name: 'just under the cap', kind: 'correctness', gen: () => [[...Array<number>(10_000).fill(0), ...Array<number>(90_000).fill(1)]] },
+        // ~5·10^9 inner steps for a double loop, but under 10^6 pairs, so no early -1 rescues it.
+        { name: 'east, then a few west at the end', kind: 'performance', gen: () => [[...Array<number>(99_990).fill(0), ...Array<number>(10).fill(1)]] },
       ],
     },
     answer: [
@@ -495,7 +498,8 @@ Constraints:
         { name: 'single element exactly S', kind: 'correctness', args: [[5], 5], expected: 1 },
         { name: 'needs the whole array', kind: 'correctness', args: [[1, 2, 3], 6], expected: 3 },
         { name: 'one element alone suffices', kind: 'correctness', args: [[1, 4, 4], 4], expected: 1 },
-        { name: 'wide window', kind: 'performance', gen: (rng) => [ints(rng, N, 1, 1000), 25_000_000] },
+        // S is 90% of the total, so the shortest window spans most of the array.
+        { name: 'wide window', kind: 'performance', gen: (rng) => { const A = ints(rng, N, 1, 1000); return [A, Math.floor(0.9 * A.reduce((s, v) => s + v, 0))]; } },
         { name: 'S above the total', kind: 'performance', gen: (rng) => [ints(rng, N, 1, 1e4), 1e9] },
       ],
     },
@@ -646,7 +650,8 @@ Constraints:
         { name: 'touching at a point', kind: 'correctness', args: [[1, 0, 0]], expected: 1 },
         { name: 'radii past 32-bit sums', kind: 'correctness', args: [[2147483647, 0, 2147483647]], expected: 3 },
         { name: 'small radii', kind: 'performance', gen: (rng) => [ints(rng, N, 0, 10)] },
-        { name: 'huge overlap', kind: 'performance', gen: () => [Array<number>(N).fill(1e6)] },
+        // A check of the -1 cap at scale: a pair loop that stops at 10^7 also finishes fast.
+        { name: 'huge overlap', kind: 'correctness', gen: () => [Array<number>(N).fill(1e6)] },
       ],
     },
     answer: [
@@ -807,8 +812,9 @@ Constraints:
         { name: 'decreasing', kind: 'correctness', args: [[3, 2, 1]], expected: 3 },
         { name: 'flat', kind: 'correctness', args: [[2, 2, 2]], expected: 1 },
         { name: 'returning to an open height', kind: 'correctness', args: [[1, 2, 1, 2]], expected: 3 },
-        { name: 'random', kind: 'performance', gen: (rng) => [ints(rng, N, 1, 1e9)] },
-        { name: 'sawtooth', kind: 'performance', gen: () => [range(N).map((i) => (i % 1000) + 1)] },
+        // Scale checks: splitting at the minimum stays shallow on these, so only the staircase separates it.
+        { name: 'random', kind: 'correctness', gen: (rng) => [ints(rng, N, 1, 1e9)] },
+        { name: 'sawtooth', kind: 'correctness', gen: () => [range(N).map((i) => (i % 1000) + 1)] },
         { name: 'staircase', kind: 'performance', gen: () => [range(N, 1)] },
       ],
     },
@@ -864,7 +870,7 @@ Constraints:
         { name: 'above the only element', kind: 'correctness', args: [[2], [3]], expected: [1] },
         { name: 'first of the duplicates', kind: 'correctness', args: [[1, 1, 1], [1]], expected: [0] },
         { name: 'negatives', kind: 'correctness', args: [[-5, -3, 0], [-4, -10, 1]], expected: [1, 0, 3] },
-        { name: 'random', kind: 'performance', gen: (rng) => [ints(rng, N, -1e9, 1e9).sort((a, b) => a - b), ints(rng, N, -1e9, 1e9)] },
+        { name: 'random, queries in the top quarter', kind: 'performance', gen: (rng) => [ints(rng, N, -1e9, 1e9).sort((a, b) => a - b), ints(rng, N, 5e8, 1e9)] },
         { name: 'every query past the end', kind: 'performance', gen: () => [range(N), Array<number>(N).fill(N)] },
       ],
     },
@@ -923,7 +929,8 @@ Constraints:
         { name: 'all zeros', kind: 'correctness', args: [2, [0, 0, 0]], expected: 0 },
         { name: 'single max element', kind: 'correctness', args: [1, [10_000]], expected: 10_000 },
         { name: 'random, small K', kind: 'performance', gen: (rng) => [int(rng, 1, 100), ints(rng, N, 0, 1e4)] },
-        { name: 'K = N', kind: 'performance', gen: (rng) => [N, ints(rng, N, 0, 1e4)] },
+        // The answer sits ~40,000 above max(A), so trying every cap upward needs ~4·10^9 steps.
+        { name: 'K = 10,000', kind: 'performance', gen: (rng) => [10_000, ints(rng, N, 0, 1e4)] },
       ],
     },
     answer: [
@@ -983,14 +990,15 @@ Constraints:
         { name: 'nail misses', kind: 'correctness', args: [[1], [1], [2]], expected: -1 },
         { name: 'nail on the endpoint', kind: 'correctness', args: [[2], [3], [3]], expected: 1 },
         { name: 'needs both nails', kind: 'correctness', args: [[1, 5], [2, 6], [5, 1]], expected: 2 },
-        { name: 'random planks and nails', kind: 'performance', gen: (rng) => {
-          const A = ints(rng, N, 1, 199_000);
-          return [A, A.map((a) => Math.min(200_000, a + int(rng, 0, 1000))), ints(rng, N, 1, 200_000)];
+        // Every position 1..N is nailed once in random order, so every short plank is pinned, but its first nail sits on average deep in the list.
+        { name: 'short planks, every position nailed once', kind: 'performance', gen: (rng) => {
+          const A = ints(rng, N, 1, N);
+          return [A, A.map((a) => Math.min(N, a + int(rng, 0, 3))), shuffle(range(N, 1), rng)];
         } },
-        // The random case above has zero-width planks, so it almost always answers -1; wide planks make the search land inside the nail list.
-        { name: 'wide planks', kind: 'performance', gen: (rng) => {
-          const A = ints(rng, N, 1, 199_000);
-          return [A, A.map((a) => Math.min(200_000, a + int(rng, 200, 1000))), ints(rng, N, 1, 200_000)];
+        // The first 90,000 nails all land right of every plank; the last 10,000 pin them, so the search lands inside the nail list.
+        { name: 'wide planks, early nails all miss', kind: 'performance', gen: (rng) => {
+          const A = ints(rng, N, 1, 99_000);
+          return [A, A.map((a) => a + int(rng, 200, 1000)), [...ints(rng, 90_000, 100_001, 200_000), ...ints(rng, 10_000, 1, 100_000)]];
         } },
         // Planks [i, i] and nails N..1: plank i is only pinned by nail N - i, so all N nails are needed and a per-plank scan of the nail list does about N²/2 steps.
         { name: 'each plank pinned only by a late nail', kind: 'performance', gen: () => [range(N, 1), range(N, 1), range(N, 1).reverse()] },

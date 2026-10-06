@@ -7,6 +7,10 @@
 // deliberately do NOT use the panel scale — they read at the size of the page around them.
 export const pageButton = 'rounded border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800';
 
+// The pad's Run/Stop/Submit and the timed test's task switcher: one string, so the two
+// cannot drift apart again (they were byte-identical copies).
+export const padButton = 'rounded border border-zinc-300 px-3 py-1 text-sm hover:border-emerald-500 dark:border-zinc-700';
+
 const panelControl = 'rounded border px-2 py-1 text-xs';
 
 const idle = 'border-zinc-300 text-zinc-500 hover:border-emerald-500 dark:border-zinc-700 dark:text-zinc-400';

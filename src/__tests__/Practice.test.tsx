@@ -6,7 +6,7 @@ import type { Question } from '../types';
 import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { Practice } from '../components/Practice';
-import { lapKey, readLap } from '../lib/lap';
+import { lapKey, laps } from '../lib/lap';
 
 // Practice now persists lap position, so each test needs a clean slate.
 beforeEach(() => localStorage.clear());
@@ -290,6 +290,31 @@ describe('Practice', () => {
     expect(screen.getByRole('checkbox', { name: 'Point two' })).not.toBeChecked();
   });
 
+  // The tick map outlived the pass it belonged to: a Weak requeue and every question of
+  // the next lap came back already ticked. Back still keeps them — that is why it is hoisted.
+  test('key-point ticks survive Back but not a Weak requeue or another lap', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Point one' }));
+    await userEvent.click(screen.getByRole('radio', { name: /solid/i })); // -> Q2
+    await userEvent.click(screen.getByRole('button', { name: /back/i }));
+    expect(screen.getByRole('checkbox', { name: 'Point one' })).toBeChecked();
+
+    await userEvent.click(screen.getByRole('radio', { name: /weak/i })); // Q1 requeued -> Q2
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Point two' }));
+    await userEvent.click(screen.getByRole('radio', { name: /solid/i })); // -> requeued Q1
+    expect(screen.getByText('First question?')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    expect(screen.getByRole('checkbox', { name: 'Point one' })).not.toBeChecked();
+
+    await userEvent.click(screen.getByRole('radio', { name: /solid/i })); // -> lap done
+    await userEvent.click(screen.getByRole('button', { name: /start another lap/i }));
+    while (!screen.queryByText('Second question?')) await rateVisible();
+    await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+    expect(screen.getByRole('checkbox', { name: 'Point two' })).not.toBeChecked();
+  });
+
   test('empty state when no questions', () => {
     render(<Practice questions={[]} state={EMPTY} dispatch={() => {}} strictMode={false} role="staff" />);
     expect(screen.getByText(/no questions match/i)).toBeInTheDocument();
@@ -493,8 +518,8 @@ describe('lap position survives a reload', () => {
 
     // Staff's lap actually advanced, and senior's own key has nothing stored yet —
     // not just two different key strings, but two independently-tracked positions.
-    expect(readLap(lapKey('staff', qs))).toBeDefined();
-    expect(readLap(lapKey('senior', qs))).toBeUndefined();
+    expect(laps.read(lapKey('staff', qs))).toBeDefined();
+    expect(laps.read(lapKey('senior', qs))).toBeUndefined();
 
     render(<HarnessRole role="senior" />);
     // Senior's lap for this exact question set starts fresh (question 1), rather than
@@ -639,7 +664,7 @@ describe('P1 regressions', () => {
 
   // advance() sets lapDone and calls onLapComplete in one batch; MockSession unmounts
   // Practice on that callback, so a render with lapDone === true never commits and the
-  // clearLap effect never ran. The finished lap then restored at its last question.
+  // lap-clearing effect never ran. The finished lap then restored at its last question.
   test('a lap that ends is cleared even when the parent unmounts on completion', async () => {
     function UnmountOnComplete() {
       const [done, setDone] = useState(false);
