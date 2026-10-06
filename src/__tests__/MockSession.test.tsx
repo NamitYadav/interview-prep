@@ -24,7 +24,7 @@ describe('MockSession', () => {
   test('starting a preset shows its full question count and a practice card', async () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('button', { name: /full loop/i }));
-    expect(screen.getByText(/28 questions/i)).toBeInTheDocument();
+    expect(screen.getByText(/29 questions/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /reveal/i })).toBeInTheDocument();
   });
 
@@ -32,7 +32,7 @@ describe('MockSession', () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('button', { name: /full loop/i }));
     await userEvent.click(screen.getByRole('button', { name: /finish session/i }));
-    expect(screen.getByText(/0 of 28 rated/i)).toBeInTheDocument();
+    expect(screen.getByText(/0 of 29 rated/i)).toBeInTheDocument();
     expect(screen.getByText(/0 solid · 0 ok · 0 weak/i)).toBeInTheDocument();
   });
 
@@ -42,7 +42,7 @@ describe('MockSession', () => {
     await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
     await userEvent.click(screen.getByRole('radio', { name: /^solid/i }));
     await userEvent.click(screen.getByRole('button', { name: /finish session/i }));
-    expect(screen.getByText(/1 of 20 rated/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 of 22 rated/i)).toBeInTheDocument();
     expect(screen.getByText(/1 solid · 0 ok · 0 weak/i)).toBeInTheDocument();
   });
 
@@ -62,7 +62,7 @@ describe('MockSession', () => {
     expect(weak).toHaveTextContent(/hiring manager/i);
     expect(weak).not.toHaveTextContent(solidOne);
 
-    const unrated = screen.getByText(/not rated \(18\)/i).closest('details')!;
+    const unrated = screen.getByText(/not rated \(20\)/i).closest('details')!;
     expect(unrated).not.toHaveAttribute('open');
     expect(unrated).not.toHaveTextContent(weakOne);
     expect(unrated).toHaveTextContent(/live coding/i);
@@ -73,7 +73,7 @@ describe('MockSession', () => {
     await userEvent.click(screen.getByRole('button', { name: /full loop/i }));
     await userEvent.click(screen.getByRole('button', { name: /finish session/i }));
     expect(screen.queryByRole('heading', { name: /rated weak/i })).not.toBeInTheDocument();
-    expect(screen.getByText(/not rated \(28\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/not rated \(29\)/i)).toBeInTheDocument();
   });
 
   // Slicing each round in file order served every session the same questions. A
@@ -178,7 +178,7 @@ describe('a reloaded mock session still counts what it rated', () => {
     render(<ReloadableHarness />);
     await userEvent.click(screen.getByRole('button', { name: /technical rounds/i }));
     await userEvent.click(screen.getByRole('button', { name: /finish session/i }));
-    expect(screen.getByText(/2 of 20 rated/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 of 22 rated/i)).toBeInTheDocument();
     expect(screen.getByText(/1 solid · 0 ok · 1 weak/i)).toBeInTheDocument();
   });
 
@@ -194,7 +194,7 @@ describe('a reloaded mock session still counts what it rated', () => {
     render(<ReloadableHarness />);
     await userEvent.click(screen.getByRole('button', { name: /technical rounds/i }));
     await userEvent.click(screen.getByRole('button', { name: /finish session/i }));
-    expect(screen.getByText(/0 of 20 rated/i)).toBeInTheDocument();
+    expect(screen.getByText(/0 of 22 rated/i)).toBeInTheDocument();
   });
 });
 
@@ -226,7 +226,7 @@ describe('a session abandoned before any action does not poison the next one', (
     render(<ReloadableHarness />);
     await userEvent.click(screen.getByRole('button', { name: /technical rounds/i }));
     await userEvent.click(screen.getByRole('button', { name: /finish session/i }));
-    expect(screen.getByText(/0 of 20 rated/i)).toBeInTheDocument();
+    expect(screen.getByText(/0 of 22 rated/i)).toBeInTheDocument();
   });
 });
 
@@ -237,26 +237,26 @@ describe('role-scoped mock sessions', () => {
   test("Senior's Full loop contains no HoE questions", async () => {
     render(<Harness role="senior" />);
     await userEvent.click(screen.getByRole('button', { name: /full loop/i }));
-    // hr:4 + hm:6 + coding:4 + design:3 + case:4 + debrief:4 = 25; hoe never counted.
-    expect(screen.getByText(/25 questions/i)).toBeInTheDocument();
+    // hr:4 + hm:6 + coding:4 + algo:1 + design:3 + case:4 + debrief:4 = 26; hoe never counted.
+    expect(screen.getByText(/26 questions/i)).toBeInTheDocument();
 
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 26; i++) {
       expect(screen.queryByText(/head of engineering/i)).not.toBeInTheDocument();
       const skipBtn = screen.queryByRole('button', { name: /^skip/i });
       if (!skipBtn) break;
       await userEvent.click(skipBtn);
     }
-    expect(screen.getByText(/0 of 25 rated/i)).toBeInTheDocument();
+    expect(screen.getByText(/0 of 26 rated/i)).toBeInTheDocument();
   });
 
   test("Senior full-stack's Full loop adds a backend slice between live coding and system design", async () => {
     render(<Harness role="fs-senior" />);
     await userEvent.click(screen.getByRole('button', { name: /full loop/i }));
-    // hr:4 + hm:6 + coding:4 + backend:4 + design:3 + case:4 + debrief:4 = 29.
-    expect(screen.getByText(/29 questions/i)).toBeInTheDocument();
+    // hr:4 + hm:6 + coding:4 + algo:1 + backend:4 + design:3 + case:4 + debrief:4 = 30.
+    expect(screen.getByText(/30 questions/i)).toBeInTheDocument();
 
     const bannersSeen: string[] = [];
-    for (let i = 0; i < 29; i++) {
+    for (let i = 0; i < 30; i++) {
       const banner = screen.queryByText(/^Round \d+ of \d+/);
       if (banner?.textContent) bannersSeen.push(banner.textContent);
       const skipBtn = screen.queryByRole('button', { name: /^skip/i });
@@ -279,11 +279,11 @@ describe('role-scoped mock sessions', () => {
   test("Lead's Full loop follows the role's own round order (lead round before hoe)", async () => {
     render(<Harness role="lead" />);
     await userEvent.click(screen.getByRole('button', { name: /full loop/i }));
-    // hr:4 + hm:6 + coding:4 + design:3 + lead:3 + hoe:3 = 23; case/debrief/arch are 0.
-    expect(screen.getByText(/23 questions/i)).toBeInTheDocument();
+    // hr:4 + hm:6 + coding:4 + algo:1 + design:3 + lead:3 + hoe:3 = 24; case/debrief/arch are 0.
+    expect(screen.getByText(/24 questions/i)).toBeInTheDocument();
 
     const bannersSeen: string[] = [];
-    for (let i = 0; i < 23; i++) {
+    for (let i = 0; i < 24; i++) {
       const banner = screen.queryByText(/^Round \d+ of \d+/);
       if (banner?.textContent) bannersSeen.push(banner.textContent);
       const skipBtn = screen.queryByRole('button', { name: /^skip/i });

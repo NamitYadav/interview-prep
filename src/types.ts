@@ -1,4 +1,4 @@
-export type RoundId = 'hr' | 'hm' | 'coding' | 'design' | 'case' | 'debrief' | 'hoe' | 'lead' | 'arch' | 'backend';
+export type RoundId = 'hr' | 'hm' | 'coding' | 'algo' | 'design' | 'case' | 'debrief' | 'hoe' | 'lead' | 'arch' | 'backend';
 export type Route = RoundId | 'weak' | 'notes' | 'stories' | 'mock' | 'search' | 'print';
 export type RoleId = 'senior' | 'staff' | 'lead' | 'architect' | 'fs-senior' | 'fs-staff';
 export interface Role { id: RoleId; title: string; blurb: string; rounds: RoundId[] }
@@ -13,6 +13,10 @@ export interface Question {
    *  terminable and works offline. Set this when the starter needs the DOM (document,
    *  IntersectionObserver) and it runs in the sandbox frame instead, like the previews. */
   needsDom?: true;
+  /** Full task text for an algo question: the task, examples, constraints. `question` stays the heading. */
+  statement?: string;
+  /** Hidden tests for an algo question; ScratchPad shows Run examples / Submit when set. */
+  grader?: Grader;
   answer: string[]; keyPoints: string[]; followUps?: string[];
   // Material to use only when the interviewer digs. Kept out of `answer` so the
   // word-budget test in data.test.ts measures only what you actually say first.
@@ -20,6 +24,21 @@ export interface Question {
   /** Roles that see this question. Absent = every role whose loop includes q.round. */
   roles?: RoleId[];
 }
+export type CaseKind = 'example' | 'correctness' | 'performance';
+/** One hidden test. Fixed `args` (with `expected` hand-written or, if omitted, computed by
+ *  the reference) or a `gen` that builds a large input from the case's own seeded draw. */
+export type AlgoCase = { name: string; kind: CaseKind; limitMs?: number } & (
+  | { args: unknown[]; expected?: unknown }
+  | { gen: (rng: () => number) => unknown[] }
+);
+export interface Grader {
+  /** The function the pad must define, e.g. 'solution'. */
+  fn: string;
+  // `never[]` so any concrete signature is assignable; callers cast to call it.
+  reference: (...args: never[]) => unknown;
+  cases: AlgoCase[];
+}
+
 export type Rating = 1 | 2 | 3;
 export interface ProgressEntry { rating: Rating; seen: number; lastSeen: number }
 export type Progress = Record<string, ProgressEntry>;

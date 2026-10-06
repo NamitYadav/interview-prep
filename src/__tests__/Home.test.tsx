@@ -149,8 +149,11 @@ describe('Home', () => {
 
   // Seven cards in two columns left the last one alone on its row. Only when it is odd:
   // the 6- and 8-card grids used to span it too and leave a hole.
-  test('the last round card spans the full row when it is the odd one out', () => {
+  // Staff has eight rounds now, so the odd grid comes from the seven-round Senior loop.
+  test('the last round card spans the full row when it is the odd one out', async () => {
+    const userEvent = (await import('@testing-library/user-event')).default;
     render(<Harness initial={EMPTY} />);
+    await userEvent.selectOptions(screen.getByLabelText('Role'), 'Senior frontend');
     const cards = within(screen.getByRole('list')).getAllByRole('listitem');
     expect(cards.length % 2).toBe(1);
     expect(cards[cards.length - 1]).toHaveClass('sm:last:odd:col-span-2');

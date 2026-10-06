@@ -17,12 +17,12 @@ const PRESETS: Preset[] = [
     id: 'full-loop',
     title: 'Full loop',
     blurb: 'A slice of every round, in round order.',
-    composition: { hr: 4, hm: 6, coding: 4, design: 3, case: 4, debrief: 4, hoe: 3, lead: 3, arch: 3, backend: 4 },
+    composition: { hr: 4, hm: 6, coding: 4, algo: 1, design: 3, case: 4, debrief: 4, hoe: 3, lead: 3, arch: 3, backend: 4 },
   },
   {
     id: 'technical',
     title: 'Technical rounds',
-    composition: { hm: 8, coding: 6, design: 6, arch: 6, backend: 6 },
+    composition: { hm: 8, coding: 6, algo: 2, design: 6, arch: 6, backend: 6 },
   },
 ];
 

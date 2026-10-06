@@ -8,6 +8,7 @@ import { useDebouncedField } from '../hooks/useDebouncedField';
 import { ScratchPad } from './ScratchPad';
 import { useRecorder } from '../hooks/useRecorder';
 import { formatTime } from '../lib/format';
+import type { Score } from '../lib/grade';
 import { RATINGS, RatingRadios } from './RatingRadios';
 
 // All of them is Solid, fewer than half is Weak, the rest is OK — one hit out of four
@@ -53,7 +54,11 @@ export function QuestionCard({
   const [ownChecked, setOwnChecked] = useState<Set<number>>(() => new Set());
   const checkedSet = checked ?? ownChecked;
   const setChecked = onCheckedChange ?? setOwnChecked;
-  const suggested = suggestedRating(checkedSet.size, question.keyPoints.length);
+  // A Submit outranks the self-ticked key points: the tests already said what passed.
+  const [graded, setGraded] = useState<Score | null>(null);
+  const suggested = graded
+    ? suggestedRating(graded.passed, graded.count)
+    : suggestedRating(checkedSet.size, question.keyPoints.length);
 
   const targetSeconds = rounds.find((r) => r.id === question.round)?.targetSeconds;
   const { elapsedMs, remainingMs, autoRevealed, markRevealed } = useQuestionTimer({
@@ -135,6 +140,9 @@ export function QuestionCard({
         {meta && <span className="shrink-0">{meta}</span>}
       </div>
       <h2 ref={headingRef} tabIndex={-1} className="mb-4 max-w-prose text-lg font-medium outline-none">{question.question}</h2>
+      {question.statement && (
+        <pre className="mb-4 max-w-prose whitespace-pre-wrap rounded bg-zinc-100 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-800">{question.statement}</pre>
+      )}
 
       {/* Mounted with the card and empty until there is something to say: a live region
           that appears with its text already inside is routinely missed, and a strict-mode
@@ -143,7 +151,7 @@ export function QuestionCard({
 
       {question.code && (
         question.scratch ? (
-          <ScratchPad key={question.id} question={question} shortcuts={shortcuts} />
+          <ScratchPad key={question.id} question={question} shortcuts={shortcuts} onGraded={setGraded} />
         ) : (
           <pre className="mb-4 overflow-x-auto rounded bg-zinc-100 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-800">
             <code>{question.code}</code>
@@ -298,7 +306,7 @@ export function QuestionCard({
             </ul>
             {suggested && (
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                {checkedSet.size}/{question.keyPoints.length} key points hit · suggested: {RATINGS.find((r) => r.value === suggested)!.label}
+                {graded ? `${graded.passed}/${graded.count} tests passed` : `${checkedSet.size}/${question.keyPoints.length} key points hit`} · suggested: {RATINGS.find((r) => r.value === suggested)!.label}
               </p>
             )}
           </section>

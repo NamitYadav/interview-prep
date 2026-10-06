@@ -8,11 +8,12 @@ import { Browse } from './Browse';
 import { Practice } from './Practice';
 import { ProgressBar, statsCaption } from './ProgressBar';
 import { DesignSession } from './DesignSession';
+import { TimedTest } from './TimedTest';
 import { CategoryStrength } from './CategoryStrength';
 import { ALL, STATUS_OPTIONS, Select } from './Select';
 
-type Tab = 'practice' | 'browse' | 'design-prompt';
-const TAB_LABEL: Record<Tab, string> = { practice: 'Practice', browse: 'Browse', 'design-prompt': '45-min prompt' };
+type Tab = 'practice' | 'browse' | 'design-prompt' | 'timed-test';
+const TAB_LABEL: Record<Tab, string> = { practice: 'Practice', browse: 'Browse', 'design-prompt': '45-min prompt', 'timed-test': 'Timed test' };
 
 export function RoundView({
   roundId, state, dispatch, strictMode, shortcuts = true, role,
@@ -25,7 +26,10 @@ export function RoundView({
   const [selected, setSelected] = useState<string | null>(null);
   const [status, setStatus] = useState<QuestionStatus>('all');
   const [tab, setTab] = useState<Tab>('practice');
-  const TABS: Tab[] = roundId === 'design' ? ['practice', 'browse', 'design-prompt'] : ['practice', 'browse'];
+  const TABS: Tab[] =
+    roundId === 'design' ? ['practice', 'browse', 'design-prompt'] :
+    roundId === 'algo' ? ['practice', 'browse', 'timed-test'] :
+    ['practice', 'browse'];
 
   // Switching tabs remounts Practice/Browse's content, and QuestionCard grabs focus
   // for its own heading on mount — this runs after that child effect (React commits
@@ -134,6 +138,7 @@ export function RoundView({
         ))}
         {tab === 'browse' && <Browse questions={filtered} state={state} dispatch={dispatch} />}
         {tab === 'design-prompt' && <DesignSession state={state} dispatch={dispatch} role={role} />}
+        {tab === 'timed-test' && <TimedTest state={state} dispatch={dispatch} role={role} />}
       </div>
     </main>
   );

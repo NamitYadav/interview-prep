@@ -41,12 +41,23 @@ export function useQuestionTimer({
   useEffect(() => {
     if (!strictMode || revealed || targetSeconds === undefined) return;
     const deadline = (mountedAt.current ?? Date.now()) + targetSeconds * 1000;
-    const timeout = autoReveal ? setTimeout(() => {
+    // The timeout is the on-time path; the tick is the fallback for when background
+    // throttling or a sleeping laptop delays that one long timeout past a clock that
+    // already reads 0:00. `fired` keeps whichever lands second from handing in twice.
+    let fired = false;
+    const fire = () => {
+      if (fired) return;
+      fired = true;
       setElapsedMs(Date.now() - mountedAt.current!);
       setAutoRevealed(true);
       onAutoRevealRef.current();
-    }, Math.max(0, deadline - Date.now())) : undefined;
-    const interval = setInterval(() => setRemainingMs(Math.max(0, deadline - Date.now())), 250);
+    };
+    const timeout = autoReveal ? setTimeout(fire, Math.max(0, deadline - Date.now())) : undefined;
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, deadline - Date.now());
+      setRemainingMs(remaining);
+      if (remaining === 0 && autoReveal) fire();
+    }, 250);
     return () => {
       if (timeout !== undefined) clearTimeout(timeout);
       clearInterval(interval);

@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Question } from '../types';
 import { ScratchPad } from '../components/ScratchPad';
+import { algoQ, FakeGraderWorker } from './helpers';
 
 const q: Question = {
   id: 'coding-001', round: 'coding', category: 'Build prompts', scratch: true,
@@ -313,5 +314,78 @@ describe('ScratchPad worker runner', () => {
     expect(screen.getByTitle('Preview')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /run/i }));
     expect(FakeWorker.instances).toHaveLength(0);
+  });
+});
+
+const editor = () => screen.getByRole('textbox', { name: /scratch editor/i });
+
+describe('ScratchPad grader', () => {
+  beforeEach(() => {
+    FakeGraderWorker.reset();
+    vi.stubGlobal('Worker', FakeGraderWorker);
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  test('a graded pad offers Run examples and Submit, and mounts no preview frame', () => {
+    render(<ScratchPad question={algoQ} />);
+    expect(screen.getByRole('button', { name: /run examples/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^submit$/i })).toBeInTheDocument();
+    expect(screen.queryByTitle('Preview')).not.toBeInTheDocument();
+  });
+
+  test('Run examples reports only the examples, with expected vs got', async () => {
+    render(<ScratchPad question={algoQ} />);
+    fireEvent.click(screen.getByRole('button', { name: /run examples/i }));
+    expect(await screen.findByText('✗ example: expected 3, got 0')).toBeInTheDocument();
+    expect(screen.queryByText(/empty/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Test report' })).not.toBeInTheDocument();
+  });
+
+  test('Submit grades every case and calls onGraded with the score', async () => {
+    const onGraded = vi.fn();
+    render(<ScratchPad question={algoQ} onGraded={onGraded} />);
+    fireEvent.click(screen.getByRole('button', { name: /^submit$/i }));
+    const report = await screen.findByRole('region', { name: 'Test report' });
+    expect(report).toHaveTextContent('Correctness 50% · Performance 0% · Total 33% (1/3)');
+    expect(onGraded).toHaveBeenCalledWith(expect.objectContaining({ passed: 1, count: 3 }));
+  });
+
+  test('a correct solution scores 100%', async () => {
+    render(<ScratchPad question={{ ...algoQ, id: 'algo-901' }} />);
+    fireEvent.change(editor(), { target: { value: 'function solution(A: number[]) { return A.reduce((s, v) => s + v, 0); }' } });
+    fireEvent.click(screen.getByRole('button', { name: /^submit$/i }));
+    expect(await screen.findByRole('region', { name: 'Test report' })).toHaveTextContent('Total 100% (3/3)');
+  });
+
+  test('Stop mid-grade terminates the worker and shows no report', async () => {
+    FakeGraderWorker.hangOn = () => true;
+    render(<ScratchPad question={algoQ} />);
+    fireEvent.click(screen.getByRole('button', { name: /^submit$/i }));
+    await vi.waitFor(() => expect(FakeGraderWorker.loads).toHaveLength(1));
+    fireEvent.click(screen.getByRole('button', { name: /stop/i }));
+    expect(FakeGraderWorker.instances[0]!.terminated).toBe(true);
+    expect(screen.getByRole('status')).toHaveTextContent('');
+    expect(screen.queryByRole('region', { name: 'Test report' })).not.toBeInTheDocument();
+  });
+
+  test('a second Run cancels the first, and unmount cancels whatever is running', async () => {
+    FakeGraderWorker.hangOn = () => true;
+    const { unmount } = render(<ScratchPad question={algoQ} />);
+    fireEvent.click(screen.getByRole('button', { name: /run examples/i }));
+    fireEvent.click(screen.getByRole('button', { name: /run examples/i }));
+    expect(FakeGraderWorker.instances[0]!.terminated).toBe(true);
+    unmount();
+    expect(FakeGraderWorker.instances[1]!.terminated).toBe(true);
+  });
+
+  test('submit={false} hides Submit (the timed test grades at the end)', () => {
+    render(<ScratchPad question={algoQ} submit={false} />);
+    expect(screen.queryByRole('button', { name: /^submit$/i })).not.toBeInTheDocument();
+  });
+
+  test('draftField keeps a separate draft per field', () => {
+    localStorage.setItem('interview-prep:drafts', JSON.stringify({ 'algo-900:test': { text: 'TEST DRAFT', savedAt: 1 } }));
+    render(<ScratchPad question={algoQ} draftField="test" />);
+    expect(editor()).toHaveValue('TEST DRAFT');
   });
 });
