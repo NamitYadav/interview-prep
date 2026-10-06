@@ -4,8 +4,8 @@ import type { Action } from '../hooks/useAppState';
 import { nextQuestion, roundStats } from '../lib/queue';
 import { rounds } from '../data';
 import { formatTime } from '../lib/format';
-import { clearLap, lapKey, readLap, writeLap } from '../lib/lap';
-import { clearDraft, draftKey } from '../lib/drafts';
+import { lapKey, laps, writeLap } from '../lib/lap';
+import { draftKey, drafts } from '../lib/drafts';
 import { QuestionCard } from './QuestionCard';
 
 // Single-character shortcuts on `window` are only safe while nothing else on the page
@@ -35,11 +35,15 @@ const REQUEUE_GAP = 8;
 interface RequeueEntry { id: string; at: number }
 
 export function Practice({
-  questions, state, dispatch, strictMode, shortcuts = true, ordered = false, onLapComplete, role,
+  questions, state, dispatch, strictMode, shortcuts = true, ordered = false, onLapComplete, role, lapId,
 }: {
   questions: Question[]; state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean;
   shortcuts?: boolean;
   ordered?: boolean; onLapComplete?: () => void; role: RoleId;
+  // A fixed name for a set whose contents shrink as you rate it (the Weak drill, a
+  // status filter). Keyed on contents, a reload rebuilt the set smaller, minted a new
+  // key and orphaned the lap — pending requeues included — in the capped store.
+  lapId?: string;
 }) {
   // In `ordered` mode (a curated, round-shaped set) the array's own order is the
   // queue; otherwise the weak/unrated/ok/solid bucket order from lib/queue.
@@ -52,13 +56,13 @@ export function Practice({
   // A reload — or a phone discarding a backgrounded tab — used to drop you back to the
   // top of a 287-question queue. `saved` restores the lap when the stored position
   // belongs to THIS question set; a key mismatch starts fresh.
-  const key = useMemo(() => lapKey(role, questions), [role, questions]);
+  const key = useMemo(() => (lapId ? `${role}:${lapId}` : lapKey(role, questions)), [role, lapId, questions]);
   // lapKey is a heuristic (length + endpoints), and the bank's content changes between
   // sessions, so a restored history can name ids this set no longer contains — which
   // would render "No questions match" with no way out. Drop those, and fall back to a
   // fresh lap if the position no longer survives.
   const [saved] = useState(() => {
-    const stored = readLap(key);
+    const stored = laps.read(key);
     if (!stored) return undefined;
     const known = new Set(questions.map((q) => q.id));
     const history = stored.history.filter((id) => known.has(id));
@@ -103,7 +107,7 @@ export function Practice({
 
   useEffect(() => {
     if (lapDone) {
-      clearLap(key);
+      laps.remove(key);
       return;
     }
     if (history.length === 0) return;
@@ -142,6 +146,9 @@ export function Practice({
   const seenInPath = () => new Set(history.slice(0, historyPos + 1));
 
   const serveNext = (id: string) => {
+    // Ticks belong to one pass through a question, kept only so Back can show them; a
+    // Weak requeue served again is a fresh attempt, and used to arrive pre-ticked.
+    setCheckedByQuestion((c) => ({ ...c, [id]: new Set() }));
     setStep((s) => s + 1);
     setHistory((h) => [...h.slice(0, historyPos + 1), id]);
     setHistoryPos((p) => p + 1);
@@ -199,7 +206,7 @@ export function Practice({
     // on this callback (MockSession swapping in its recap) means no render with
     // lapDone === true ever commits, so the effect would never fire and the finished
     // lap would restore at its last question.
-    clearLap(key);
+    laps.remove(key);
     setLapDone(true);
     onLapComplete?.();
   };
@@ -211,7 +218,7 @@ export function Practice({
     dispatch({ type: 'rate', id: current.id, rating, now: Date.now() });
     // The answer you wrote before revealing has done its job once you have rated; left
     // in place it would pre-fill the box next lap and defeat "write first, then look".
-    clearDraft(draftKey(current.id, 'answer'));
+    drafts.remove(draftKey(current.id, 'answer'));
     // A weak rating requeues the question. The setRequeued below has not landed in
     // state by the time advance() runs in this same closure, so the entry is handed
     // over explicitly — otherwise advance() sees a list without it and can end the lap
@@ -245,6 +252,7 @@ export function Practice({
     setStep(0);
     setRevealed(false);
     setLapDone(false);
+    setCheckedByQuestion({});
     finalRepeat.current = false;
   };
 

@@ -32,17 +32,14 @@ if (!existsSync(BROWSER)) {
   process.exit(1);
 }
 
-const workerAsset = readdirSync(join(DIST, 'assets')).find((f) => /^worker-.*\.js$/.test(f));
-if (!workerAsset) {
-  console.error('No worker-*.js in dist/assets — the console-only runner did not build.');
+const asset = (prefix, what) => {
+  const found = readdirSync(join(DIST, 'assets')).find((f) => f.startsWith(`${prefix}-`) && f.endsWith('.js'));
+  if (found) return found;
+  console.error(`No ${prefix}-*.js in dist/assets — ${what} did not build.`);
   process.exit(1);
-}
-
-const graderAsset = readdirSync(join(DIST, 'assets')).find((f) => /^grader-.*\.js$/.test(f));
-if (!graderAsset) {
-  console.error('No grader-*.js in dist/assets — the hidden-test runner did not build.');
-  process.exit(1);
-}
+};
+const workerAsset = asset('worker', 'the console-only runner');
+const graderAsset = asset('grader', 'the hidden-test runner');
 
 const TYPES = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json',

@@ -5,7 +5,7 @@ import { forRole } from '../data';
 import { nextQuestion } from '../lib/queue';
 import { useQuestionTimer } from '../hooks/useQuestionTimer';
 import { DRAFT_SAVE_FAILED, useDraft } from '../hooks/useDraft';
-import { clearDraft, draftKey } from '../lib/drafts';
+import { draftKey, drafts } from '../lib/drafts';
 import { clearDesignSession, readDesignSession, writeDesignSession } from '../lib/lap';
 import { formatTime } from '../lib/format';
 import { RatingRadios } from './RatingRadios';
@@ -86,7 +86,7 @@ function DesignPrompt({
     // next attempt at this prompt under a fresh 45:00.
     if (finished) {
       clearDesignSession();
-      clearDraft(scratchKey);
+      drafts.remove(scratchKey);
     } else writeDesignSession({ questionId: question.id, startedAt, phases: [...checkedPhases] });
   }, [question.id, scratchKey, startedAt, checkedPhases, finished]);
   // Keyed by question id alone, not id+attempt: `attempt` is an in-memory counter that
@@ -105,9 +105,9 @@ function DesignPrompt({
   }, [finished]);
 
   // Visible 45-minute countdown that never forces anything — a real loop doesn't
-  // cut you off, it just tells you the clock is running.
+  // cut you off, it just tells you the clock is running. Reaching zero calls the noop.
   const { remainingMs } = useQuestionTimer({
-    targetSeconds: TARGET_SECONDS, strictMode: true, revealed: finished, onAutoReveal: noop, autoReveal: false, startedAt,
+    targetSeconds: TARGET_SECONDS, strictMode: true, revealed: finished, onAutoReveal: noop, startedAt,
   });
 
   const rating = state.progress[question.id]?.rating;

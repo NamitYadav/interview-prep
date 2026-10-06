@@ -5,6 +5,7 @@ import { useReducer } from 'react';
 import type { Persisted } from '../types';
 import { reducer } from '../hooks/useAppState';
 import { ImportReset, LAST_EXPORT_KEY } from '../components/ExportImport';
+import { STORAGE_KEY, load, saveBlockedReason } from '../lib/storage';
 
 const seeded: Persisted = {
   version: 2,
@@ -51,6 +52,24 @@ describe('ExportImport', () => {
     render(<Harness initial={seeded} />);
     await userEvent.click(screen.getByRole('button', { name: /export/i }));
     expect(localStorage.getItem(LAST_EXPORT_KEY)).not.toBeNull();
+  });
+
+  // Fresh progress has never been exported, so the weekly nudge must not stay quiet.
+  test('reset clears the last-export timestamp', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    localStorage.setItem(LAST_EXPORT_KEY, String(Date.now()));
+    render(<Harness initial={seeded} />);
+    await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
+    expect(localStorage.getItem(LAST_EXPORT_KEY)).toBeNull();
+  });
+
+  test('reset lifts a save guard set by load()', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 3, progress: {} }));
+    load();
+    render(<Harness initial={seeded} />);
+    await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
+    expect(saveBlockedReason()).toBeNull();
   });
 
   test('import replaces state and clears a prior error on success', async () => {

@@ -4,7 +4,7 @@ import type { Persisted, Question, Rating, RoleId, Round, RoundId } from '../typ
 import type { Action } from '../hooks/useAppState';
 import { forRole } from '../data';
 import { Practice } from './Practice';
-import { clearBaseline, clearLap, lapKey, mockSets, readBaseline, readLap, writeBaseline, type Baseline } from '../lib/lap';
+import { baselines, lapKey, laps, mockSets, type Baseline } from '../lib/lap';
 import { orderQueue } from '../lib/queue';
 
 /** No `blurb` means "name the active role's rounds this preset draws from" — one static
@@ -61,7 +61,7 @@ export function MockSession({
     const ids = mockSets.read(setKey) ?? [];
     const pool = roleRounds.flatMap((r) => byRound(r.id));
     const previous = ids.flatMap((id) => pool.filter((q) => q.id === id));
-    const drill = previous.length === ids.length && readLap(lapKey(role, previous))
+    const drill = previous.length === ids.length && laps.read(lapKey(role, previous))
       ? previous
       : buildSet(preset.composition, roleRounds, byRound);
     mockSets.write(setKey, drill.map((q) => q.id));
@@ -79,10 +79,10 @@ export function MockSession({
     // match it. Reusing that orphaned baseline next time this preset opened made any
     // rating made in between — outside this mock session entirely — look like it
     // happened during the new session.
-    const baseline = (readLap(key) && readBaseline(key)) || Object.fromEntries(
+    const baseline = (laps.read(key) && baselines.read(key)) || Object.fromEntries(
       drill.flatMap((q) => { const e = state.progress[q.id]; return e ? [[q.id, e.seen] as const] : []; }),
     );
-    writeBaseline(key, baseline);
+    baselines.write(key, baseline);
     setSession({ preset, drill, baseline });
     setFinished(false);
   };
@@ -96,8 +96,8 @@ export function MockSession({
   const endSession = () => {
     if (!session) return;
     const key = lapKey(role, session.drill);
-    clearLap(key);
-    clearBaseline(key);
+    laps.remove(key);
+    baselines.remove(key);
   };
   const finishSession = () => {
     endSession();

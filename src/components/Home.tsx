@@ -58,7 +58,9 @@ export function Home({ state, role, setRole }: { state: Persisted; role: RoleId;
 
   const lastExport = useLastExport();
   const hasProgress = Object.keys(state.progress).length > 0;
-  const exportIsStale = hasProgress && (!lastExport || now - Number(lastExport) > EXPORT_STALE_MS);
+  // `!(age <= stale)` rather than `age > stale`: a hand-edited or garbled timestamp reads
+  // as NaN, and every comparison with NaN is false, so the nudge went quiet for good.
+  const exportIsStale = hasProgress && (!lastExport || !(now - Number(lastExport) <= EXPORT_STALE_MS));
 
   // `lastSeen` is the latest rating's time, so this is "questions you rated in the
   // window", which is the number that tells you whether you drilled today at all. It
@@ -66,7 +68,9 @@ export function Home({ state, role, setRole }: { state: Persisted; role: RoleId;
   // what "questions drilled" means.
   const ratedSince = (since: number) => roleQuestions.filter((q) => (state.progress[q.id]?.lastSeen ?? 0) >= since).length;
   const ratedToday = ratedSince(startOfToday(now));
-  const ratedThisWeek = ratedSince(startOfToday(now) - 6 * 86_400_000);
+  // Six calendar days back, not 6 × 24h: across a DST change that is an hour off midnight.
+  const today = new Date(now);
+  const ratedThisWeek = ratedSince(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6).getTime());
 
   const roundCards = roleRounds.map((round, index) => ({
     round,

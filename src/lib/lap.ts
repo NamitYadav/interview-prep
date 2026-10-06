@@ -63,18 +63,10 @@ const parseLap = (key: string, v: unknown): SavedLap | undefined => {
   };
 };
 
-const lapStore = keyedStore<SavedLap>(KEY, parseLap, { max: MAX_LAPS, recencyOf: (l) => l.savedAt });
-
-export function readLap(key: string): SavedLap | undefined {
-  return lapStore.read(key);
-}
+export const laps = keyedStore<SavedLap>(KEY, parseLap, { max: MAX_LAPS, recencyOf: (l) => l.savedAt });
 
 export function writeLap(lap: Omit<SavedLap, 'savedAt'>, now: number = Date.now()): void {
-  lapStore.write(lap.key, { ...lap, savedAt: now });
-}
-
-export function clearLap(key: string): void {
-  lapStore.remove(key);
+  laps.write(lap.key, { ...lap, savedAt: now });
 }
 
 // id -> `seen` count at the moment the session started. The count, not the progress
@@ -90,19 +82,7 @@ const parseBaseline = (_key: string, v: unknown): Baseline | undefined => {
 
 // Uncapped on purpose: one entry per preset the user has an unfinished session in,
 // and every way out of a session clears its entry.
-const baselineStore = keyedStore<Baseline>(BASELINE_KEY, parseBaseline);
-
-export function readBaseline(key: string): Baseline | undefined {
-  return baselineStore.read(key);
-}
-
-export function writeBaseline(key: string, baseline: Baseline): void {
-  baselineStore.write(key, baseline);
-}
-
-export function clearBaseline(key: string): void {
-  baselineStore.remove(key);
-}
+export const baselines = keyedStore<Baseline>(BASELINE_KEY, parseBaseline);
 
 // The questions a mock session drew, keyed `${role}:${presetId}`, so re-picking the preset
 // after a reload gets the same set back — and with it the same lap and baseline — rather
@@ -172,8 +152,8 @@ export function clearTimedTest(): void {
 // The design session is the same class of thing: after a reset it resumed the old prompt
 // with its phases still ticked and a clock already at 00:00. The timed test likewise.
 export function clearAllLaps(): void {
-  lapStore.clear();
-  baselineStore.clear();
+  laps.clear();
+  baselines.clear();
   designStore.clear();
   timedStore.clear();
 }

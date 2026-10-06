@@ -7,6 +7,8 @@ import { reducer } from '../hooks/useAppState';
 import { forRole, rounds } from '../data';
 const questionsByRound = forRole('staff').byRound;
 import { RoundView } from '../components/RoundView';
+import { drawTest } from '../components/TimedTest';
+import { writeTimedTest } from '../lib/lap';
 
 // Ties in the practice queue are broken at random (lib/queue); a constant draw keeps the
 // stable sort's data order so these assertions can name specific questions.
@@ -186,5 +188,26 @@ describe('RoundView', () => {
     render(<RoundHarness roundId="algo" />);
     expect(screen.getByRole('tab', { name: /timed test/i })).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: /45-min prompt/i })).not.toBeInTheDocument();
+  });
+
+  test('a reload during a running timed test reopens its tab, without the practice filters', () => {
+    localStorage.clear();
+    function AlgoHarness() {
+      const [state, dispatch] = useReducer(reducer, EMPTY);
+      return <RoundView roundId="algo" state={state} dispatch={dispatch} strictMode={false} role="staff" />;
+    }
+    const session = { questionIds: drawTest(questionsByRound('algo'), {}, () => 0).map((q) => q.id), startedAt: Date.now() - 60_000, submitted: false };
+    writeTimedTest(session);
+    const { unmount } = render(<AlgoHarness />);
+    expect(screen.getByRole('tab', { name: /timed test/i })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.queryByRole('combobox', { name: /category/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /submit test/i })).toBeInTheDocument();
+    unmount();
+    // Handed in: nothing is running, so the round opens on Practice as usual.
+    writeTimedTest({ ...session, submitted: true });
+    render(<AlgoHarness />);
+    expect(screen.getByRole('tab', { name: /practice/i })).toHaveAttribute('aria-selected', 'true');
+    expect(category()).toBeInTheDocument();
+    localStorage.clear();
   });
 });

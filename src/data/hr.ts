@@ -18,7 +18,7 @@ export const hr: Question[] = [
       'States explicitly which part of the track record maps to staff scope',
       'Describes the current role without a single word of criticism',
     ],
-    followUps: ['What would make you turn down an offer?', 'Where else are you interviewing?'],
+    followUps: ['What would make you stay where you are?', 'Where else are you interviewing?'],
   },
   {
     id: 'hr-002',
@@ -80,7 +80,7 @@ export const hr: Question[] = [
     category: 'Motivation & fit',
     question: 'What would a great first 90 days in this role look like for you?',
     answer: [
-      'Split it into phases: weeks 1-4 are listening and mapping — understanding the codebase, the team, the roadmap, and where the technical pain points are, without proposing big changes yet.',
+      'Keep it to the shape, not the method — a recruiter is checking your expectations are realistic, and the diagnosis is a Head of Engineering conversation. Weeks 1-4 are listening and mapping — understanding the codebase, the team, the roadmap, and where the technical pain points are, without proposing big changes yet.',
       'Weeks 4-8 are picking one visible, bounded win: "[ship or unblock one concrete improvement]" that builds trust and demonstrates how you work with the team, not just what you know.',
       'By day 90, aim to have a documented point of view on [one architectural or process area] and early relationships across the teams you will need to influence at staff level.',
     ],
@@ -212,19 +212,19 @@ export const hr: Question[] = [
     category: 'Compensation',
     question: 'What are your salary expectations?',
     answer: [
-      'Make them go first. "What is the budgeted range for this role, and at what level is it scoped?" is a normal, expected question in EU hiring, and whoever names a number first anchors the conversation.',
-      'If you have to answer, answer by method rather than from memory: identify the level the role is scoped at, find the band for that level at that employer type, separate base from total compensation — Glassdoor reports base, levels.fyi reports total — then annualise any equity over its vesting period before adding it.',
+      'Make them go first. "What is the budgeted range for this role, and at what level is it scoped?" is a normal question in EU hiring, and whoever names a number first anchors the conversation.',
+      'If you have to answer, answer by method rather than from memory: identify the level the role is scoped at, find the band for that level at that employer type, separate base from total compensation — Glassdoor reports base, levels.fyi reports total — then annualise RSUs or shares over the vest; VSOP gets a heavy discount instead.',
       'Refresh the figures the week of the loop: [check levels.fyi and Glassdoor for Berlin staff-level frontend; note the date, and whether each figure is base or total]. Discard sources that average the whole German employer market rather than funded tech — that floor is not your band, and speaking it hands the recruiter an anchor.',
       'Then give a range, never a single number: "Based on current market data for staff-level frontend in Berlin, I am looking at [€X-€Y] base plus the equity component — what is the band for this level?" Anchor on market rate and role scope, never on your current salary.',
     ],
     deeper: [
       'The EU Pay Transparency Directive (2023/970) requires employers to give applicants the pay range before or at the first interview. Germany missed the 7 June 2026 transposition deadline and its implementing law is expected around 2027, so treat it as a strong norm you can invoke rather than a right you can enforce on the call. A flat refusal to share a band is a data point about the process, not just a tactic.',
-      'Mixing a base source with a total-compensation source is how candidates arrive at nonsense ranges, so label every figure you collect with which one it is. Total compensation, not base, is what decides it at this level, and the spread between employer types is real rather than noise: the Berlin offices of US big tech and the best-funded scale-ups sit far above a Series B startup that matches the base with equity worth nothing for years. Quote a base range, then get the equity detail — instrument, vesting, refresh — before calling any offer competitive. The mechanics of valuing it are the RSU-versus-VSOP question.',
+      'Mixing a base source with a total-compensation source is how candidates arrive at nonsense ranges, so label every figure you collect with which one it is. Total compensation, not base, is what decides it at this level, and the spread between employer types is real rather than noise: the Berlin offices of US big tech and the best-funded scale-ups sit far above a Series B startup that matches the base with equity worth nothing for years. Quote a base range, then get the equity detail — instrument, vesting, refresh — before calling any offer competitive. The mechanics of valuing it, and why VSOP is discounted rather than annualised, are the RSU-versus-VSOP question.',
     ],
     keyPoints: [
       'Asks for the budgeted band and the level it is scoped at before giving a number',
       'Derives the range by method — level, then band, then base versus total — from a source dated to the week of the loop',
-      'Annualises equity over its vest rather than quoting a headline total',
+      'Annualises RSUs or real shares over their vest and discounts VSOP heavily, rather than quoting a headline total',
       'Anchors on market rate and role scope, never on current or past salary',
     ],
     followUps: ['What is your absolute floor?', 'What would you do if we refused to share our band?'],
@@ -277,6 +277,7 @@ export const hr: Question[] = [
       'Weigh it as speculative upside, not a cash-equivalent: discount it heavily against a lower cash offer, and treat how clearly the company explains the plan as a signal in itself.',
     ],
     deeper: [
+      'Full rate is the default, not the whole story: a payout that rewards several years of work can qualify for the Fünftelregelung (§34 EStG), which softens the progression. Since 2025 it is claimed in your tax return rather than applied through payroll, so ask a Steuerberater before counting on it.',
       'The trade-off in one line: VSOP gives full income-tax treatment with no dry income, real equity a better capital-gains upside carrying dry-income risk. §19a EStG addresses the share-transfer case specifically: it defers taxation on shares transferred to employees of qualifying young companies, and the Zukunftsfinanzierungsgesetz (ZuFinG) widened who can use it. By default the deferral ends at the earliest of a sale of the shares, the end of the employment relationship, or fifteen years after the transfer, a ceiling ZuFinG raised from twelve. ZuFinG also added §19a(4a): if the employer irrevocably declares it will be liable for the wage tax, leaving the job or reaching fifteen years no longer triggers it, and tax stays deferred until the shares are sold or otherwise transferred. So real equity only beats VSOP on tax treatment if a deferral actually applies to you; confirm that rather than assuming it.',
       'If the company is far enough along to offer real shares or options rather than a virtual plan, ask about it directly, since the upside tax treatment is better. A company that will not explain why it chose a virtual plan is usually telling you something about how much the instrument is expected to pay.',
     ],
@@ -375,7 +376,7 @@ export const hr: Question[] = [
     question: 'You have a competing offer with a deadline. How do you use it, and how do you ask for more time?',
     answer: [
       'Use it, but only truthfully — a real competing offer is the strongest leverage you have. Say what is true and no more: "I have another offer in hand. I would rather come here, and I am trying to make that work." You need not name the company, and should not name the number early: it becomes the ceiling they match rather than a floor they beat.',
-      'Never bluff: no invented offer, inflated number, or deadline. Berlin tech hiring is a small market and a called bluff ends the negotiation. A real offer wins you maybe 10-15%; a caught bluff costs you the role. If all you have is an active process, say exactly that — "I am at final stage elsewhere" is honest and still creates urgency.',
+      'Never bluff: no invented offer, inflated number, or deadline. Berlin tech hiring is a small market and a called bluff ends the negotiation. A real offer usually wins a modest bump; a caught bluff costs the role. If all you have is an active process, say exactly that — "I am at final stage elsewhere" is honest and still creates urgency.',
       'Asking for time is normal and almost always granted. Ask early, ask once, with a reason and a date: "I want to give this a proper decision rather than a rushed one — could I come back to you by [date]?" A specific date makes it easy to say yes to. Then ask the company you prefer to compress its remaining steps rather than issuing an ultimatum.',
     ],
     deeper: [
@@ -398,7 +399,7 @@ export const hr: Question[] = [
     question: 'How do you compare an RSU-heavy offer with a VSOP-heavy one, and what do you say when a recruiter demands a number three minutes into the first call?',
     answer: [
       'Compare them on expected annual cash, not headline totals. For RSUs: grant value divided by the vesting period, then check the refresh policy after year one — a big grant with no refresh is a pay cut in year two — and the vesting shape.',
-      'Do not annualize VSOP. It pays only if a triggering event happens, so treat it as a lottery ticket with a face value: discount it hard — 70-90% is common for an early-stage plan — and ask which events trigger a payout.',
+      'Do not annualize VSOP. It pays only if a triggering event happens, so treat it as a lottery ticket with a face value: discount it hard — a common rule of thumb is 70-90% — and ask which events trigger a payout.',
       'Then compare the downside rather than the expected value: if the equity in each offer went to zero, which base would you still be content with after a relocation? That usually settles it faster than the spreadsheet.',
       'The minute-three number demand is a recruiter script, not an ambush. Redirect once — "what is the budgeted band, and at what level is this scoped?" If they push, give a range: "[€X-€Y] base plus whatever the equity looks like — does that fit your band?" Never a single number, and make the bottom of the range one you would genuinely accept: that is the one you will be offered.',
     ],
@@ -660,19 +661,19 @@ export const hr: Question[] = [
     id: 'hr-024',
     round: 'hr',
     category: 'From your CV',
-    question: 'Six months from now you have relocated, what does success look like?',
+    question: 'Six months after relocating, what does success look like — and what would tell you the move is not working?',
     answer: [
-      'Split success into two tracks: personal/logistical (fully settled — housing, Anmeldung, health insurance switch complete, basic routines established) and professional (ramped up, trusted with real technical ownership, visible cross-team relationships forming).',
-      'On the professional side, be specific but generic: "[shipped or unblocked one meaningful initiative], established a point of view on [one architectural or process area], and am seen as a reliable technical voice by [peers/stakeholders]."',
-      'Add a marker of staff-level success specifically: influence starting to extend beyond your immediate team, not just strong individual output.',
+      'Lead with the relocation track, because that is what the recruiter is really checking — whether the move will hold: Anmeldung, tax ID, health insurance and a bank account done in the first weeks, out of temporary housing into a real lease, and [family settled: school, Kita, a partner\'s work] where that applies.',
+      'Then life outside work: German moving from survival to everyday [A2/B1], and some routine and people beyond the office. Relocations rarely fail on the job; they fail when life around it never settles.',
+      'Keep work to one line: past onboarding and owning something real. Then name the warning signs you would act on early rather than at month eleven — still in temporary housing, a family member unhappy, no life outside work — and say you would raise them with your manager rather than quietly decide to leave.',
     ],
     keyPoints: [
-      'Separates the logistical track from the professional one',
-      'Names concrete month-six professional milestones',
-      'Names one marker of influence outside the immediate team',
-      'Gives a timeframe that does not promise impact in week one',
+      'Leads with the relocation track: registrations, housing, family where it applies',
+      'Counts life outside work and language progress as part of success',
+      'Keeps the work milestone to one line: past onboarding, owning something real',
+      'Names early warning signs and would raise them rather than quietly leave',
     ],
-    followUps: ['What would concern you if you were not there by month six?', 'How would you measure your own progress along the way?'],
+    followUps: ['What support from us would make the move easier?', 'Have you relocated before, and what did you learn from it?'],
   },
   {
     id: 'hr-025',
@@ -682,15 +683,15 @@ export const hr: Question[] = [
     answer: [
       'Describe concrete, current practice rather than a buzzword: using an AI coding assistant for scaffolding boilerplate, generating first-draft tests, exploring unfamiliar parts of a codebase faster, or drafting documentation — then always reviewing and owning the result yourself.',
       'Be explicit about where you draw the line: you treat AI output as a fast first draft, not a substitute for understanding the code, and you apply the same review rigor (tests, code review, security considerations) to AI-assisted changes as to anything else.',
-      'Mention one team-level angle if relevant, e.g. helping less experienced engineers use these tools well, or thinking about where AI assistance genuinely speeds up a team versus where it introduces risk (e.g. security-sensitive code, unreviewed dependency changes).',
+      'Say how you know it helps rather than asserting it: one task where it reliably saves time, one where it cost you time — plausible code that was subtly wrong, a package it invented — and how you keep the skills it could erode, such as writing the tricky core logic yourself before asking it for a second opinion.',
     ],
     keyPoints: [
       'Names two or three specific tasks they actually use it for',
       'States that they review and own every line that ships',
       'Names the same gates (tests, review, security) applied as to hand-written code',
-      'Names at least one place they will not use it, and why',
+      'Names one place it saved time, one where it cost time, and where they will not use it',
     ],
-    followUps: ['Where would you say AI assistance should not be trusted?', 'How do you evaluate whether AI-generated code is safe to merge?'],
+    followUps: ['How has it changed the way you review other people\'s code?', 'How do you evaluate whether AI-generated code is safe to merge?'],
   },
   {
     id: 'hr-026',

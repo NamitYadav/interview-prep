@@ -1,9 +1,9 @@
 import { useRef, useState, useSyncExternalStore, type Dispatch } from 'react';
 import type { Persisted } from '../types';
 import type { Action } from '../hooks/useAppState';
-import { backupFilename, parseBackup } from '../lib/storage';
+import { backupFilename, parseBackup, unblockSave } from '../lib/storage';
 import { clearAllLaps } from '../lib/lap';
-import { clearAllDrafts } from '../lib/drafts';
+import { drafts } from '../lib/drafts';
 import { pageButton, panelButton, panelDangerButton } from './controlStyles';
 import { plural } from './ProgressBar';
 
@@ -69,12 +69,15 @@ export function ImportReset({ state, dispatch }: { state: Persisted; dispatch: D
         return;
       }
       dispatch({ type: 'import', data });
+      // Choosing to replace everything is consent to overwrite whatever load() refused to
+      // (a newer-version or unquarantined blob); without this the import never saved.
+      unblockSave();
       // Laps and drafts are position and scratch for the data that was just replaced.
       // Kept, they point into a set that no longer exists: the restored lap resumes
       // somebody else's session, and the scratch editor opens full of code written
       // against a question the imported data may not even contain.
       clearAllLaps();
-      clearAllDrafts();
+      drafts.clear();
       setImported(summary(data));
     } catch (e) {
       setImported(null);
@@ -98,8 +101,16 @@ export function ImportReset({ state, dispatch }: { state: Persisted; dispatch: D
     // with the last session's code still sitting in the scratch editor.
     if (window.confirm(`Delete all ${counts.slice(0, -1).join(', ')} and ${counts[counts.length - 1]}, plus your place in every drill and any scratch work? This cannot be undone — export first if you want a backup.`)) {
       dispatch({ type: 'reset' });
+      unblockSave();
       clearAllLaps();
-      clearAllDrafts();
+      drafts.clear();
+      // Fresh progress has never been exported. Left in place, the timestamp kept the
+      // backup nudge quiet for up to a week after a reset. Import keeps it: the data you
+      // just imported came from an export.
+      try {
+        localStorage.removeItem(LAST_EXPORT_KEY);
+      } catch { /* storage unavailable — the nudge just stays as it was */ }
+      listeners.forEach((l) => l());
     }
   };
 

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 import type { Question } from '../types';
-import { MAX_LAPS, clearLap, lapKey, readLap, writeLap } from '../lib/lap';
+import { MAX_LAPS, lapKey, laps, writeLap } from '../lib/lap';
 
 beforeEach(() => localStorage.clear());
 
@@ -12,13 +12,13 @@ const lap = { key, history: ['a', 'b'], historyPos: 1, requeued: [{ id: 'a', at:
 describe('lap', () => {
   test('round-trips a lap', () => {
     writeLap(lap, 111);
-    expect(readLap(key)).toEqual({ ...lap, savedAt: 111 });
+    expect(laps.read(key)).toEqual({ ...lap, savedAt: 111 });
   });
 
   test('a different question set does not restore', () => {
     writeLap(lap);
-    expect(readLap(lapKey('staff', ['a', 'b'].map(q)))).toBeUndefined();
-    expect(readLap(lapKey('staff', ['a', 'b', 'd'].map(q)))).toBeUndefined();
+    expect(laps.read(lapKey('staff', ['a', 'b'].map(q)))).toBeUndefined();
+    expect(laps.read(lapKey('staff', ['a', 'b', 'd'].map(q)))).toBeUndefined();
   });
 
   test('lapKey distinguishes length and endpoints', () => {
@@ -41,16 +41,16 @@ describe('lap', () => {
 
   test('rejects a position outside the stored history', () => {
     writeLap({ ...lap, historyPos: 5 });
-    expect(readLap(key)).toBeUndefined();
+    expect(laps.read(key)).toBeUndefined();
     writeLap({ ...lap, historyPos: -1 });
-    expect(readLap(key)).toBeUndefined();
+    expect(laps.read(key)).toBeUndefined();
   });
 
   test('rejects malformed stored data rather than throwing', () => {
     localStorage.setItem('interview-prep:laps', 'not json');
-    expect(readLap(key)).toBeUndefined();
+    expect(laps.read(key)).toBeUndefined();
     localStorage.setItem('interview-prep:laps', JSON.stringify({ [key]: { history: 'nope', historyPos: 0, requeued: [], step: 0 } }));
-    expect(readLap(key)).toBeUndefined();
+    expect(laps.read(key)).toBeUndefined();
   });
 
   test('drops malformed requeue entries but keeps the lap', () => {
@@ -58,16 +58,16 @@ describe('lap', () => {
       'interview-prep:laps',
       JSON.stringify({ [key]: { history: ['a'], historyPos: 0, step: 1, requeued: [{ id: 'a', at: 3 }, { id: 5 }, null, 'x'] } }),
     );
-    expect(readLap(key)?.requeued).toEqual([{ id: 'a', at: 3 }]);
+    expect(laps.read(key)?.requeued).toEqual([{ id: 'a', at: 3 }]);
   });
 
-  test('clearLap removes only the named lap', () => {
+  test('laps.remove removes only the named lap', () => {
     const otherKey = lapKey('staff', ['x', 'y'].map(q));
     writeLap(lap);
     writeLap({ ...lap, key: otherKey });
-    clearLap(key);
-    expect(readLap(key)).toBeUndefined();
-    expect(readLap(otherKey)).toBeDefined();
+    laps.remove(key);
+    expect(laps.read(key)).toBeUndefined();
+    expect(laps.read(otherKey)).toBeDefined();
   });
 
   // One global slot meant opening any other Practice set — another round, a category
@@ -77,16 +77,16 @@ describe('lap', () => {
     const b = lapKey('staff', ['x', 'y'].map(q));
     writeLap({ key: a, history: ['a', 'b'], historyPos: 1, requeued: [], step: 1 });
     writeLap({ key: b, history: ['x'], historyPos: 0, requeued: [], step: 0 });
-    expect(readLap(a)?.historyPos).toBe(1);
-    expect(readLap(b)?.historyPos).toBe(0);
+    expect(laps.read(a)?.historyPos).toBe(1);
+    expect(laps.read(b)?.historyPos).toBe(0);
   });
 
   test('evicts the oldest laps past the cap', () => {
     for (let i = 0; i < MAX_LAPS + 8; i++) {
       writeLap({ key: `k${i}`, history: ['a'], historyPos: 0, requeued: [], step: 0 }, i);
     }
-    expect(readLap(`k${MAX_LAPS + 7}`)).toBeDefined();
-    expect(readLap('k0')).toBeUndefined();
+    expect(laps.read(`k${MAX_LAPS + 7}`)).toBeDefined();
+    expect(laps.read('k0')).toBeUndefined();
     const stored: unknown = JSON.parse(localStorage.getItem('interview-prep:laps')!);
     expect(Object.keys(stored as object).length).toBe(MAX_LAPS);
   });

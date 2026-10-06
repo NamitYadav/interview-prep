@@ -1,7 +1,8 @@
 import { score, type CaseResult, type CaseStatus } from '../lib/grade';
+import { ratingText } from './controlStyles';
 
 const ICON: Record<CaseStatus, string> = { pass: '✓', fail: '✗', error: '✗', timeout: '⏱' };
-const warnText = 'text-amber-700 dark:text-amber-400';
+const warnText = ratingText.ok;
 
 // Codility's report shape: the two scores up top, then every case, failing ones opened up
 // with what went in, what was expected, and what came back.

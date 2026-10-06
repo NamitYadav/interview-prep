@@ -19,7 +19,6 @@ const isRoundId = (r: Route): r is RoundId => (ROUND_IDS as readonly string[]).i
 
 const APP_NAME = 'Interview Prep';
 
-const SAVE_FAILED_MESSAGE = 'Progress is not being saved (storage unavailable). Export before closing the tab.';
 const STALE_TAB_MESSAGE = 'Another tab changed your progress. Reload to see it — saving from here will overwrite that change.';
 
 const VIEW_TITLES: Record<Exclude<Route, RoundId>, string> = {
@@ -79,14 +78,14 @@ export default function App() {
   // One region, mounted for the life of the app and empty until there is something to
   // say. A role="status" that appears with its text already inside is routinely missed:
   // the announcement depends on the text arriving after the region is being watched.
-  const announcement = saveFailed ? SAVE_FAILED_MESSAGE : staleTab ? STALE_TAB_MESSAGE : '';
+  const announcement = saveFailed ?? (staleTab ? STALE_TAB_MESSAGE : '');
 
   return (
     <>
       <p role="status" className="sr-only">{announcement}</p>
       {saveFailed && (
         <div className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-900 print:hidden dark:bg-amber-900 dark:text-amber-100">
-          {SAVE_FAILED_MESSAGE}
+          {saveFailed}
         </div>
       )}
       {staleTab && !saveFailed && (

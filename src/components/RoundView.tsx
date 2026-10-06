@@ -8,7 +8,7 @@ import { Browse } from './Browse';
 import { Practice } from './Practice';
 import { ProgressBar, statsCaption } from './ProgressBar';
 import { DesignSession } from './DesignSession';
-import { TimedTest } from './TimedTest';
+import { TimedTest, testRunning } from './TimedTest';
 import { CategoryStrength } from './CategoryStrength';
 import { ALL, STATUS_OPTIONS, Select } from './Select';
 
@@ -25,7 +25,8 @@ export function RoundView({
   const categories = useMemo(() => [...new Set(all.map((q) => q.category))], [all]);
   const [selected, setSelected] = useState<string | null>(null);
   const [status, setStatus] = useState<QuestionStatus>('all');
-  const [tab, setTab] = useState<Tab>('practice');
+  // A reload mid-test used to land on Practice with the clock still running unseen.
+  const [tab, setTab] = useState<Tab>(() => (roundId === 'algo' && testRunning() ? 'timed-test' : 'practice'));
   const TABS: Tab[] =
     roundId === 'design' ? ['practice', 'browse', 'design-prompt'] :
     roundId === 'algo' ? ['practice', 'browse', 'timed-test'] :
@@ -108,15 +109,18 @@ export function RoundView({
           </button>
         ))}
       </div>
-      <div className="mb-2 flex flex-wrap gap-2">
-        <Select
-          label="Category"
-          value={selected ?? ALL}
-          onChange={(v) => setSelected(v || null)}
-          options={[{ value: ALL, label: 'All categories' }, ...categories.map((c) => ({ value: c, label: c }))]}
-        />
-        <Select label="Status" value={status} onChange={(v) => setStatus(v as QuestionStatus)} options={STATUS_OPTIONS} />
-      </div>
+      {/* Only Practice and Browse read the filters; on the session tabs they did nothing. */}
+      {(tab === 'practice' || tab === 'browse') && (
+        <div className="mb-2 flex flex-wrap gap-2">
+          <Select
+            label="Category"
+            value={selected ?? ALL}
+            onChange={(v) => setSelected(v || null)}
+            options={[{ value: ALL, label: 'All categories' }, ...categories.map((c) => ({ value: c, label: c }))]}
+          />
+          <Select label="Status" value={status} onChange={(v) => setStatus(v as QuestionStatus)} options={STATUS_OPTIONS} />
+        </div>
+      )}
       </div>
 
       <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>
@@ -134,7 +138,7 @@ export function RoundView({
             </button>
           </div>
         ) : (
-          <Practice key={`${roundId}:${selected ?? ''}:${status}`} questions={filtered} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />
+          <Practice key={`${roundId}:${selected ?? ''}:${status}`} lapId={`${roundId}:${selected ?? ''}:${status}`} questions={filtered} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />
         ))}
         {tab === 'browse' && <Browse questions={filtered} state={state} dispatch={dispatch} />}
         {tab === 'design-prompt' && <DesignSession state={state} dispatch={dispatch} role={role} />}
