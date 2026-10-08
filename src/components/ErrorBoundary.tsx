@@ -56,7 +56,8 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { hasError
             onClick={() => {
               if (!window.confirm(CLEAR_CONFIRM)) return;
               try {
-                localStorage.clear();
+                // This app's keys only: the portfolio at the site root shares the origin.
+                for (const k of Object.keys(localStorage)) if (k.startsWith('interview-prep:')) localStorage.removeItem(k);
               } catch {
                 /* nothing else to do — the reload below is still the best move */
               }

@@ -65,12 +65,14 @@ export const lead: Question[] = [
       'Start by ruling out the boring explanations before assuming a skill or will problem: a change in scope, an unclear owner on a project, something happening outside work — a direct, private "I\'ve noticed [specific change], what\'s going on" opens that door without accusing anyone of anything.',
       'If it is a real performance gap, name it concretely and in writing between the two of you: which specific outputs are below the bar, over what time window, and what "back on track" would look like — vague concern with no specifics is what turns into a surprise PIP later.',
       'Set a short, explicit check-in cadence (weeks, not a quarter) so both of you see the trend early, and be honest with yourself about your own contribution — unclear priorities or a project handed off badly are causes you can fix faster than the person\'s "attitude."',
+      'Know the German frame before you reach for a US-style plan: a PIP has no legal standing here. Once someone is past the six-month waiting period in a company with more than ten employees, the KSchG requires any dismissal to be socially justified; a conduct problem usually needs a prior written warning, an Abmahnung, first; and if there is a works council it must be heard before any dismissal under §102 BetrVG, or the dismissal is void. So the lead\'s job is dated, specific documentation and involving HR early — not an ultimatum.',
     ],
     keyPoints: [
       'Rules out situational causes before assuming a skill or motivation problem',
       'Names the specific gap and time window in writing, not just a feeling',
       'Sets a short, explicit check-in cadence rather than waiting for the next review',
       'Honestly considers the lead\'s own contribution to the gap',
+      'Knows a PIP has no legal standing in Germany: KSchG social justification, Abmahnung for conduct, and §102 BetrVG works-council hearing — so documents and involves HR early',
     ],
     followUps: ['How long do you let this run before escalating to HR or a formal plan?', 'How do you keep the rest of the team from noticing and speculating?'],
   },
@@ -313,6 +315,9 @@ export const lead: Question[] = [
       'Sets a concrete revisit date rather than adopting off one prototype',
     ],
     followUps: ['What\'s a dependency you regret adopting, and what would you do differently?', 'How do you handle it when the request comes from someone more senior than you?'],
+    deeper: [
+      'If the dependency is a vendor SDK or hosted service that will see EU user data, add one gate before the pilot rather than after adoption: a data processing agreement and the vendor\'s real storage and processing locations cleared by legal and security review. A script tag that sends IP addresses or DOM content to a third party is a data flow even when it does not look like one.',
+    ],
   },
   {
     id: 'lead-018',
@@ -542,12 +547,12 @@ export const lead: Question[] = [
     question: 'Your panel is split on a candidate — two strong yeses, two real concerns. As the hiring lead, who actually makes the call, and when do you overrule the split?',
     answer: [
       'Run the debrief first as real discussion, not a vote — have each interviewer walk through their specific evidence, since a 2-2 split on the surface sometimes resolves once everyone hears the actual details behind each score rather than just the number.',
-      'Be clear who owns the decision before the debrief starts, not during it: in most Berlin scale-ups the hiring manager decides and the panel advises, a bar-raiser or a hiring committee changes that, and a split is the moment an unstated rule turns into a fight. If you own it, the panel should know their input is weighed on evidence rather than counted as votes, so one well-evidenced concern can outweigh two enthusiastic yeses.',
+      'Be clear who owns the decision before the debrief starts, not during it: in most Berlin scale-ups the hiring manager decides and the panel advises, a bar-raiser or a hiring committee changes that, and a split is the moment an unstated rule turns into a fight. In Germany the company\'s decision is also not final on its own: with a works council in a company of more than 20 employees, every hire needs the Betriebsrat\'s consent under §99 BetrVG, so the manager decides subject to that. If you own it, the panel should know their input is weighed on evidence rather than counted as votes, so one well-evidenced concern can outweigh two enthusiastic yeses.',
       'Make the call explicitly as yours to make, state the reasoning to the full panel afterward so it doesn\'t look like you ignored their input, and treat a genuinely close, well-argued split as a signal to consider a narrower role scope or an extra data point rather than only a yes-or-no fight.',
     ],
     keyPoints: [
       'Runs debrief as real discussion of evidence, not a raw vote count',
-      'Knows who owns the decision before the debrief, and weighs evidence rather than counting votes',
+      'Knows who owns the decision before the debrief, that a works council must consent to every hire (§99 BetrVG), and weighs evidence rather than counting votes',
       'Owns the final call explicitly and explains the reasoning to the full panel',
       'Considers a narrower scope or extra data point instead of forcing a binary outcome',
     ],

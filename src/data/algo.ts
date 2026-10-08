@@ -551,7 +551,7 @@ Constraints:
     answer: [
       'Restating: how many different values A holds. N is up to 100,000 and N can be 0, so the empty array must return 0.',
       'Brute force checks each element against everything before it, with indexOf or a nested loop: O(N²), which fails when all values are distinct.',
-      'Two good options. First, sort and count the places where a value differs from its predecessor: O(N log N) time and O(1) extra space if I may sort in place, or O(N) if I copy. Second, a Set: add every element and return its size, O(N) time and O(N) space. I would name that trade-off aloud: the Set is faster, the sort uses less memory.',
+      'Two good options. First, sort and count the places where a value differs from its predecessor: O(N log N) time, with O(1) extra beyond the sort itself — but V8\'s TimSort allocates up to O(N), so I would not claim O(1) overall. Second, a Set: add every element and return its size, O(N) time and O(N) space. I would name that trade-off aloud: the Set is faster and simpler; the sort only wins on memory if the sort itself is in place.',
       'One JavaScript trap: sort without a comparator orders values as strings, so negatives and multi-digit numbers come out in the wrong order. Equal values still end up adjacent, but I always pass (a, b) => a - b so the order is correct.',
       'Tests: an empty array, one element, negatives, all values the same and all values distinct.',
     ],

@@ -6,22 +6,24 @@ export const backend: Question[] = [
     id: 'backend-001',
     round: 'backend',
     category: 'API design',
-    question: 'A client retries POST /payments after a timeout. How do you make sure the customer is charged once?',
+    question: 'A client retries POST /payments after a timeout, and the charge itself happens at an external payment provider. How do you make sure the customer is charged once?',
     answer: [
-      'Name the failure first: a timeout tells the client nothing about whether the server committed, so a retry is the correct client behaviour and the server has to make it safe. That is an idempotency problem, not a networking one.',
-      'The client sends an Idempotency-Key header, a UUID generated once per logical payment. The server stores the key with a hash of the request body and the eventual response, inside the same transaction that creates the payment, with a unique constraint on the key. A repeat with the same key and body returns the stored response; the same key with a different body is a 422, because that is a client bug, not a retry.',
-      'Cover the concurrent case out loud: two identical requests arriving together both miss the lookup, and the unique constraint is what makes one of them lose. The loser either waits and replays the winner\'s stored response or gets a 409 to retry. Keys expire after a window, say 24 hours, that is longer than any client\'s retry policy.',
+      'Name the failure first: a timeout tells the client nothing about whether the server committed, so a retry is correct client behaviour and the server has to make it safe. With an external provider there are two hops that can each time out, and the provider call cannot sit inside your database transaction — so this is a small state machine, not one unique constraint.',
+      'Layer one is your own API. The client sends an Idempotency-Key, one per logical payment. Before doing anything else the server inserts the key with a hash of the request body into a table with a unique constraint, and commits. The constraint, not a read-then-write check, settles two concurrent duplicates. A repeat that finds a completed row replays the stored response; one that finds a row still in flight gets a 409 the client treats as pending; the same key with a different body is a 422, because that is a client bug, not a retry.',
+      'Layer two is the provider. Record the payment as pending and commit before calling out, then pass your key through as the provider\'s own idempotency key — most payment providers accept one — so your retry of the provider call is deduplicated on their side too. On success, store the provider\'s reference and the response on the same row.',
+      'Layer three is the unknown outcome, which is the part people skip. If the provider call itself times out, the row stays pending: do not mark it failed, because the charge may have gone through, and a failed status invites a new key and a second charge. A reconciliation job asks the provider about rows pending longer than a threshold, and the provider\'s webhook updates the same row — deduplicated by event id, since webhooks are at-least-once too. Keys expire after a window longer than any client\'s retry policy, say 24 hours.',
     ],
     keyPoints: [
-      'Treats a timeout as an unknown outcome, so retries must be safe server-side',
-      'Client-generated idempotency key, one per logical operation',
-      'Key, request hash and response stored in the same transaction as the side effect',
-      'A database unique constraint, not a read-then-write check, settles concurrent duplicates',
-      'Same key with a different body is rejected, not replayed',
+      'Treats a timeout as an unknown outcome at both hops, so retries must be safe server-side',
+      'Client-generated idempotency key, inserted under a unique constraint and committed before any side effect',
+      'In-flight repeat gets 409-as-pending, completed repeat replays, same key with a different body gets 422',
+      'Passes its own key through to the provider so the provider deduplicates the outbound retry',
+      'A provider timeout leaves the payment pending, never failed; a reconciliation job and deduplicated webhooks resolve it',
     ],
-    followUps: ['What changes when the side effect is a call to an external payment provider rather than your own database?', 'How long do you keep keys, and what decides it?'],
+    followUps: ['The provider says it has no record of your key for a payment stuck pending. What now?', 'Why not mark the payment failed when the provider call times out?', 'How long do you keep keys, and what decides it?'],
     deeper: [
-      'With an external provider you cannot share a transaction, so record the key as "in progress" first, pass your key through to the provider (most accept one), and reconcile stuck "in progress" rows with a job that asks the provider for the outcome.',
+      'If the provider call has to follow other writes — the order row, stock reservation — put the payment intent and an outbox row in the same transaction and let a worker make the provider call with the key. The outbox is at-least-once and the provider deduplicates by key, which together give you effectively-once charging without a distributed transaction.',
+      'The frontend half of the same contract — when the key is generated, and what the UI shows while the outcome is unknown — is the hiring-manager version of this question; the server-side mechanics of storing the promise rather than the result are the idempotency-store live-coding task.',
     ],
   },
   {
@@ -100,7 +102,7 @@ export const backend: Question[] = [
     followUps: ['Which errors should a client retry automatically?', 'How do you localise error messages for end users?'],
   },
 
-  // Data & Postgres (6)
+  // Data & Postgres (8)
   {
     id: 'backend-006',
     round: 'backend',
@@ -214,6 +216,51 @@ export const backend: Question[] = [
     followUps: ['How would you migrate a JSONB key into a column without downtime?', 'How do you validate JSONB contents?'],
   },
 
+  {
+    id: 'backend-041',
+    round: 'backend',
+    category: 'Data & Postgres',
+    question: "A busy Postgres table keeps growing on disk although the row count is flat, and the service runs out of connections under load. Explain both, and what you change.",
+    answer: [
+      "Both come from how Postgres works, so explain the mechanism first. MVCC: an UPDATE writes a new row version and marks the old one dead, and a DELETE only marks it, so readers see a consistent snapshot without locks. Dead versions are reclaimed by VACUUM, normally autovacuum, which makes the space reusable inside the table but does not shrink the file. A flat row count on a growing table is dead tuples outpacing vacuum.",
+      "Diagnose it: n_dead_tup and last_autovacuum in pg_stat_user_tables, and look for what blocks cleanup — a long-running transaction or an idle-in-transaction session holds back the oldest snapshot, so vacuum cannot remove anything newer. Fix the blocker first, then tune autovacuum for that table — a lower scale factor so it runs more often on a big table. Reclaiming disk already lost needs a rewrite such as pg_repack, not VACUUM FULL on a live table, which takes an exclusive lock.",
+      "Connections: each Postgres connection is a process with real memory, so hundreds of app instances each holding a pool exhaust max_connections long before the CPU is busy. Put PgBouncer in transaction mode in front: a server connection is lent per transaction, so a few dozen serve thousands of clients.",
+      "Name the caveat, because it bites: in transaction mode anything session-scoped breaks — SET, advisory locks held across transactions, LISTEN/NOTIFY, temporary tables — and prepared statements historically broke too, because the next transaction can land on another server connection. Recent PgBouncer versions track protocol-level prepared statements when configured; otherwise disable them in the driver. Keep a session-mode pool for migrations and anything that needs a session.",
+    ],
+    keyPoints: [
+      "Explains MVCC dead tuples and that VACUUM makes space reusable without shrinking the file",
+      "Finds the vacuum blocker: long-running or idle-in-transaction sessions holding the oldest snapshot",
+      "Tunes autovacuum per table and uses pg_repack rather than VACUUM FULL to reclaim disk online",
+      "Explains per-connection process cost and uses PgBouncer transaction pooling",
+      "Names transaction-mode caveats: session state, advisory locks, LISTEN, and prepared statements unless supported and configured",
+    ],
+    followUps: ["What is transaction ID wraparound, and why does it force a vacuum?", "How do you size the pool behind PgBouncer?"],
+    deeper: [
+      "Wraparound is the failure that turns vacuum from hygiene into an outage: transaction ids are 32-bit, so old rows must be frozen by vacuum before the counter wraps; if that falls far enough behind, Postgres refuses new writes to protect data. Monitor age(datfrozenxid) and never disable autovacuum on a table to make a problem go away.",
+    ],
+  },
+  {
+    id: 'backend-042',
+    round: 'backend',
+    category: 'Data & Postgres',
+    question: "A user exercises their GDPR right to erasure. Their data is in Postgres, in logs, in the analytics warehouse and in last night's backups. What do you actually do?",
+    answer: [
+      "Start with scope, because erasure under Art. 17 is not absolute: data you must keep under another legal duty, like invoices under German retention rules, stays, restricted to that purpose. Everything else goes, within a month.",
+      "Primary database: delete or anonymise, and know where the user's id fans out — a data map per service, maintained like the schema, is what makes this a job rather than an investigation. Prefer anonymising rows other records depend on, such as orders kept for accounting, over cascading deletes.",
+      "Downstream systems need an event: publish a deletion event that every consumer — search index, warehouse, CRM, email tool, processors under contract — must handle, and track completion per system, because erasure is only as complete as the slowest consumer.",
+      "Backups: you usually cannot rewrite an immutable backup, and regulators generally accept that if the backups are access-controlled, expire on a short fixed retention, and a restore re-applies the deletions — so keep a log of erased ids, holding only what is needed, and replay it after any restore.",
+      "Logs: the real fix is upstream — do not log personal data in the first place; log pseudonymous ids, and keep log retention short so whatever slipped through ages out.",
+      "Crypto-shredding is the strong version: encrypt each user's data with a per-user key and delete the key, which also covers backups.",
+    ],
+    keyPoints: [
+      "Knows Art. 17 has exceptions such as legal retention duties, and the one-month deadline",
+      "Maintains a data map and anonymises rows that other records depend on",
+      "Propagates deletion by event to every downstream system and tracks completion",
+      "Handles backups with short retention and replaying an erased-ids log after restore",
+      "Keeps personal data out of logs and mentions crypto-shredding with per-user keys",
+    ],
+    followUps: ["How do you prove to the user, or a regulator, that erasure happened?", "What do you do about personal data inside free-text fields?"],
+  },
   // Caching & performance (4)
   {
     id: 'backend-012',

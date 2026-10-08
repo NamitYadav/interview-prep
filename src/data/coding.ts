@@ -618,20 +618,20 @@ function AmountForm() {
     question: 'Build a drag-to-reorder list: dragging an item to a new position updates the list order, keyboard-operable, no external DnD library. Talk me through your approach.',
     code: `function ReorderableList({ items, onReorder }: { items: string[]; onReorder: (next: string[]) => void }) {
   // TODO: draggable items, onDragStart/onDragOver/onDrop to compute the new order
-  // TODO: keyboard equivalent (e.g. focus an item, Alt+ArrowUp/Down to move it)
+  // TODO: visible move-up/move-down buttons per item (WCAG 2.2 SC 2.5.7 single-pointer alternative); Alt+ArrowUp/Down as an extra
   return null;
 }`,
     answer: [
       'For mouse/touch: use native HTML5 drag-and-drop (draggable, onDragStart storing the dragged index, onDragOver preventing default and computing the hover target index, onDrop reordering the array immutably and calling onReorder) rather than building pointer-tracking from scratch.',
       'Compute the reorder with a pure function (remove the dragged item, splice it back in at the target index) so the logic is unit-testable independent of any DOM event.',
-      'State the accessibility gap in native drag-and-drop plainly: it is mouse/touch-only and has no keyboard equivalent, so a keyboard path is a hard requirement, not a nice-to-have, for a genuinely accessible list.',
-      'Implement the keyboard path with a per-item "move up"/"move down" affordance (or a documented Alt+Arrow shortcut while an item is focused) calling the same pure reorder function, and move focus to the item\'s new position after the move so focus does not get lost.',
+      'State the accessibility gap in native drag-and-drop plainly: it has no keyboard equivalent, and it demands a path-based pointer movement. WCAG 2.2 SC 2.5.7 Dragging Movements (AA) requires a single-pointer alternative for anything done by dragging, so visible controls are mandatory, not a nice-to-have.',
+      'Implement that as visible per-item "move up"/"move down" buttons — real buttons, so they serve a single click or tap and the keyboard at once — calling the same pure reorder function, and move focus to the item\'s new position after the move so focus does not get lost. A documented Alt+Arrow shortcut on the focused item is a good extra for power users, but it does not satisfy 2.5.7 on its own, because it is not a pointer alternative.',
     ],
     keyPoints: [
       'Uses native HTML5 drag events rather than hand-rolled pointer tracking',
       'Reorder logic is a pure, independently testable function',
-      'Explicitly names drag-and-drop\'s keyboard-accessibility gap',
-      'Implements a working keyboard alternative that preserves focus after the move',
+      'Names WCAG 2.2 SC 2.5.7 Dragging Movements: a single-pointer alternative is required, not optional',
+      'Ships visible move-up/move-down buttons that work for pointer and keyboard and preserve focus after the move; Alt+Arrow is an extra, not the alternative',
     ],
     followUps: ['How would you announce the new position to a screen reader after a move?', 'How would you support dragging across two separate lists?'],
   },

@@ -1,7 +1,7 @@
 import { useRef, useState, useSyncExternalStore, type Dispatch } from 'react';
 import type { Persisted } from '../types';
 import type { Action } from '../hooks/useAppState';
-import { backupFilename, parseBackup, unblockSave } from '../lib/storage';
+import { backupFilename, parseBackup, saveBlockedReason, unblockSave } from '../lib/storage';
 import { clearAllLaps } from '../lib/lap';
 import { drafts } from '../lib/drafts';
 import { pageButton, panelButton, panelDangerButton } from './controlStyles';
@@ -12,6 +12,12 @@ export const LAST_EXPORT_KEY = 'interview-prep:last-export';
 // Export can be pressed from the settings panel or from Home's backup nudge; Home's
 // nudge has to clear either way, so the timestamp is a tiny shared store rather than
 // state one component reads once at mount.
+// load() refused to touch what is on disk (a newer-version blob after a rollback, or one
+// it could not set aside), so the in-memory counts above are 0 and say nothing about it.
+// Reset and Import overwrite it; say so instead of confirming "Delete all 0 ratings".
+const overwritesBlocked = () =>
+  saveBlockedReason() ? ' It also permanently overwrites the saved data this version of the app could not open.' : '';
+
 const listeners = new Set<() => void>();
 const subscribe = (l: () => void) => {
   listeners.add(l);
@@ -65,7 +71,7 @@ export function ImportReset({ state, dispatch }: { state: Persisted; dispatch: D
       setImported(null);
       const summary = (p: Persisted) =>
         `${Object.keys(p.progress).length} rated, ${Object.keys(p.notes).length} notes, ${Object.keys(p.stories).length} stories`;
-      if (!window.confirm(`Replace your current data (${summary(state)}) with this backup (${summary(data)})? This cannot be undone.`)) {
+      if (!window.confirm(`Replace your current data (${summary(state)}) with this backup (${summary(data)})?${overwritesBlocked()} This cannot be undone.`)) {
         return;
       }
       dispatch({ type: 'import', data });
@@ -99,7 +105,7 @@ export function ImportReset({ state, dispatch }: { state: Persisted; dispatch: D
     // Laps and drafts are named too, and actually cleared. Clearing only the ratings
     // left the user resuming mid-lap through a set where nothing is rated any more,
     // with the last session's code still sitting in the scratch editor.
-    if (window.confirm(`Delete all ${counts.slice(0, -1).join(', ')} and ${counts[counts.length - 1]}, plus your place in every drill and any scratch work? This cannot be undone — export first if you want a backup.`)) {
+    if (window.confirm(`Delete all ${counts.slice(0, -1).join(', ')} and ${counts[counts.length - 1]}, plus your place in every drill and any scratch work?${overwritesBlocked()} This cannot be undone — export first if you want a backup.`)) {
       dispatch({ type: 'reset' });
       unblockSave();
       clearAllLaps();

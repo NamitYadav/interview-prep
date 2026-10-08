@@ -8,7 +8,7 @@ import { Browse } from './Browse';
 import { Practice } from './Practice';
 import { ProgressBar, statsCaption } from './ProgressBar';
 import { DesignSession } from './DesignSession';
-import { TimedTest, testRunning } from './TimedTest';
+import { TimedTest, testPending } from './TimedTest';
 import { CategoryStrength } from './CategoryStrength';
 import { ALL, STATUS_OPTIONS, Select } from './Select';
 
@@ -26,7 +26,7 @@ export function RoundView({
   const [selected, setSelected] = useState<string | null>(null);
   const [status, setStatus] = useState<QuestionStatus>('all');
   // A reload mid-test used to land on Practice with the clock still running unseen.
-  const [tab, setTab] = useState<Tab>(() => (roundId === 'algo' && testRunning() ? 'timed-test' : 'practice'));
+  const [tab, setTab] = useState<Tab>(() => (roundId === 'algo' && testPending() ? 'timed-test' : 'practice'));
   const TABS: Tab[] =
     roundId === 'design' ? ['practice', 'browse', 'design-prompt'] :
     roundId === 'algo' ? ['practice', 'browse', 'timed-test'] :
