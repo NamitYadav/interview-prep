@@ -32,16 +32,35 @@ const parseDraft = (_key: string, v: unknown): Draft | undefined => {
 // `remove` drops a draft so its field falls back to the starter value; `clear` is for
 // Reset and Import, which replace the whole data set — scratch written against the old
 // one would survive as stale code in the editor of a question you have never seen.
-export const drafts = keyedStore<Draft>(KEY, parseDraft, { max: MAX_DRAFTS, recencyOf: (d) => d.savedAt });
+const store = keyedStore<Draft>(KEY, parseDraft, { max: MAX_DRAFTS, recencyOf: (d) => d.savedAt });
+
+// Writes that did not fit (storage full), kept for the life of the page. Without them a
+// remount — switching timed-test tasks — reopened the older stored copy, and the grader
+// marked that instead of what was on screen. A reload still loses them; the pad says so.
+const unsaved = new Map<string, string>();
+
+export const drafts = {
+  remove(key: string) {
+    unsaved.delete(key);
+    store.remove(key);
+  },
+  clear() {
+    unsaved.clear();
+    store.clear();
+  },
+};
 
 export const draftKey = (questionId: string, field: string) => `${questionId}:${field}`;
 
-export const readDraft = (key: string): string | undefined => drafts.read(key)?.text;
+export const readDraft = (key: string): string | undefined => unsaved.get(key) ?? store.read(key)?.text;
 
 /** Returns false if the draft could not be stored, so the caller can say so. */
 export function writeDraft(key: string, value: string, now: number = Date.now()): boolean {
   // An empty draft is stored, not deleted: the scratch editor starts pre-filled with
   // the question's code, so treating "" as absent meant deliberately clearing it
   // brought the starter text straight back on the next remount.
-  return drafts.write(key, { text: value, savedAt: now });
+  const ok = store.write(key, { text: value, savedAt: now });
+  if (ok) unsaved.delete(key);
+  else unsaved.set(key, value);
+  return ok;
 }

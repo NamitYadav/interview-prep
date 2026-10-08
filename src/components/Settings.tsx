@@ -56,7 +56,9 @@ export function Settings({
     // max-h + overflow: the header is sticky, so a panel taller than the viewport (it is
     // ~680px on a phone) could never be scrolled to its bottom — Import and Reset were
     // unreachable at 375×667. Capped to the viewport, it scrolls inside itself instead.
-    <details ref={ref} className="relative">
+    // data-own-keys: with focus anywhere in here, Practice's N/B/1/2/3 used to act on the
+    // drill behind the panel.
+    <details ref={ref} data-own-keys className="relative">
       <summary className={`${pageButton} inline-block cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
         Settings
         {sound.playing && <><span aria-hidden="true"> ♪</span><span className="sr-only">, focus sound playing</span></>}

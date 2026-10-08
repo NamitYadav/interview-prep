@@ -25,7 +25,9 @@ const ownsKeys = (target: EventTarget | null) =>
     target.tagName === 'AUDIO' || target.tagName === 'VIDEO' ||
     // closest, not isContentEditable: it covers a focused descendant of an editable
     // host the same way, and unlike the property it is implemented in jsdom.
-    target.closest('[contenteditable]:not([contenteditable="false"])') !== null);
+    target.closest('[contenteditable]:not([contenteditable="false"])') !== null) ||
+  // A panel that opts out wholesale (Settings): its buttons and checkboxes are not the drill.
+  (target instanceof HTMLElement && target.closest('[data-own-keys]') !== null);
 
 // A weak rating requeues instead of ending the question's turn on the spot — it
 // comes back around after roughly this many further questions, not immediately
@@ -149,6 +151,16 @@ export function Practice({
     // Ticks belong to one pass through a question, kept only so Back can show them; a
     // Weak requeue served again is a fresh attempt, and used to arrive pre-ticked.
     setCheckedByQuestion((c) => ({ ...c, [id]: new Set() }));
+    // Advancing after a Back drops the old forward path. A Weak repeat served there had
+    // already used up its requeue entry, and its first showing still counts as seen, so
+    // it never came back this lap. An id in the dropped tail that also sits in the kept
+    // path was such a repeat: schedule it again. Not the question being rated or served
+    // now — that rating makes its own call.
+    const kept = history.slice(0, historyPos + 1);
+    const lostRepeats = [...new Set(history.slice(historyPos + 1))].filter((d) => kept.includes(d) && d !== current?.id && d !== id);
+    if (lostRepeats.length > 0) {
+      setRequeued((r) => [...r, ...lostRepeats.filter((d) => !r.some((e) => e.id === d)).map((d) => ({ id: d, at: step }))]);
+    }
     setStep((s) => s + 1);
     setHistory((h) => [...h.slice(0, historyPos + 1), id]);
     setHistoryPos((p) => p + 1);

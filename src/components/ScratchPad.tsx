@@ -62,7 +62,8 @@ export function ScratchPad({
   draftField?: string;
   /** Show Submit (hidden tests). The timed test grades at the end instead. */
   submit?: boolean;
-  onGraded?: (s: Score) => void;
+  /** A Submit's score, or null once a new run clears its report. */
+  onGraded?: (s: Score | null) => void;
 }) {
   const scratch = useDraft(draftKey(question.id, draftField), question.code ?? '');
   const grader = question.grader;
@@ -173,6 +174,8 @@ export function ScratchPad({
     cancelGrade.current?.();
     setLines([]);
     setReport(null);
+    // The report just went; a suggestion still built on it rated code that has changed since.
+    onGraded?.(null);
     setStatus('running');
     cancelGrade.current = gradeRun(scratch.draft, grader!.fn, buildCases(grader!, question.id, all ? undefined : EXAMPLES), {
       console: !all,
