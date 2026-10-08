@@ -6,7 +6,7 @@ import { draftKey } from '../lib/drafts';
 import type { FromSandbox, LogLevel, ToSandbox } from '../sandbox/protocol';
 import { buildCases, score, type CaseResult, type Score } from '../lib/grade';
 import { gradeRun } from '../lib/gradeRun';
-import { GradeReport } from './GradeReport';
+import { GradeReport, reportSummary } from './GradeReport';
 import { padButton as button, ratingText } from './controlStyles';
 
 // Same host as the app, so it works in dev, `vite preview` and on GitHub Pages alike.
@@ -260,6 +260,8 @@ export function ScratchPad({
         )}
         <span role="status" className="text-xs text-zinc-500 dark:text-zinc-400">
           {status === 'running' ? (grader ? 'Grading…' : 'Running…') : status === 'done' && lines.length === 0 && !report ? 'Ran — no output' : ''}
+          {/* The report below mounts outside any live region; without this a Submit was silent. */}
+          {report && <span className="sr-only">{reportSummary(report)}</span>}
         </span>
       </div>
 

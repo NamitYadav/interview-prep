@@ -88,20 +88,23 @@ export function load(storage: Storage = localStorage): Persisted {
     return emptyState();
   }
   if (text === null) return emptyState();
+  let raw: unknown;
   try {
-    const raw: unknown = JSON.parse(text);
+    raw = JSON.parse(text);
     if (isRecord(raw) && typeof raw.version === 'number' && raw.version > 2) {
       saveBlocked = "Your saved data is from a newer version of the app — reload to use it; changes here won't be saved.";
       return emptyState();
     }
     return validate(raw);
   } catch {
+    const kept = salvage(raw);
     try {
       storage.setItem(CORRUPT_KEY, text);
     } catch {
       saveBlocked = "Your saved data could not be read, and there was no room to set it aside — changes here won't be saved, so it isn't overwritten.";
-      return emptyState();
+      return kept ?? emptyState();
     }
+    if (kept) return kept; // the next save replaces the original with the cleaned copy
     try {
       storage.removeItem(STORAGE_KEY);
     } catch {
@@ -109,6 +112,21 @@ export function load(storage: Storage = localStorage): Persisted {
     }
     return emptyState();
   }
+}
+
+// One malformed entry used to bin the whole store: weeks of ratings gone over a single
+// bad rating. Keep every entry that still validates; the original stays under CORRUPT_KEY.
+// Load only — an import of a bad file should be refused, not quietly trimmed.
+function salvage(raw: unknown): Persisted | null {
+  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2)) return null;
+  const keep = <T>(v: unknown, ok: (x: unknown) => x is T): Record<string, T> =>
+    isRecord(v) ? (Object.fromEntries(Object.entries(v).filter(([, x]) => ok(x))) as Record<string, T>) : {};
+  return {
+    version: 2,
+    progress: keep(raw.progress, isEntry),
+    notes: keep(raw.notes, (x): x is string => typeof x === 'string'),
+    stories: keep(raw.version === 2 ? raw.stories : undefined, isStory),
+  };
 }
 
 export function save(data: Persisted, storage: Storage = localStorage): boolean {

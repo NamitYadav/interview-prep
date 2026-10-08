@@ -2,7 +2,7 @@
 
 Interactive mock-interview drill for frontend and full-stack engineer loops in
 Berlin / EU — Senior, Staff, Lead or Architect frontend, or Senior and Staff
-full-stack. Eleven rounds across the six loops, 417 curated questions with model
+full-stack. Eleven rounds across the six loops, 430 curated questions with model
 answers, key points and likely follow-ups. Reveal, rate yourself, and weak
 questions come back first.
 
@@ -90,7 +90,8 @@ between roles; only the round list and the visible question set change.
   clock reaching zero, which submits whatever is in the pads without asking — grades all
   three at once: a correctness, performance and total score per task, the model answer
   folded under each, and a rating for each. **New test** resets it. A test in progress
-  survives a reload — the round reopens on its tab while the clock is running — and is
+  survives a reload — the round reopens on its tab until the test is handed in, and one whose
+  clock ran out while you were away is submitted and graded the moment it reopens — and is
   dropped once it is over three hours old; its code is kept apart from the practice pads'
   drafts.
 - **Search** — every question in the active role's loop, in one search box, with the same status
@@ -169,7 +170,8 @@ week.
 ## Your data
 - Ratings, notes and stories stay in your browser (localStorage). Nothing is sent
   anywhere. **Export** / **Import** to back up or move devices; **Reset progress**
-  clears everything.
+  clears everything. If one saved entry is ever unreadable, only that entry is dropped on
+  load; the original blob is kept aside under `interview-prep:v1:corrupt`.
 - **Theme**: Dark, Gruvbox, Gruvbox Light or Light, switchable from the top of any
   page. Stored per device, outside the backup.
 - **Strict mode**: switchable from the top of any page. When on, running out of a

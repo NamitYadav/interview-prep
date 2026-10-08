@@ -10,7 +10,7 @@ import { buildCases, type CaseResult } from '../lib/grade';
 import { gradeRun } from '../lib/gradeRun';
 import { formatTime } from '../lib/format';
 import { ScratchPad } from './ScratchPad';
-import { GradeReport } from './GradeReport';
+import { GradeReport, reportSummary } from './GradeReport';
 import { RatingRadios } from './RatingRadios';
 import { padButton } from './controlStyles';
 
@@ -26,9 +26,11 @@ const primary = 'rounded bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700 dark
 // border-emerald-500 in Dark and Gruvbox, and the active task looked like the others.
 const activeTask = 'rounded border border-emerald-500 px-3 py-1 text-sm font-medium';
 
-/** A test whose clock is still running — RoundView opens its tab after a reload. */
-export const testRunning = (s = readTimedTest()): boolean =>
-  s !== undefined && !s.submitted && Date.now() - s.startedAt < TEST_SECONDS * 1000;
+/** An unsubmitted test RoundView reopens after a reload: still running, or past zero and
+ *  waiting to be handed in. Opening on Practice left an expired test ungraded until it was
+ *  dropped as abandoned; mounted, TestSession submits it at once. */
+export const testPending = (s = readTimedTest()): boolean =>
+  s !== undefined && !s.submitted && Date.now() - s.startedAt < RESUMABLE_MS;
 
 /** Weakest first, one task per category — a real Codility test mixes topics. */
 export function drawTest(questions: Question[], progress: Progress, random: () => number = Math.random): Question[] {
@@ -169,6 +171,10 @@ function TestSession({
           {remainingMs !== null && (
             <p role="timer" aria-live="off" className="text-xs text-zinc-500 dark:text-zinc-400">Time left: {formatTime(remainingMs)}</p>
           )}
+          {/* The ticking clock stays silent; these change once each, so each is announced once. */}
+          <p role="status" className="sr-only">
+            {remainingMs === null ? '' : remainingMs <= 60_000 ? 'One minute left' : remainingMs <= 600_000 ? 'Ten minutes left' : ''}
+          </p>
         </div>
         <h2 className="mb-2 text-lg font-medium">{q.question}</h2>
         <pre className="mb-4 max-w-prose whitespace-pre-wrap rounded bg-zinc-100 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-800">{q.statement}</pre>
@@ -189,13 +195,15 @@ function TestSession({
         return (
           <article key={q.id} className="rounded-lg border border-zinc-200 bg-white p-4 text-sm dark:border-zinc-800 dark:bg-zinc-900">
             <h2 ref={i === 0 ? resultsRef : undefined} tabIndex={-1} className="mb-2 text-lg font-medium">Task {i + 1}: {q.question}</h2>
-            {report === undefined ? (
-              <p role="status">Grading…</p>
-            ) : 'error' in report ? (
+            {/* Mounted throughout so the change from Grading… to the result is announced. */}
+            <p role="status" className={report ? 'sr-only' : undefined}>
+              {report === undefined ? 'Grading…' : 'results' in report ? `Task ${i + 1}: ${reportSummary(report.results)}` : ''}
+            </p>
+            {report !== undefined && ('error' in report ? (
               <p role="alert" className="text-amber-700 dark:text-amber-400">✗ {report.error}</p>
             ) : (
               <GradeReport results={report.results} />
-            )}
+            ))}
             <details className="my-3">
               <summary className="cursor-pointer font-semibold">Model answer</summary>
               <div className="mt-2 max-w-prose space-y-2">

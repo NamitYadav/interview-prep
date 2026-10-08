@@ -72,6 +72,16 @@ describe('ExportImport', () => {
     expect(saveBlockedReason()).toBeNull();
   });
 
+  // After a rollback the in-memory counts are all 0; the confirm said it deleted nothing.
+  test('the reset confirm warns when it would overwrite data load() could not open', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 3, progress: {} }));
+    load();
+    render(<Harness initial={seeded} />);
+    await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
+    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/could not open/);
+  });
+
   test('import replaces state and clears a prior error on success', async () => {
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     render(<Harness initial={seeded} />);

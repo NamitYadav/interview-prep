@@ -474,6 +474,7 @@ export const caseStudy: Question[] = [
     id: 'case-029',
     round: 'case',
     category: 'Common prompts',
+    roles: ['senior', 'fs-senior'],
     question: '"Build a real-time dashboard from a websocket feed." What do you focus on?',
     answer: [
       'Separate connection lifecycle from data handling explicitly: a clear connect/reconnect/backoff strategy for the socket itself, independent from how incoming messages update the UI, so a flaky connection does not corrupt displayed state — and say why websockets over server-sent events (or the reverse): SSE is simpler and enough for a one-directional feed, websockets earn their place when the client also sends.',

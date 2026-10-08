@@ -45,6 +45,12 @@ describe('load', () => {
     load(); // the guard lasts until the next load; don't leak it into later tests
   });
 
+  test('keeps the valid entries when one is malformed, with the original set aside', () => {
+    const blob = JSON.stringify({ version: 2, progress: { a: { rating: 3, seen: 1, lastSeen: 1 }, b: { rating: 4, seen: 1, lastSeen: 1 } }, notes: { a: 'kept', b: 7 }, stories: {} });
+    localStorage.setItem(STORAGE_KEY, blob);
+    expect(load()).toEqual({ version: 2, progress: { a: { rating: 3, seen: 1, lastSeen: 1 } }, notes: { a: 'kept' }, stories: {} });
+    expect(localStorage.getItem(CORRUPT_KEY)).toBe(blob);
+  });
   test('treats wrong shape as corrupt', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 2 }));
     expect(load()).toEqual(EMPTY);

@@ -166,6 +166,11 @@ export const hr: Question[] = [
       'Refers to the salary threshold as the current year figure instead of quoting a stale number',
     ],
     followUps: ['Do you already have an EU Blue Card?', 'How long is your current visa valid for?'],
+    deeper: [
+      'The threshold resets on 1 January and the figure for the year you file applies. For 2026 it is €50,700 gross a year standard and €45,934.20 for shortage occupations, which include IT — check the current figure before the call rather than trusting this one.',
+      'The degree route needs the degree recognised: on anabin the university must be rated H+ and the degree itself listed, otherwise a ZAB Statement of Comparability. IT specialists without a degree can qualify on at least three years of relevant professional experience instead, at the shortage-occupation threshold.',
+      'What it gets you, if the recruiter asks: a settlement permit after 27 months on the Blue Card, or 21 with B1 German, and a spouse who may work without restriction — useful when they worry about relocation churn.',
+    ],
   },
   {
     id: 'hr-010',
@@ -218,7 +223,7 @@ export const hr: Question[] = [
       'Then give a range, never a single number: "Based on current market data for staff-level frontend in Berlin, I am looking at [€X-€Y] base plus the equity component — what is the band for this level?" Anchor on market rate and role scope, never on your current salary.',
     ],
     deeper: [
-      'The EU Pay Transparency Directive (2023/970) requires employers to give applicants the pay range before or at the first interview. Germany missed the 7 June 2026 transposition deadline and its implementing law is expected around 2027, so treat it as a strong norm you can invoke rather than a right you can enforce on the call. A flat refusal to share a band is a data point about the process, not just a tactic.',
+      'The EU Pay Transparency Directive (2023/970) requires employers to give applicants the initial pay range or its basis prior to the job interview (Art. 5), whether in the advert or otherwise. Germany missed the 7 June 2026 transposition deadline, its implementing law is expected in 2027, and the employer pay-gap reporting duties are not expected to bite before June 2028, so treat it as a strong norm you can invoke rather than a right you can enforce on the call. A flat refusal to share a band is a data point about the process, not just a tactic.',
       'Mixing a base source with a total-compensation source is how candidates arrive at nonsense ranges, so label every figure you collect with which one it is. Total compensation, not base, is what decides it at this level, and the spread between employer types is real rather than noise: the Berlin offices of US big tech and the best-funded scale-ups sit far above a Series B startup that matches the base with equity worth nothing for years. Quote a base range, then get the equity detail — instrument, vesting, refresh — before calling any offer competitive. The mechanics of valuing it, and why VSOP is discounted rather than annualised, are the RSU-versus-VSOP question.',
     ],
     keyPoints: [
@@ -235,7 +240,7 @@ export const hr: Question[] = [
     category: 'Compensation',
     question: 'What is your current compensation?',
     answer: [
-      'In Germany you are not obligated to disclose current compensation, and the EU Pay Transparency Directive (2023/970) bars employers from asking about pay history once transposed into national law — Germany missed the 7 June 2026 deadline and its implementing law is expected around 2027, so the ban is not yet enforceable here, though the direction is clear. Either way, decline politely: "I would prefer to focus on the expectations for this role rather than share current pay."',
+      'In Germany you are not obligated to disclose current compensation, and the EU Pay Transparency Directive (2023/970) bars employers from asking about pay history once transposed into national law — Germany missed the 7 June 2026 deadline and its implementing law is expected in 2027, so the ban is not yet enforceable here, though the direction is clear. Either way, decline politely: "I would prefer to focus on the expectations for this role rather than share current pay."',
       'Redirect immediately and constructively to the researched range from the salary-expectations question, so the conversation keeps moving rather than stalling on a refusal.',
       'If you choose to share, keep it factual and brief, but the stronger staff-level move is usually the polite decline plus redirect, since current pay at a different market/company is not a reliable anchor anyway.',
     ],
@@ -545,6 +550,26 @@ export const hr: Question[] = [
     ],
     followUps: ['How would a works council change this picture?', 'What would you want in the contract if you were relocating for a fixed-term role?'],
   },
+  {
+    id: 'hr-040',
+    round: 'hr',
+    category: 'German employment',
+    question: "The contract has a post-employment non-compete and a clause requiring approval for side projects. What do you check — and what if they later offer an Aufhebungsvertrag?",
+    answer: [
+      "A post-contractual non-compete in Germany is only binding if the employer pays Karenzentschädigung of at least half the last total pay for every month it runs, and it can last at most two years. Without that payment it is not enforceable against you, so ask what the compensation is, not just what the restriction is — and whether they would rather drop the clause.",
+      "Side projects, Nebentätigkeit, are generally allowed, but you usually have to disclose them, and the employer can only refuse on a legitimate interest: competing work, a conflict of interest, or the combined hours breaching working-time limits. Disclose open-source work and anything paid up front, in writing.",
+      "An Aufhebungsvertrag is a mutual termination agreement, and signing one can trigger a Sperrzeit — up to 12 weeks without unemployment benefit — because you agreed to end the job. Never sign on the spot: take it away, get advice, and look for a stated important reason and the notice period respected.",
+    ],
+    keyPoints: [
+      "A non-compete needs Karenzentschädigung of at least 50% of last pay and lasts at most two years, or it is unenforceable",
+      "Side projects need disclosure, and the employer can refuse only on a legitimate interest",
+      "An Aufhebungsvertrag can cause a Sperrzeit of up to 12 weeks, so it is never signed on the spot",
+    ],
+    followUps: ["Would you sign a contract that assigns them all IP you create, including outside work hours?", "How do you raise the non-compete without sounding like you are planning to leave?"],
+    deeper: [
+      "The details behind those three: the non-compete rules are §§74 ff. HGB, applied to employees generally; a clause with too little compensation is typically one you can choose to ignore or honour, which is why it is worth fixing in writing before signing. The Sperrzeit is §159 SGB III; the Agentur für Arbeit may waive it if there was an important reason, such as an employer dismissal that was coming anyway and a settlement that respects the notice period — get advice from a Fachanwalt für Arbeitsrecht before signing rather than relying on that.",
+    ],
+  },
 
   // Process & culture (3)
   {
@@ -679,6 +704,7 @@ export const hr: Question[] = [
     id: 'hr-025',
     round: 'hr',
     category: 'From your CV',
+    roles: ['senior', 'fs-senior'],
     question: 'If you use AI-assisted development daily, what does that actually look like, and where do you not trust it?',
     answer: [
       'Describe concrete, current practice rather than a buzzword: using an AI coding assistant for scaffolding boilerplate, generating first-draft tests, exploring unfamiliar parts of a codebase faster, or drafting documentation — then always reviewing and owning the result yourself.',

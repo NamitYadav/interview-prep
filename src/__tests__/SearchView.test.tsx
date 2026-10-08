@@ -4,8 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
 import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
-import { questions } from '../data';
-import { roles } from '../data/roles';
+import { forRole } from '../data';
 import { SearchView } from '../components/SearchView';
 import type { Persisted } from '../types';
 
@@ -17,8 +16,8 @@ function Harness({ initial = EMPTY }: { initial?: Persisted } = {}) {
 // SearchView scopes to the harness's "staff" role, which does not include every round
 // (e.g. it excludes the lead and architect rounds) — so the in-scope count is the
 // staff role's own question count, not the global total across every role.
-const staffRounds = roles.find((r) => r.id === 'staff')!.rounds;
-const staffQuestions = questions.filter((q) => staffRounds.includes(q.round));
+// forRole, not a round filter: a question's `roles` can scope it away from staff.
+const staffQuestions = forRole('staff').questions;
 
 const [firstQuestion] = staffQuestions;
 if (!firstQuestion) throw new Error('no questions');

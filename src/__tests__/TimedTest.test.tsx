@@ -5,7 +5,7 @@ import { EMPTY, FakeGraderWorker } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { forRole } from '../data';
 import { readTimedTest, writeTimedTest } from '../lib/lap';
-import { TEST_SECONDS, TimedTest, drawTest, testRunning } from '../components/TimedTest';
+import { TEST_SECONDS, TimedTest, drawTest, testPending } from '../components/TimedTest';
 
 const pool = forRole('staff').byRound('algo');
 
@@ -122,12 +122,14 @@ describe('TimedTest', () => {
   });
 });
 
-describe('testRunning', () => {
-  test('only while the clock runs and the test is not handed in', () => {
+describe('testPending', () => {
+  test('until it is handed in or abandoned', () => {
     const base = { questionIds: ['a'], startedAt: Date.now() - 60_000, submitted: false };
-    expect(testRunning(base)).toBe(true);
-    expect(testRunning({ ...base, submitted: true })).toBe(false);
-    expect(testRunning({ ...base, startedAt: Date.now() - TEST_SECONDS * 1000 - 1 })).toBe(false);
-    expect(testRunning(undefined)).toBe(false);
+    expect(testPending(base)).toBe(true);
+    expect(testPending({ ...base, submitted: true })).toBe(false);
+    // Past zero but not abandoned: reopened so it gets handed in and graded.
+    expect(testPending({ ...base, startedAt: Date.now() - TEST_SECONDS * 1000 - 1 })).toBe(true);
+    expect(testPending({ ...base, startedAt: Date.now() - 2 * TEST_SECONDS * 1000 - 1 })).toBe(false);
+    expect(testPending(undefined)).toBe(false);
   });
 });

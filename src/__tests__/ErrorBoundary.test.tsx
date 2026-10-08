@@ -58,9 +58,11 @@ describe('ErrorBoundary recovery', () => {
   // only escape was clearing storage from the browser's own settings.
   test('the destructive escape clears saved data and reloads, after confirming', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
+    localStorage.setItem('portfolio:theme', 'gruvbox');
     render(<ErrorBoundary><Bomb /></ErrorBoundary>);
     await userEvent.click(screen.getByRole('button', { name: /delete all saved data/i }));
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+    expect(localStorage.getItem('portfolio:theme')).toBe('gruvbox');
     expect(reload).toHaveBeenCalled();
   });
 
