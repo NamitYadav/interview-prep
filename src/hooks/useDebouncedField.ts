@@ -22,9 +22,11 @@ export function useDebouncedField(value: string, onCommit: (v: string) => void, 
   });
 
   // The prop changed from outside (a different item selected) rather than as an
-  // echo of our own commit — resync the draft to it.
+  // echo of our own commit — resync the draft to it. A blank commit echoes back as ''
+  // (the note reducer deletes whitespace-only notes), which is still an echo: treated
+  // as outside, it wiped the space or newline you had just typed into an empty note.
   useEffect(() => {
-    if (value !== lastCommitted.current) {
+    if (value !== lastCommitted.current && !(value === '' && lastCommitted.current.trim() === '')) {
       setDraft(value);
       lastCommitted.current = value;
     }

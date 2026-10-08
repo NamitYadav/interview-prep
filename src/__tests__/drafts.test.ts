@@ -86,7 +86,13 @@ describe('drafts do not grow without limit', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('QuotaExceededError');
     });
-    expect(writeDraft('q:scratch', 'lost')).toBe(false);
+    expect(writeDraft('q:scratch', 'unsaved')).toBe(false);
+    // Kept in memory for this page, so a remount or the grader sees what was typed,
+    // not the older stored copy; remove drops that copy too.
+    expect(readDraft('q:scratch')).toBe('unsaved');
+    vi.restoreAllMocks();
+    drafts.remove('q:scratch');
+    expect(readDraft('q:scratch')).toBeUndefined();
   });
 
   test('drafts.clear empties the store', () => {

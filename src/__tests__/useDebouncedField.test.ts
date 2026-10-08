@@ -17,6 +17,21 @@ describe('useDebouncedField', () => {
     }
   });
 
+  // Replacing a note's text with a newline commits '\n'; the reducer deletes the blank
+  // note, so the prop drops to '' — and the resync used to wipe the newline.
+  test('a blank commit echoed back as empty keeps the typed whitespace', () => {
+    vi.useFakeTimers();
+    try {
+      const { result, rerender } = renderHook(({ v }) => useDebouncedField(v, () => {}), { initialProps: { v: 'x' } });
+      act(() => result.current.onChange('\n'));
+      act(() => vi.advanceTimersByTime(300));
+      rerender({ v: '' });
+      expect(result.current.draft).toBe('\n');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test('blur flushes a pending change immediately', () => {
     vi.useFakeTimers();
     try {

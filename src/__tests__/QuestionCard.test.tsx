@@ -501,4 +501,13 @@ describe('QuestionCard algo grading', () => {
     rerender(<QuestionCard question={algoQ} revealed note="" onReveal={() => {}} onNote={() => {}} onRate={() => {}} />);
     expect(screen.getByText(/1\/3 tests passed · suggested: Weak/)).toBeInTheDocument();
   });
+
+  test('a new run drops the Submit-based suggestion along with its report', async () => {
+    render(<QuestionCard question={algoQ} revealed note="" onReveal={() => {}} onNote={() => {}} onRate={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: /^submit$/i }));
+    await screen.findByRole('region', { name: 'Test report' });
+    fireEvent.click(screen.getByRole('button', { name: /run examples/i }));
+    expect(screen.queryByText(/tests passed/)).not.toBeInTheDocument();
+    expect(screen.getByText(/key points hit/)).toBeInTheDocument();
+  });
 });

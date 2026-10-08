@@ -163,6 +163,22 @@ describe('Practice', () => {
     }
   });
 
+  // Settings sits over the drill: N on its Play button skipped a question behind it.
+  test('keyboard shortcuts are ignored inside a panel marked data-own-keys', () => {
+    render(<Harness />);
+    const panel = document.createElement('details');
+    panel.setAttribute('data-own-keys', '');
+    const button = document.createElement('button');
+    panel.appendChild(button);
+    document.body.appendChild(panel);
+    try {
+      fireEvent.keyDown(button, { key: 'n' });
+      expect(screen.getByText('First question?')).toBeInTheDocument();
+    } finally {
+      panel.remove();
+    }
+  });
+
   // Rating the last question of a lap unmounts the radio that was just activated. Focus
   // fell to <body>: nothing announced, and Tab restarted from the top of the document.
   test('finishing a lap moves focus to the lap-done heading', async () => {
@@ -381,6 +397,19 @@ describe('Practice weak-question requeuing', () => {
     }
     // The 8th advance since the weak rating lands back on Question 1, ahead of the
     // still-unshown Question 10 — the requeue wins over the regular queue once due.
+    expect(currentQuestionText()).toBe('Question 1?');
+  });
+
+  test('going Back past a served Weak repeat and advancing schedules it again', async () => {
+    render(<Harness10 />);
+    await rateWeak(); // Question 1 requeued
+    for (let i = 2; i <= 9; i++) await skipVisible();
+    expect(currentQuestionText()).toBe('Question 1?'); // the repeat, entry consumed
+    await userEvent.click(screen.getByRole('button', { name: /back/i }));
+    await userEvent.click(screen.getByRole('button', { name: /back/i }));
+    expect(currentQuestionText()).toBe('Question 8?');
+    await skipVisible(); // overwrites the path that held the repeat
+    await skipVisible();
     expect(currentQuestionText()).toBe('Question 1?');
   });
 
