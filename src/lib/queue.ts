@@ -4,7 +4,7 @@ import type { Progress, Question } from '../types';
 // (it needs the work), then unseen, then ok, then solid — a real loop doesn't wait
 // days for a rating to come due. Tiebreak oldest-seen-first within a bucket so a
 // stale rating surfaces before one you just gave a moment ago.
-// A lap only ends once every question has been shown, and with ~287 questions that
+// A lap only ends once every question has been shown, and with hundreds of questions that
 // never happens in one sitting — so without decay, bucket 3 is unreachable and a
 // question rated Solid in week 1 never comes back for the rest of your prep. Seven days
 // is the whole benefit of spacing for this use case, without carrying a scheduler.

@@ -1033,4 +1033,26 @@ function buildTree(flat: Comment[]): CommentNode[] {
     ],
     followUps: ['How would you make this work when the scrolling container is a div rather than the window?', 'How would you test the hook without a real IntersectionObserver?'],
   },
+  // AI-assisted engineering (1)
+  {
+    id: 'coding-049',
+    round: 'coding',
+    category: 'AI-assisted engineering',
+    question: "The interviewer says AI tools are allowed in this live-coding round. How do you use them so they see your judgement and not the model's?",
+    answer: [
+      "Clarify the rules first: which tools, whether I can paste the whole prompt in, and what they want to see. 'AI allowed' rounds usually assess how you direct and verify the tool, not whether you can avoid it.",
+      "Then do the thinking out loud before prompting anything: restate the problem, name the edge cases, sketch the approach and the data shape. That part is the signal, and it is the part a model cannot do for me in front of them.",
+      "Use the tool for what it is good at: boilerplate, a known API I would otherwise look up, a test scaffold, a regex. Give it small, specific prompts, not the whole task, so each output is small enough to read properly.",
+      "Read every line it gives me and say what I am checking: is that the right method for this version, what happens on empty input, is that loop quadratic. Then run it. Catching the tool's mistake out loud is probably the strongest moment in the round, so I look for it rather than hoping there is none.",
+      "Keep ownership of the design. If the generated code takes a different approach from mine, I decide which is better and say why, rather than drifting into whatever it produced. And if the tool stalls or produces nonsense, I drop it and keep going by hand, without losing time arguing with it.",
+    ],
+    keyPoints: [
+      "Clarifies the rules and what is being assessed",
+      "Does the problem analysis out loud before prompting",
+      "Uses small, specific prompts for boilerplate and lookups, not the whole task",
+      "Reads, explains and runs every generated line, and calls out its mistakes",
+      "Keeps ownership of the design and can continue without the tool",
+    ],
+    followUps: ["The model produces a working solution in one go. What do you do next?", "How would you test the generated code in the time left?"],
+  },
 ];

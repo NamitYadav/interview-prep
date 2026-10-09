@@ -3,7 +3,7 @@ import { render, renderHook, screen, fireEvent, act } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import type { Question } from '../types';
-import { QuestionCard } from '../components/QuestionCard';
+import { QuestionCard, gradingPrompt } from '../components/QuestionCard';
 import { algoQ, FakeGraderWorker } from './helpers';
 import { useQuestionTimer } from '../hooks/useQuestionTimer';
 
@@ -509,5 +509,29 @@ describe('QuestionCard algo grading', () => {
     fireEvent.click(screen.getByRole('button', { name: /run examples/i }));
     expect(screen.queryByText(/tests passed/)).not.toBeInTheDocument();
     expect(screen.getByText(/key points hit/)).toBeInTheDocument();
+  });
+});
+
+describe('QuestionCard copy for Claude', () => {
+  test('the prompt carries the round, question, your answer and every key point', () => {
+    const prompt = gradingPrompt({ ...base, keyPoints: ['Point one', 'Point two'] }, '  - my bullet\n');
+    expect(prompt).toContain('Live coding interview round');
+    expect(prompt).toContain('Question: What is wrong here?');
+    expect(prompt).toContain('My answer:\n- my bullet\n');
+    expect(prompt).toContain('- Point one\n- Point two');
+  });
+
+  test('copies the prompt once revealed, and reports a blocked clipboard', async () => {
+    const writeText = vi.fn().mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('denied'));
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    const { rerender } = render(<QuestionCard question={base} revealed={false} note="" onReveal={noop} onNote={noop} onRate={noop} />);
+    expect(screen.queryByRole('button', { name: 'Copy for Claude' })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Your answer'), { target: { value: 'my bullet' } });
+    rerender(<QuestionCard question={base} revealed note="" onReveal={noop} onNote={noop} onRate={noop} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Copy for Claude' }));
+    expect(await screen.findByText(/Copied/)).toBeInTheDocument();
+    expect(writeText).toHaveBeenCalledWith(gradingPrompt(base, 'my bullet'));
+    fireEvent.click(screen.getByRole('button', { name: 'Copy for Claude' }));
+    expect(await screen.findByText(/Couldn't copy/)).toBeInTheDocument();
   });
 });
