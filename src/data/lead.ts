@@ -558,4 +558,46 @@ export const lead: Question[] = [
     ],
     followUps: ['How do you handle it if you overrule and the hire doesn\'t work out?', 'What if the split is along a pattern, like all the concerns coming from more junior interviewers?'],
   },
+  // AI-assisted engineering (2)
+  {
+    id: 'lead-031',
+    round: 'lead',
+    category: 'AI-assisted engineering',
+    question: "AI adoption on your team is uneven: two engineers now open twice the PRs, the review queue has exploded, and the juniors lean on the tools without seeming to learn. What do you do?",
+    answer: [
+      "Treat it as a system problem, not a people problem. Output went up at one stage, writing code, and the bottleneck moved to the next, review. Pushing harder on the first stage only makes the queue longer.",
+      "For the queue: the same PR size limits apply whatever wrote the code, the author self-reviews and runs it before asking anyone else, tests are part of the PR, and review load is shared and visible so it does not fall on the two seniors who are fastest at it. If someone's output is mostly creating work for others, that is a conversation about how they work, not a reward.",
+      "For the juniors: the risk is that they ship code they cannot explain and stop building the judgement that makes them seniors. I would not ban the tools. I would make explaining the work part of the bar: in review, in pairing, in asking them to walk through a design before generating it. Some deliberate practice without the tool, on the problems where struggling is the point, is fair.",
+      "And reset what we celebrate. If the career framework or the standup culture rewards visible output, AI turns that into noise. Reward outcomes: things shipped that worked, incidents avoided, other people unblocked.",
+    ],
+    keyPoints: [
+      "Sees the bottleneck move from writing to review",
+      "Keeps PR size limits and author self-review regardless of tool",
+      "Shares review load visibly instead of letting it fall on a few",
+      "Protects juniors' learning by making explanation part of the bar, without banning tools",
+      "Rewards outcomes rather than output volume",
+    ],
+    followUps: ["One of the high-output engineers says the review rules are slowing them down. What do you say?", "How would you tell whether a junior is actually learning?"],
+  },
+  {
+    id: 'lead-032',
+    round: 'lead',
+    category: 'AI-assisted engineering',
+    question: "Leadership asks whether the AI tooling budget is paying off for your team. How do you answer with evidence?",
+    answer: [
+      "Start by refusing the easy metrics: lines generated, suggestion acceptance rate and PR count measure activity, and they all go up whether or not anything improved. A team can open more PRs and ship slower.",
+      "Measure delivery outcomes instead, the DORA set: lead time for changes, deployment frequency, change failure rate, time to restore. Add the costs AI tends to shift rather than remove: review time per PR, rework and revert rate, and escaped defects.",
+      "Get a baseline before any change, or the comparison is a story. If the rollout is already done, compare similar work over comparable periods, and be explicit about what else changed.",
+      "Pair the numbers with a developer survey, because perception is unreliable in both directions. A 2025 METR study found experienced open-source developers were slower with AI tools on their own repositories while believing they were faster. That is the case for measuring rather than asking.",
+      "Then answer the question that was asked: cost per seat and per token against the change in those outcomes, plus where it clearly helps, tests, migrations, unfamiliar code, and where it does not. My answer to leadership is a recommendation, keep, expand, narrow, with the evidence behind it, not a dashboard.",
+    ],
+    keyPoints: [
+      "Rejects activity metrics like lines generated and PR count",
+      "Uses delivery outcomes: DORA metrics plus review time and rework",
+      "Insists on a baseline or a fair comparison",
+      "Pairs metrics with surveys, knowing perception and reality diverge",
+      "Ends with a cost-versus-outcome recommendation, not a dashboard",
+    ],
+    followUps: ["What would you do if the numbers show no improvement but the team loves the tools?", "How would you account for the time spent learning to use them well?"],
+  },
 ];

@@ -35,6 +35,16 @@ const withPlaceholders = (text: string) =>
     ),
   );
 
+// Ticking key points only checks what you already know you missed; this hands your
+// written answer to an assistant for an outside read. No API key, nothing sent from here.
+export const gradingPrompt = (q: Question, answer: string): string => [
+  `I'm practising for a ${rounds.find((r) => r.id === q.round)?.title ?? q.round} interview round for an engineering role in Berlin. Grade my answer like a strict interviewer.`,
+  '', `Question: ${q.question}`,
+  '', 'My answer:', answer.trim(),
+  '', 'A strong answer covers:', ...q.keyPoints.map((k) => `- ${k}`),
+  '', 'Tell me which of those I covered, what is wrong or vague, and rate it Weak, OK or Solid. Then rewrite my answer in three tight bullets. Finally ask me one follow-up question and wait for my reply.',
+].join('\n');
+
 export function QuestionCard({
   question, revealed, note, rating, strictMode = false, shortcuts = false, checked, onCheckedChange, focusOnMount = true,
   stories, onRehearse, onReveal, onNote, onRate, meta,
@@ -101,6 +111,19 @@ export function QuestionCard({
   };
 
   const [expandedStoryId, setExpandedStoryId] = useState<string | null>(null);
+  // Tagged with the question so the message does not carry over when Practice reuses
+  // this card for the next one. The Promise wrapper catches a missing clipboard API
+  // (insecure context), which throws instead of rejecting.
+  const [copyStatus, setCopyStatus] = useState<{ id: string; text: string } | null>(null);
+  const copyPrompt = () => {
+    const id = question.id;
+    Promise.resolve()
+      .then(() => navigator.clipboard.writeText(gradingPrompt(question, answerText)))
+      .then(
+        () => setCopyStatus({ id, text: 'Copied. Paste it into Claude.' }),
+        () => setCopyStatus({ id, text: "Couldn't copy. Your browser blocked clipboard access." }),
+      );
+  };
 
   // Only on the false→true transition. Firing on a mount that starts revealed — which
   // is exactly Browse and #search, where the card appears under a disclosure button —
@@ -261,6 +284,10 @@ export function QuestionCard({
             <section>
               <h3 className="mb-1 font-semibold">Your answer</h3>
               <p className="whitespace-pre-wrap text-zinc-600 dark:text-zinc-400">{answerText}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <button type="button" onClick={copyPrompt} className={secondaryButton}>Copy for Claude</button>
+                <span role="status" className="text-xs text-zinc-500 dark:text-zinc-400">{copyStatus?.id === question.id ? copyStatus.text : ''}</span>
+              </div>
             </section>
           )}
           {recorder.url && (

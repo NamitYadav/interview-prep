@@ -39,6 +39,14 @@ describe('Home', () => {
     expect(screen.getAllByText(/unseen · 3 days/i).length).toBeGreaterThan(0);
   });
 
+  test('a loop date ahead shows how many questions a day clear the weak and unseen', () => {
+    render(<Harness initial={EMPTY} />);
+    const inFourDays = new Date(Date.now() + 4 * 86_400_000).toISOString().slice(0, 10);
+    fireEvent.change(screen.getByLabelText(/loop date/i), { target: { value: inFourDays } });
+    const total = forRole('staff').questions.length;
+    expect(screen.getByText(new RegExp(`${Math.ceil(total / 4)} a day clears all ${total} weak or unseen`))).toBeInTheDocument();
+  });
+
   test('with a loop date, cards reorder by urgency and drop the Round N label', () => {
     // Every question in every round rated solid (urgency 0 everywhere) except two
     // hoe questions left weak — hoe (naturally last, Round 7) is now the only round
@@ -89,7 +97,7 @@ describe('Home', () => {
     expect(screen.getByText('Loop day is today')).toBeInTheDocument();
     expect(screen.getAllByText(/unseen · today/i).length).toBeGreaterThan(0);
     fireEvent.change(screen.getByLabelText(/loop date/i), { target: { value: local(1) } });
-    expect(screen.getByText('1 day left')).toBeInTheDocument();
+    expect(screen.getByText(/^1 day left ·/)).toBeInTheDocument();
   });
 
   test('rated-today and last-7-days counts come from lastSeen, once per question', () => {

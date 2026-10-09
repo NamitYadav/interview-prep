@@ -2,7 +2,7 @@
 
 Interactive mock-interview drill for frontend and full-stack engineer loops in
 Berlin / EU — Senior, Staff, Lead or Architect frontend, or Senior and Staff
-full-stack. Eleven rounds across the six loops, 430 curated questions with model
+full-stack. Eleven rounds across the six loops, 449 curated questions with model
 answers, key points and likely follow-ups. Reveal, rate yourself, and weak
 questions come back first.
 
@@ -24,9 +24,10 @@ between roles; only the round list and the visible question set change.
 
 ## Rounds
 1. HR screen (compensation, negotiation, German employment basics)
-2. Hiring manager (live code review, web fundamentals, security, regulated & payments FE,
-   TypeScript, i18n, reliability, situational, behavioral)
-3. Live coding (pairing, debugging, code review, build prompts)
+2. Hiring manager (live code review, web fundamentals, CSS & layout, accessibility, security,
+   regulated & payments FE, TypeScript, i18n, reliability, deployment & infrastructure,
+   AI-assisted engineering, situational, behavioral)
+3. Live coding (pairing, debugging, code review, build prompts, AI-allowed rounds)
 4. Algorithms (Codility-style tasks with hidden correctness and performance tests, and a
    90-minute timed test)
 5. Frontend system design (one prompt, 45 minutes)
@@ -34,7 +35,7 @@ between roles; only the round list and the visible question set change.
 7. Case study debrief (panel grilling)
 8. Head of engineering
 9. Tech lead round (Lead only) — people & growth, delivery & process, hiring & team shape,
-   conflict & stakeholders, technical direction, running the round
+   conflict & stakeholders, technical direction, running the round, AI-assisted engineering
 10. Architecture deep-dive (Architect only) — cross-team platform, migration strategy,
     decision records & governance, design-system ownership, build & runtime architecture,
     trade-off probes
@@ -112,6 +113,9 @@ between roles; only the round list and the visible question set change.
   OK. Once revealed, the card shows how long you took and
   the round's target time — a stopwatch, not a countdown, so nothing forces a hide,
   unless you turn on **Strict mode** (below).
+- If you wrote an answer, **Copy for Claude** under it copies a grading prompt — the
+  question, your answer and the key points — to paste into Claude for an outside read
+  instead of grading yourself. Nothing is sent from the app.
 - Algorithms tasks are **graded pads**: **Run examples** runs your solution against the
   example cases only, with its console output shown; **Submit** runs every hidden case,
   console muted, and reports *Correctness X% · Performance Y% · Total Z%* with a row per
@@ -156,7 +160,8 @@ between roles; only the round list and the visible question set change.
 
 ## Readiness
 Set a **Loop date** on the home screen and every round card shows how many
-questions are unseen, how many are weak, and how many days you have left; cards
+questions are unseen, how many are weak, and how many days you have left, and the line under the date says how many questions a
+day clears everything weak or unseen by then; cards
 themselves reorder by urgency (weak and unseen count more), and the Round N labels
 come off since they would contradict the order. Once the date has passed the countdown
 stops and the cards go back to round order. Under the title, a line counts the

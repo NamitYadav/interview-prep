@@ -77,6 +77,12 @@ export function Home({ state, role, setRole }: { state: Persisted; role: RoleId;
     index,
     stats: roundStats(byRound(round.id), state.progress),
   }));
+  // What the date asks of each day: everything weak or unseen, spread over the days left.
+  const toClear = roundCards.reduce((n, { stats }) => n + stats.weak + stats.unrated, 0);
+  const dailyTarget = daysLeft !== null && daysLeft > 0 && toClear > 0
+    ? ` · ${Math.ceil(toClear / daysLeft)} a day clears all ${toClear} weak or unseen`
+    : '';
+
   // With a loop date ahead the cards sort by urgency, and a "Round 3" label on the
   // first card would contradict its position — so the label only shows in data order.
   const orderedCards = upcoming
@@ -107,7 +113,7 @@ export function Home({ state, role, setRole }: { state: Persisted; role: RoleId;
             onChange={(e) => setLoopDate(e.target.value || null)}
             className="rounded border border-zinc-300 bg-transparent px-2 py-1 dark:border-zinc-700"
           />
-          {daysLeft !== null && <span className="text-zinc-500 dark:text-zinc-400">{loopDateLabel(daysLeft)}</span>}
+          {daysLeft !== null && <span className="text-zinc-500 dark:text-zinc-400">{loopDateLabel(daysLeft)}{dailyTarget}</span>}
         </span>
         <span className="flex items-center gap-2">
           <label htmlFor="role" className="text-zinc-600 dark:text-zinc-400">Role</label>
