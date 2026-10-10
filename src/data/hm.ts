@@ -2678,4 +2678,185 @@ a:hover { color: blue; }`,
     ],
     followUps: ["How long would you bake a canary for a checkout change?", "What would you do if the canary looks fine but support tickets spike?"],
   },
+
+  // Staff coverage additions: JS runtime and memory, off-main-thread work, HTTP caching,
+  // API shape and contracts, developer experience, orphaned code.
+  {
+    id: 'hm-140',
+    round: 'hm',
+    category: 'Web fundamentals',
+    question: "What does this print, in what order, and which part of the order is not guaranteed?",
+    code: `console.log('1');
+setTimeout(() => console.log('2'), 0);
+Promise.resolve().then(() => console.log('3'));
+queueMicrotask(() => console.log('4'));
+(async () => {
+  console.log('5');
+  await null;
+  console.log('6');
+})();
+requestAnimationFrame(() => console.log('7'));
+console.log('8');`,
+    answer: [
+      "Read it as the event loop rather than as a puzzle. Synchronous code runs to completion first: 1, then 5, because an async function runs synchronously up to its first await, then 8.",
+      "Then the microtask queue drains fully, in the order things were queued: the then callback (3), the queueMicrotask callback (4), and the continuation after await null (6), which was queued last because the await was reached after the other two were scheduled. Awaiting a non-promise still costs one microtask tick.",
+      "Then say what is not guaranteed, which is the part most answers miss: 2 and 7 can come in either order. setTimeout is a new task; requestAnimationFrame runs before the next paint, and whether a frame is due before the timer task runs depends on timing. In a background tab, 7 may not print at all, because rAF is paused.",
+      "Close with why it matters in real code: microtasks run before the browser can render, so a long chain of promise callbacks blocks a frame just as a synchronous loop does, while setTimeout gives up the thread.",
+    ],
+    keyPoints: [
+      "1 5 8, then 3 4 6, then 2 and 7 in either order",
+      "Async functions run synchronously until the first await",
+      "Microtasks drain fully, FIFO, before any task or frame",
+      "Knows setTimeout versus rAF order is not guaranteed, and rAF pauses in background tabs",
+    ],
+    followUps: ["What happens if a microtask keeps queueing another microtask?", "Where does a MutationObserver callback run?"],
+  },
+  {
+    id: 'hm-141',
+    round: 'hm',
+    category: 'Performance',
+    question: "Users say the app gets slower the longer a tab stays open. How do you find and fix a memory leak in a single-page app?",
+    answer: [
+      "Confirm it is memory before hunting: watch the tab's memory in the browser task manager across a repeated user journey, open a view and close it ten times. A sawtooth that returns to baseline is normal garbage collection; a floor that keeps rising is a leak.",
+      "Then use the three-snapshot method in the DevTools Memory panel: snapshot at baseline, repeat the journey, snapshot, repeat again, snapshot, and compare. Objects that grow by the same count with each repeat are the leak. Filter for Detached to find DOM nodes that left the page but are still referenced from JavaScript, and read the retainers path to see who holds them.",
+      "Name the usual causes, because the retainer path almost always points at one: a listener on window or document never removed, an interval or subscription without cleanup, a module-level cache or Map that only grows, a closure in a long-lived callback that captured a large object, or a third-party widget that was never destroyed.",
+      "Fix at the cause, not the symptom: return a cleanup from every effect that subscribes, pass an AbortController signal to addEventListener so one abort removes a whole group, bound caches with a size limit, and use a WeakMap for metadata keyed by objects. Then add the journey to a regression check, since leaks come back.",
+    ],
+    keyPoints: [
+      "Separates a GC sawtooth from a rising floor before profiling",
+      "Uses the three-snapshot comparison and reads retainers",
+      "Looks for detached DOM nodes",
+      "Names concrete causes: listeners, intervals, unbounded caches, closures, third parties",
+      "Fixes with effect cleanup, AbortController signals, bounded caches, WeakMap",
+    ],
+    followUps: ["How would you catch a leak in CI before users do?", "Why does a detached node often keep a whole subtree alive?"],
+    deeper: [
+      "performance.memory is non-standard and Chrome-only. performance.measureUserAgentSpecificMemory() is the standard API, but it needs cross-origin isolation, so most teams track a leak through a scripted journey in a lab run with heap snapshots instead.",
+      "React-specific: StrictMode in development mounts, unmounts and remounts effects, which is designed to surface a missing cleanup early. A leak that only appears in production often comes from code outside React, such as a chart library instance or a global event bus.",
+    ],
+  },
+  {
+    id: 'hm-142',
+    round: 'hm',
+    category: 'Performance',
+    question: "When would you move work into a Web Worker, and when does it not help?",
+    answer: [
+      "Start with the test: the work is CPU-bound, takes longer than a frame or two, and does not need the DOM. Typical examples are parsing a large CSV or JSON file, building a client-side search index, diffing big documents, syntax highlighting, and image processing.",
+      "Then name the cost that decides it: messages are copied with structured clone, so sending a 50MB object in and a 50MB result back can cost about as much main-thread time as you saved. Transfer ArrayBuffers instead of copying them, or keep the data in the worker and send queries and small results, which is usually the bigger win.",
+      "Compare it with the cheaper alternative: if the work can be chunked, yielding to the main thread between chunks keeps input responsive without a second thread, a message protocol and a separate bundle. A worker earns its cost when the work cannot be split usefully or would still make the UI feel slow when split.",
+      "Close with how you keep it maintainable: wrap the worker in a small promise-based interface, or a library such as Comlink, so the call site looks like an async function. Handle worker errors and termination explicitly, and measure the result with a performance trace rather than assuming it helped.",
+    ],
+    keyPoints: [
+      "CPU-bound, longer than a frame, no DOM needed",
+      "Structured-clone copy cost; transfer buffers or keep data in the worker",
+      "Compares with chunking and yielding first",
+      "Wraps the message protocol behind an async interface and measures",
+    ],
+    followUps: ["What does SharedArrayBuffer need from your headers, and why?", "Where does OffscreenCanvas fit?"],
+    deeper: [
+      "SharedArrayBuffer requires cross-origin isolation (COOP: same-origin and COEP: require-corp or credentialless), which can break third-party embeds, so it is rarely the first tool.",
+      "WebAssembly is a separate question from threading: it speeds up the computation itself, and it still runs on whichever thread calls it. Heavy Wasm usually belongs in a worker too.",
+    ],
+  },
+  {
+    id: 'hm-143',
+    round: 'hm',
+    category: 'Web fundamentals',
+    question: "Beyond hashed assets, how do you set HTTP caching for API responses behind a CDN, and what goes wrong?",
+    answer: [
+      "Split responses by who may see them. Public, non-personal data, such as a product catalogue, can be cached at the CDN with s-maxage and a shorter max-age for browsers. Anything per user is private, so only the browser keeps it, and sensitive data, such as account balances or personal details, is no-store.",
+      "Explain the difference teams confuse: no-cache does not mean do not cache, it means revalidate before use, and with an ETag that revalidation is a cheap 304. no-store is the one that keeps the response out of every cache.",
+      "Add stale-while-revalidate where slightly old data is acceptable: the user gets the cached response immediately while it refreshes in the background, which removes a loading state at little cost.",
+      "Then name what goes wrong, because that is the staff part of the answer. The worst one is a personalised response cached publicly at the CDN, which serves one user's data to another; it is a security incident, not a performance bug. Next is Vary: a Vary on Cookie or a high-variety header quietly drops the hit rate to near zero. Last is a service worker cache in front of the HTTP cache that keeps serving old responses after the server has changed its headers.",
+    ],
+    keyPoints: [
+      "public with s-maxage, private, or no-store by audience and sensitivity",
+      "no-cache means revalidate, often a cheap 304 with an ETag",
+      "stale-while-revalidate where slightly old data is fine",
+      "Personalised data cached at the CDN is a data leak",
+      "Vary pitfalls and service-worker caches as hidden layers",
+    ],
+    followUps: ["How would you verify what the CDN actually cached?", "How do you purge a bad response that is already cached at the edge?"],
+  },
+  {
+    id: 'hm-144',
+    round: 'hm',
+    category: 'Architecture & system design',
+    question: "REST, GraphQL or a backend-for-frontend: how do you choose the API shape for a frontend?",
+    answer: [
+      "Decide from the shape of the organisation and the clients, not from taste. How many clients need different views of the same data, how many backend services a screen has to combine, and who will own and operate the layer in between.",
+      "REST with good HTTP caching is the default when there are few clients and resources map cleanly to screens: it is simple, CDN-friendly and easy to debug. Its cost appears when one screen needs five calls, or when each client overfetches.",
+      "GraphQL earns its cost when many clients need different slices of a large, connected graph. Name the costs directly: HTTP caching mostly goes away and moves into a normalised client cache, the server needs query-cost limits and batching against N+1 queries, persisted queries are needed in production for security and performance, and someone has to own the schema across teams.",
+      "A backend-for-frontend is the middle option: a thin service owned by the frontend team that aggregates and shapes backend calls for one client. It fixes overfetching and chatty screens without an org-wide GraphQL rollout, but it is another service the frontend team has to deploy, monitor and be on call for.",
+      "Close with a default: REST plus a BFF where screens aggregate heavily, and GraphQL when several clients and teams share a large domain graph and there is a team willing to own the gateway.",
+    ],
+    keyPoints: [
+      "Chooses by number of clients, services to combine, and ownership",
+      "REST: simple and cacheable; cost is chatty or overfetching screens",
+      "GraphQL: caching, query cost, N+1, persisted queries, schema ownership",
+      "BFF: frontend-owned aggregation, and the on-call cost that comes with it",
+    ],
+    followUps: ["Where does tRPC fit for a TypeScript full-stack team?", "How would you migrate a REST app to GraphQL one screen at a time?"],
+  },
+  {
+    id: 'hm-145',
+    round: 'hm',
+    category: 'Architecture & system design',
+    question: "How do you keep the frontend and backend teams' API contract from breaking in production?",
+    answer: [
+      "Make one schema the source of truth, OpenAPI or a GraphQL schema, and generate the TypeScript types and client from it, so a backend change shows up as a type error in the frontend build instead of a runtime error for users.",
+      "Explain why types alone are not enough: generated types describe what the server promised, not what it sent. Validate at the boundary, with a schema library such as zod, on the responses where wrong data is costly, and report mismatches to monitoring instead of crashing the page.",
+      "Catch breaking changes before merge: diff the schema in CI and fail on removed fields, renamed fields or narrowed types, or use consumer-driven contract tests where several consumers depend on one service. Changes should be additive by default; removals go through a deprecation window with a date, and usage data shows when it is safe.",
+      "Generate mocks from the same schema, for example MSW handlers, so the frontend can build against an agreed contract before the endpoint exists. That is what makes the contract an agreement between teams instead of a document nobody reads.",
+    ],
+    keyPoints: [
+      "One schema as source of truth, with generated types and client",
+      "Runtime validation at the boundary, because types do not check the wire",
+      "Breaking-change detection in CI, or consumer-driven contract tests",
+      "Additive changes and dated deprecations",
+      "Mocks generated from the schema for parallel work",
+    ],
+    followUps: ["The backend team does not want a schema-first process. How do you start?", "How do you handle a field the mobile app still uses but web has dropped?"],
+  },
+  {
+    id: 'hm-146',
+    round: 'hm',
+    category: 'Delivery & process',
+    question: "How would you treat developer experience as a product? What do you measure, and what do you fix first?",
+    answer: [
+      "Treat engineers as the users: start with a short survey and a few interviews to find where they lose time, because the loudest complaint in Slack is not always the most expensive one.",
+      "Pair that with a small set of system measures: CI time at p50 and p90, the flaky-test rate, local start-up and hot-reload time, how long a new hire takes to merge a first change, and how long a pull request waits for review. Delivery metrics such as deploy frequency and change failure rate show the outcome, but they do not tell you what to fix.",
+      "Pick one pain with a clear cost, fix it, and publish the before and after. For example, cutting CI from 25 to 8 minutes across 40 engineers is hours of waiting saved each week, and stating that number earns support for the next fix.",
+      "Name what you avoid: using the measures on individuals, which corrupts them; building internal tooling nobody asked for; and fixing ten things halfway. The goal is a paved road, a default way of doing things that is easier than the alternative, not a mandate.",
+    ],
+    keyPoints: [
+      "Developers as users: survey and interviews first",
+      "Concrete system measures: CI p90, flakiness, local loop, first merge, review wait",
+      "One fix at a time, with a published before and after",
+      "Never measures individuals; aims for a paved road, not a mandate",
+    ],
+    roles: ['staff', 'fs-staff', 'architect', 'lead'],
+    followUps: ["Product says DX work is not on the roadmap. How do you get time for it?", "How do you stop a flaky test suite from getting worse again?"],
+  },
+  {
+    id: 'hm-147',
+    round: 'hm',
+    category: 'Situational',
+    question: "A shared part of the frontend that no team owns keeps breaking, and you keep being the one who fixes it. What do you do?",
+    answer: [
+      "Stabilise first, since it is hurting users: add tests around the paths that keep breaking and an alert that names the area, so the next failure is caught earlier and is visibly attributed to it.",
+      "Then gather evidence instead of complaining: how many incidents or broken builds it caused in the last quarter, how many hours went into fixing them, and which teams change it or depend on it most. Commit history and incident records usually make the natural owner obvious.",
+      "Take the ownership question to the people who decide staffing, the engineering managers or the head of engineering, with a proposal rather than a problem: this team, because they change it most, or a split along a boundary you can name, or a decision to delete or freeze it. Record the result in CODEOWNERS or the service catalogue so it stays decided.",
+      "Name the trap explicitly: quietly fixing it every time feels helpful, but it hides the cost from the people who could fix the cause, and it turns you into a single point of failure. Staff work here is making the ownership gap visible and getting it closed, not becoming the owner by default.",
+    ],
+    keyPoints: [
+      "Stabilises the area first with tests and attributed alerts",
+      "Brings evidence: incidents, hours, who changes it",
+      "Proposes a named owner or a delete or freeze decision to the people who staff teams",
+      "Makes ownership explicit in CODEOWNERS or a catalogue",
+      "Names the hero trap and the single-point-of-failure risk",
+    ],
+    roles: ['staff', 'fs-staff', 'architect', 'lead'],
+    followUps: ["The proposed owning team pushes back because they have no capacity. What now?", "When is it right for you to own it yourself?"],
+  },
 ];

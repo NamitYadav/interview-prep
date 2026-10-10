@@ -649,4 +649,89 @@ export const hoe: Question[] = [
     ],
     followUps: ['Has anyone changed your mind on this?', 'Under what evidence would you drop this position?'],
   },
+
+  // Staff coverage additions: archetypes, glue work, deciding in writing, team shape.
+  {
+    id: 'hoe-036',
+    round: 'hoe',
+    category: 'Org & impact',
+    question: "Staff engineers come in different shapes: tech lead, architect, solver, right hand. Which are you, and what does that mean for this role?",
+    answer: [
+      "Name one shape as your default and back it with a specific example, rather than claiming all four. For example: mostly a tech lead across [two or three teams], guiding how they build and delivering through them, with some architect work on the frontend platform.",
+      "Show you know what each one involves, briefly: a tech lead guides one or a few teams' execution; an architect owns the direction of a technical area across teams; a solver goes deep on the hardest problem the org has right now and then moves on; a right hand extends a senior leader's reach across the organisation.",
+      "Then turn it into a question for them, because that is the useful part: which of these does this role need over the next year, and is that the same shape the job description describes? A mismatch, for example hiring a solver to do a tech lead's job, is a common reason staff hires fail, and asking about it shows you know that.",
+      "Close with how you would adapt: say which shape you can stretch into and what support you would want, and be honest about which one you would not enjoy doing full time.",
+    ],
+    keyPoints: [
+      "Picks one default shape with a concrete example",
+      "Describes tech lead, architect, solver and right hand accurately",
+      "Asks which shape the role actually needs and names the mismatch risk",
+      "Is honest about the shape that fits least",
+    ],
+    roles: ['staff', 'fs-staff', 'architect'],
+    followUps: ["What would make you switch from one shape to another?", "What did your last manager need from you that did not fit your default shape?"],
+    deeper: [
+      "The four archetypes come from Will Larson's Staff Engineer (2021). Naming the source is optional; describing the shapes accurately matters more than citing them.",
+    ],
+  },
+  {
+    id: 'hoe-037',
+    round: 'hoe',
+    category: 'Org & impact',
+    question: "How do you think about glue work: the onboarding, coordination, reviews and documentation that keep teams moving but rarely show up in a promotion packet?",
+    answer: [
+      "Define it plainly: work that makes other people and teams effective, such as unblocking, onboarding, writing the doc nobody owns, coordinating a cross-team release, or reviewing carefully. At staff level, much of this is the job; the risk is doing it invisibly.",
+      "Say how you make your own glue work count: tie each piece to an outcome someone senior cares about, such as a migration that landed on time because you coordinated three teams or new hires merging in their first week instead of their third, and write it down as you go, not at review time.",
+      "Then talk about other people, because that is where staff judgment shows: glue work often lands on the same people, frequently earlier-career engineers and frequently along gender lines, and it can stall their promotion if it is not recognised. Rotate it on purpose, name it in calibration as real impact, and do not let someone take it on in place of the technical work their level is assessed on.",
+      "Close with the line you draw: glue work is valuable when it is chosen and visible, and harmful when it fills a gap the organisation should staff properly. Say when you would escalate that gap instead of quietly covering it.",
+    ],
+    keyPoints: [
+      "Defines glue work with concrete examples",
+      "Ties own glue work to outcomes and records it as it happens",
+      "Notices who carries it on the team, rotates it, and credits it in calibration",
+      "Separates chosen, visible glue work from covering a staffing gap",
+    ],
+    followUps: ["How would you write glue work into a promotion case?", "What would you do if a manager said glue work is not engineering?"],
+    deeper: [
+      "The term comes from Tanya Reilly's 2019 talk and essay Being Glue, which made the case that this work is necessary and often goes unrewarded.",
+    ],
+  },
+  {
+    id: 'hoe-038',
+    round: 'hoe',
+    category: 'Org & impact',
+    question: "How do you get a decision made across five teams with a written proposal, without it turning into a comment thread that never ends?",
+    answer: [
+      "Write it for the decision, not for completeness: the problem and why now, the options with their real trade-offs, a clear recommendation, what you are explicitly not doing, and two things people tend to leave out, who decides and by what date.",
+      "Talk to the people whose objections would sink it before you share it widely. One conversation each with the two or three people who could block it usually turns their objections into changes to the document instead of a public argument.",
+      "Run the review with a time box: open it for comments for [one to two weeks], resolve threads as you go by changing the document or explaining why not, and hold one meeting only for the points that are still open, with the decider in the room.",
+      "Close it properly: record the decision and the rejected options as an ADR, say what would make you revisit it, and tell the people who disagreed directly before the announcement goes out. Then follow up a few weeks later on whether it is actually happening, because a decision nobody acts on has not been made.",
+    ],
+    keyPoints: [
+      "Structures the document around a decision, a named decider and a date",
+      "Talks to likely blockers one-to-one before sharing widely",
+      "Time-boxes review and meets only on unresolved points",
+      "Records the decision as an ADR, informs the people who disagreed, and follows up",
+    ],
+    followUps: ["What do you do when the decider will not decide?", "How do you handle someone who raises a fundamental objection after the decision?"],
+  },
+  {
+    id: 'hoe-039',
+    round: 'hoe',
+    category: 'Org & impact',
+    question: "Where have you seen team structure shape the frontend architecture, and how would you use that here?",
+    answer: [
+      "Name Conway's law and give a frontend example from your own work, for instance six teams in one single-page app with one release train, where every team waits for the slowest one and merge conflicts cluster in shared folders. The codebase took the shape of the communication paths, not the product.",
+      "Then show you can use it deliberately: if you want independent parts of the frontend, the teams need clear ownership of those parts first. Splitting the code into packages or micro-frontends without splitting ownership only moves the coupling somewhere harder to see.",
+      "Use the Team Topologies vocabulary if it helps: product teams that each own a slice of the user journey, a platform team that offers the design system and build tooling as a service with a clear interface, and an enabling role, often a staff engineer, that helps teams adopt it and then steps back.",
+      "Close with your limits as an individual contributor: you do not reorganise teams, but you can bring evidence to the head of engineering, such as how long pull requests wait on other teams, how often deploys are blocked by someone else's change, and where incidents cross ownership lines, together with an architecture proposal that fits the team structure you are recommending.",
+    ],
+    keyPoints: [
+      "Names Conway's law with a concrete frontend example",
+      "Ownership must change before splitting the code helps",
+      "Uses product, platform and enabling roles accurately",
+      "As an IC, brings evidence and a matching architecture proposal to leadership",
+    ],
+    followUps: ["What is the smallest org change that would fix the release-train problem?", "When is a single shared frontend codebase still the right call for many teams?"],
+  },
 ];
