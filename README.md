@@ -2,7 +2,7 @@
 
 Interactive mock-interview drill for frontend and full-stack engineer loops in
 Berlin / EU — Senior, Staff, Lead or Architect frontend, or Senior and Staff
-full-stack. Eleven rounds across the six loops, 449 curated questions with model
+full-stack. Eleven rounds across the six loops, 461 curated questions with model
 answers, key points and likely follow-ups. Reveal, rate yourself, and weak
 questions come back first.
 
