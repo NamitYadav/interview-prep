@@ -9,7 +9,7 @@ export const hr: Question[] = [
     question: 'Why are you looking to move, and why this company?',
     answer: [
       'Lead with pull, not push: name two concrete things about the company (product domain, engineering culture signal, a public engineering post) and connect them to the scope you want next, naming the part of your track record that already maps onto staff-level work.',
-      'Keep the push side short and neutral: "[your current role] has been a great run; I have shipped [scope] and I am now looking for a larger platform surface or a Berlin-based team." Never criticize the current employer.',
+      'Keep the push side short and neutral: "[your current role] has been a great run; I have shipped [scope] and I am now looking for a larger platform surface or a Berlin-based team." Never criticise the current employer.',
       'Close by naming what you would own in the first year so the recruiter can map you to the open role.',
     ],
     keyPoints: [
@@ -138,7 +138,7 @@ export const hr: Question[] = [
     answer: [
       'Lay out the sequence: notice period, then visa/permit application (Blue Card or the applicable category), then the move into housing, then Anmeldung (address registration) within 14 days of moving in — it needs the landlord\'s Wohnungsgeberbestätigung, so it cannot happen before you have an address — and give a realistic total window, typically [2-4 months] end to end.',
       'Name the concrete support that materially speeds this up: relocation agency access for the permit appointment (usually the longest pole), a temporary housing allowance so Anmeldung is possible on arrival, and help booking the Bürgeramt slot.',
-      'Make clear you have researched the process yourself — permit type, and whether your salary sits above the current Jahresarbeitsentgeltgrenze (it changes yearly; check the current figure), which decides whether statutory health insurance is mandatory or private is an option — rather than expecting the company to explain German bureaucracy from scratch.',
+      'Make clear you have researched the process yourself — permit type, and whether your salary sits above the current Jahresarbeitsentgeltgrenze (it changes yearly), which decides whether statutory health insurance is mandatory or private is an option — rather than expecting the company to explain German bureaucracy from scratch.',
     ],
     keyPoints: [
       'Gives the sequence in order: notice, permit, housing, Anmeldung within 14 days',
@@ -147,6 +147,9 @@ export const hr: Question[] = [
       'Names at least two steps by their German name without being prompted',
     ],
     followUps: ['Have you relocated internationally before?', 'Do you have family considerations affecting the timeline?'],
+    deeper: [
+      'JAEG 2026: €77,400 gross a year; the 2027 figure is still pending.',
+    ],
   },
   {
     id: 'hr-009',
@@ -154,10 +157,10 @@ export const hr: Question[] = [
     category: 'Logistics & relocation',
     question: 'What is your current work permit status, and would you need sponsorship?',
     answer: [
-      'State your status factually and concisely: nationality/permit category and whether you already hold or qualify for an EU work authorization (e.g. an EU Blue Card given your salary band and degree, or an existing permit) — avoid vague answers that make the recruiter guess.',
+      'State your status factually and concisely: nationality/permit category and whether you already hold or qualify for an EU work authorisation (e.g. an EU Blue Card given your salary band and degree, or an existing permit) — avoid vague answers that make the recruiter guess.',
       'If no sponsorship is required, say so explicitly and early: "No sponsorship required — I am eligible for [permit type, stated generically]." This is one of the fastest ways to de-risk yourself as a candidate.',
-      'If sponsorship is required, name the specific route (Blue Card is the common one for skilled non-EU hires in Germany; since the 2023 reform, IT specialists can also qualify on around three years of relevant experience without a degree) and note that the process is well-established and typically employer-supported, to preempt hesitation.',
-      'Know that the Blue Card minimum salary threshold is reset every year, with a lower figure for shortage occupations including IT — quote it as "above the current threshold" rather than a number you may have memorized from a previous year.',
+      'If sponsorship is required, name the specific route (Blue Card is the common one for skilled non-EU hires in Germany; since the 2023 reform, IT specialists can also qualify on at least three years of relevant experience in the last seven, without a degree) and note that the process is well-established and typically employer-supported, to preempt hesitation.',
+      'Know that the Blue Card minimum salary threshold is reset every year, with a lower figure for shortage occupations including IT — quote it as "above the current threshold" rather than a number you may have memorised from a previous year.',
     ],
     keyPoints: [
       'States the current permit status as a fact, with the category named',
@@ -167,8 +170,8 @@ export const hr: Question[] = [
     ],
     followUps: ['Do you already have an EU Blue Card?', 'How long is your current visa valid for?'],
     deeper: [
-      'The threshold resets on 1 January and the figure for the year you file applies. For 2026 it is €50,700 gross a year standard and €45,934.20 for shortage occupations, which include IT — check the current figure before the call rather than trusting this one.',
-      'The degree route needs the degree recognised: on anabin the university must be rated H+ and the degree itself listed, otherwise a ZAB Statement of Comparability. IT specialists without a degree can qualify on at least three years of relevant professional experience instead, at the shortage-occupation threshold.',
+      'The threshold resets on 1 January and the figure for the year you file applies. For 2026 it is €50,700 gross a year standard and €45,934.20 for shortage occupations, which include IT. An offer signed now is likely filed in 2027, where the provisional figures are about €53,100 and €48,108.60 — check the final figure before the call rather than trusting these.',
+      'The degree route needs the degree recognised: on anabin the university must be rated H+ and the degree itself listed, otherwise a ZAB Statement of Comparability. IT specialists without a degree can qualify on at least three years of relevant professional experience in the last seven instead, at the shortage-occupation threshold.',
       'What it gets you, if the recruiter asks: a settlement permit after 27 months on the Blue Card, or 21 with B1 German, and a spouse who may work without restriction — useful when they worry about relocation churn.',
     ],
   },
@@ -179,7 +182,7 @@ export const hr: Question[] = [
     question: 'What are your expectations around remote versus hybrid work, and how often would you be in the Berlin office?',
     answer: [
       'Answer with the company\'s stated policy in mind (research it beforehand) and state your own preference as a range rather than a hard line, e.g. "comfortable with [two to three days a week] in-office, flexible on the exact split."',
-      'Give a concrete cadence you can actually commit to once relocated (e.g. "[3 days a week]", or "full-time for the first few months to ramp up, then per team norm") rather than a vague "sure, sometimes" — and if that commitment depends on something (housing secured, permit finalized), say so instead of giving an unconditional yes you may not be able to keep.',
+      'Give a concrete cadence you can actually commit to once relocated (e.g. "[3 days a week]", or "full-time for the first few months to ramp up, then per team norm") rather than a vague "sure, sometimes" — and if that commitment depends on something (housing secured, permit finalised), say so instead of giving an unconditional yes you may not be able to keep.',
       'If you are relocating, acknowledge that being in-office more often early on helps you build relationships and ramp up faster, which reads well for a staff hire who needs cross-team trust.',
       'Ask whether the cadence is a team norm or a company-wide rule: where a works council exists, attendance and hybrid arrangements are often fixed in a Betriebsvereinbarung rather than by an individual manager, which tells you how much flexibility is actually on the table. If there is a genuine personal constraint, name it briefly and neutrally rather than leaving it implicit.',
     ],
@@ -259,7 +262,7 @@ export const hr: Question[] = [
     question: 'How do you think about trade-offs between equity and cash?',
     answer: [
       'Show that you evaluate equity like a real asset, not a bonus: consider company stage, valuation trajectory, vesting schedule, and liquidity horizon before assigning it real weight against guaranteed cash.',
-      'State your personal preference with reasoning tied to your situation (e.g. relocating and taking on new cost-of-living risk argues for prioritizing a solid cash base, with equity as genuine upside rather than a substitute for base pay).',
+      'State your personal preference with reasoning tied to your situation (e.g. relocating and taking on new cost-of-living risk argues for prioritising a solid cash base, with equity as genuine upside rather than a substitute for base pay).',
       'Avoid two extremes: dismissing equity entirely as "worthless paper," or treating it as equivalent to cash without discounting for risk and stage. Land on a number: say what you actually value the grant at after the discount, and compare offers on that.',
     ],
     keyPoints: [
@@ -404,7 +407,7 @@ export const hr: Question[] = [
     question: 'How do you compare an RSU-heavy offer with a VSOP-heavy one, and what do you say when a recruiter demands a number three minutes into the first call?',
     answer: [
       'Compare them on expected annual cash, not headline totals. For RSUs: grant value divided by the vesting period, then check the refresh policy after year one — a big grant with no refresh is a pay cut in year two — and the vesting shape.',
-      'Do not annualize VSOP. It pays only if a triggering event happens, so treat it as a lottery ticket with a face value: discount it hard — a common rule of thumb is 70-90% — and ask which events trigger a payout.',
+      'Do not annualise VSOP. It pays only if a triggering event happens, so treat it as a lottery ticket with a face value: discount it hard — a common rule of thumb is 70-90% — and ask which events trigger a payout.',
       'Then compare the downside rather than the expected value: if the equity in each offer went to zero, which base would you still be content with after a relocation? That usually settles it faster than the spreadsheet.',
       'The minute-three number demand is a recruiter script, not an ambush. Redirect once — "what is the budgeted band, and at what level is this scoped?" If they push, give a range: "[€X-€Y] base plus whatever the equity looks like — does that fit your band?" Never a single number, and make the bottom of the range one you would genuinely accept: that is the one you will be offered.',
     ],
@@ -414,15 +417,15 @@ export const hr: Question[] = [
       'If they insist there is no band at all, say "then let me give you a range rather than a number, since the right figure depends on the level and the equity mix." And if they ask for your current package, use the decline-and-redirect from the current-compensation question rather than answering it.',
     ],
     keyPoints: [
-      'Annualizes RSUs over the vest and asks about refresh policy and vesting shape',
-      'Refuses to annualize VSOP, applies an explicit discount, and asks which events trigger payout',
+      'Annualises RSUs over the vest and asks about refresh policy and vesting shape',
+      'Refuses to annualise VSOP, applies an explicit discount, and asks which events trigger payout',
       'Compares the offers on the downside case where equity is worth zero',
       'Redirects the number demand once, then gives a range whose bottom is genuinely acceptable',
     ],
     followUps: ['What discount would you apply to a Series B VSOP and why?', 'What if the recruiter says they cannot proceed without a single number?'],
   },
 
-  // German employment (6)
+  // German employment (7)
   {
     id: 'hr-016',
     round: 'hr',
@@ -491,12 +494,13 @@ export const hr: Question[] = [
     category: 'German employment',
     question: 'At this salary you are above the JAEG threshold, what does that mean for your health insurance?',
     answer: [
-      'Know what the threshold does: above the Jahresarbeitsentgeltgrenze (JAEG, the compulsory-insurance income ceiling, roughly [check the current year\'s figure — it rises annually]), you are no longer required to stay in the statutory system (GKV) and can opt into private health insurance (PKV) instead. It is not a same-day switch for someone already insured here, so check when it actually takes effect before planning around it.',
+      'Know what the threshold does: above the Jahresarbeitsentgeltgrenze (JAEG, the compulsory-insurance income ceiling, which rises every year), you are no longer required to stay in the statutory system (GKV) and can opt into private health insurance (PKV) instead. It is not a same-day switch for someone already insured here, so check when it actually takes effect before planning around it.',
       'Weigh the real trade-off, not just the sticker price: PKV premiums are often lower when young and healthy but rise with age and pre-existing conditions, are individually underwritten (not income-based), and switching back to GKV later is restricted, especially past age 55 — so it is a long-horizon decision, not just a today decision.',
       'Name the family angle: GKV has free co-insurance for a non-earning spouse and children (Familienversicherung); PKV requires a separate paid policy for each family member, which changes the math significantly for anyone planning a family.',
       'If unsure, the practical staff-level answer is to stay on GKV (or a strong open GKV-equivalent) unless you have done the specific math for your situation, since the switch is easy to make later but expensive to reverse.',
     ],
     deeper: [
+      'JAEG 2026: €77,400 gross a year; the 2027 figure is still pending.',
       'The timing rule catches people out. If you are already in GKV, crossing the JAEG does not free you on the spot: Versicherungsfreiheit begins at the end of the calendar year in which your regular annual income exceeds the threshold, and only if it also exceeds the following year\'s JAEG — which rises annually. Someone arriving from abroad and starting employment above the threshold is generally outside compulsory insurance from the start of that employment instead. Confirm which of the two cases you are in before assuming PKV is available on day one.',
     ],
     keyPoints: [
@@ -596,7 +600,7 @@ export const hr: Question[] = [
     category: 'Process & culture',
     question: 'How do you handle receiving critical feedback?',
     answer: [
-      'Describe a simple, repeatable process: listen fully before responding, ask a clarifying question to make sure you understood the specific behavior or outcome being flagged, then separate what is actionable from what is just venting or a difference in style.',
+      'Describe a simple, repeatable process: listen fully before responding, ask a clarifying question to make sure you understood the specific behaviour or outcome being flagged, then separate what is actionable from what is just venting or a difference in style.',
       'Give one generic example of the shape of feedback you have acted on (e.g. "[being told a design doc lacked enough context for other teams]") and what changed afterward, without inventing specific real incidents.',
       'Note that at staff level, actively soliciting feedback (not just reacting to it) is part of the job, since you often have fewer people naturally pushing back on your decisions.',
     ],
@@ -615,7 +619,7 @@ export const hr: Question[] = [
     question: 'What questions do you have for me?',
     answer: [
       'Always have 3-5 ready, mixing logistics and substance: team size and structure, why the role is open (backfill vs. growth), and what the decision timeline looks like from here.',
-      'Add one or two that show staff-level thinking: "What would make this hire clearly successful a year from now?" or "What is the biggest technical or organizational challenge the team is facing?"',
+      'Add one or two that show staff-level thinking: "What would make this hire clearly successful a year from now?" or "What is the biggest technical or organisational challenge the team is facing?"',
       'Avoid asking things you could have found on the company website, and avoid leading with compensation here since that is usually already covered separately.',
     ],
     keyPoints: [
@@ -653,7 +657,7 @@ export const hr: Question[] = [
     question: 'Walk me through a decision to move countries for a role — what made it worth it?',
     answer: [
       'Frame it as a deliberate scope or growth decision at the time: name the kind of opportunity it represented generically (e.g. "a chance to take on [broader technical ownership / a new domain / a leadership step]") rather than describing it as a fallback or purely personal necessity.',
-      'Be honest about what you learned from the experience that is directly transferable back to a Berlin/EU staff role — e.g. operating with more autonomy, working across a more distributed or higher-context organization, or scaling a system under different constraints.',
+      'Be honest about what you learned from the experience that is directly transferable back to a Berlin/EU staff role — e.g. operating with more autonomy, working across a more distributed or higher-context organisation, or scaling a system under different constraints.',
       'Close by connecting it to why you are now looking to return to the EU market: be specific and positive (e.g. wanting to rejoin a Berlin-based tech ecosystem, family/life reasons, or targeting a specific type of company only well-represented in that market).',
     ],
     keyPoints: [
@@ -671,8 +675,8 @@ export const hr: Question[] = [
     question: 'If your current title is a lead or management title, why apply for a Staff IC role?',
     answer: [
       'Clarify what your lead title has actually meant in scope versus what it implies — many "Lead" titles at fast-growing companies carry staff-equivalent scope without the matching title, so state plainly what you own today (e.g. "[technical direction for X, mentoring Y engineers, cross-team design reviews]") in generic terms.',
-      'Explain the IC choice as deliberate, not a fallback: you want to maximize hands-on technical depth and system-level influence rather than move toward people management, and a staff IC track is the clearest path to that. Answer the unasked half too: say whether you would want to manage people later, rather than leaving it open.',
-      'If the title is genuinely a step down in scope on paper, be upfront about it and reframe the conversation around actual responsibilities and impact rather than the label, since titles are not standardized across companies or markets.',
+      'Explain the IC choice as deliberate, not a fallback: you want to maximise hands-on technical depth and system-level influence rather than move toward people management, and a staff IC track is the clearest path to that. Answer the unasked half too: say whether you would want to manage people later, rather than leaving it open.',
+      'If the title is genuinely a step down in scope on paper, be upfront about it and reframe the conversation around actual responsibilities and impact rather than the label, since titles are not standardised across companies or markets.',
     ],
     keyPoints: [
       'Lists what they actually own today, separately from what the title says',

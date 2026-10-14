@@ -96,9 +96,10 @@
   --color-amber-700: #7a4a05;
 }
 
-/* 18px on a default browser, but as a percentage so a reader who raised their own
-   default font size gets it scaled up rather than pinned back to 18. */
-html { font-size: 112.5%; }
+/* 16px on phones (mono at 18px left ~30 characters a line at 375px, so one answer
+   ran ~70 lines), 18px from the sm breakpoint, as on the portfolio. Percentages so a
+   reader who raised their own default font size gets it scaled up, not pinned. */
+@media (min-width: 40rem) { html { font-size: 112.5%; } }
 :root { color-scheme: dark; }
 [data-theme='light'], [data-theme='gruvbox-light'] { color-scheme: light; }
 body { @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 antialiased; }

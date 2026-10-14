@@ -18,7 +18,7 @@ export const ROUTES = [...ROUND_IDS, 'weak', 'notes', 'stories', 'mock', 'search
 
 export const rounds: Round[] = [
   { id: 'hr', title: 'HR screen', blurb: 'Motivation, logistics, compensation framing, German employment basics.', targetSeconds: 90 },
-  { id: 'hm', title: 'Hiring manager', blurb: 'Live code review on HTML, CSS and JS, situational judgement, and staff-scope stories.', targetSeconds: 150 },
+  { id: 'hm', title: 'Hiring manager', blurb: 'Web platform depth (CSS, a11y, security, performance, TS), architecture, delivery, situational and staff-scope stories.', targetSeconds: 150 },
   { id: 'coding', title: 'Live coding', blurb: 'Pairing on a build, debugging unfamiliar code, and reviewing a PR out loud.', targetSeconds: 180 },
   { id: 'algo', title: 'Algorithms', blurb: 'Codility-style tasks: hidden correctness and performance tests, timed.', targetSeconds: 1800 },
   { id: 'design', title: 'Frontend system design', blurb: 'One prompt, 45 minutes: requirements, architecture, trade-offs, out loud.', targetSeconds: 300 },

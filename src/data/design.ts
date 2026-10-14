@@ -1,7 +1,7 @@
 import type { Question } from '../types';
 
 export const design: Question[] = [
-  // Product surfaces (13)
+  // Product surfaces (14)
   {
     id: 'design-001',
     round: 'design',
@@ -136,7 +136,7 @@ export const design: Question[] = [
       "Model progress explicitly on the server (current step, completed steps, validation state per step) rather than inferring it from what data happens to be filled in, since a user might fill step 3 before finishing step 2 during a save-and-resume flow.",
       "Cover step validation carefully: validate a step when the user tries to leave it, not only at final submit, so errors surface early, but allow navigating backward freely to fix earlier steps without re-validating everything ahead of the user's current position.",
       "Handle the resume entry point directly: on return, route the user to their last incomplete step by default, but always allow jumping to any earlier completed step from a visible progress indicator, since forcing a rigid replay is what actually loses users.",
-      "Close on the non-functionals. Accessibility is a legal floor on a flow like this, not a nicety: a consumer loan application sits in the European Accessibility Act's consumer-banking scope — the BFSG in Germany, in force since June 2025 — and a public-sector visa portal is covered instead by the Web Accessibility Directive, so either way WCAG 2.1 AA via EN 301 549 v3.2.1 is the baseline today — the WAD's standard, and the de-facto one for the EAA, which has no harmonised standard cited yet. v4.1.1 moves to WCAG 2.2 once cited, expected around December 2026, so I build to 2.2 AA now. Form labelling, programmatic error identification, and keyboard-only completion are the parts that actually get audited. Then instrument per-step drop-off and autosave failure rate, ship step changes behind a flag, and roll back on a drop-off regression.",
+      "Close on the non-functionals. Accessibility is a legal floor on a flow like this, not a nicety: a consumer loan application sits in the European Accessibility Act's consumer-banking scope — the BFSG in Germany, in force since June 2025 — and a public-sector visa portal is covered instead by the Web Accessibility Directive, so either way WCAG 2.1 AA via EN 301 549 v3.2.1 is the baseline today — the WAD's standard, and the de-facto one for the EAA, which has no harmonised standard cited yet. v4.1.1 is already aligned to WCAG 2.2 and gives presumption of conformity once cited, expected around December 2026, so I build to 2.2 AA now. Form labelling, programmatic error identification, and keyboard-only completion are the parts that actually get audited. Then instrument per-step drop-off and autosave failure rate, ship step changes behind a flag, and roll back on a drop-off regression.",
     ],
     keyPoints: [
       'Per-field or per-step autosave, not one large in-memory object',

@@ -97,12 +97,14 @@ describe('forRole', () => {
 
   // Full-stack loops are "the frontend loop plus backend". The existing roles tags all
   // list staff, so a missed 'fs-staff' on one of them would silently drop a staff-scope
-  // question from Staff full-stack — this compares the two sets id for id.
+  // question from Staff full-stack — this compares the two sets id for id. The one deliberate
+  // gap: hm-143/144/145 near-duplicate backend-round questions, so full-stack loops drill those instead.
+  const BACKEND_DUPES = ['hm-143', 'hm-144', 'hm-145'];
   test.each([['fs-staff', 'staff'], ['fs-senior', 'senior']] as const)(
-    '%s sees exactly what %s sees, plus backend',
+    '%s sees exactly what %s sees, minus backend duplicates, plus backend',
     (fs, fe) => {
       const fsIds = forRole(fs).questions.filter((q) => q.round !== 'backend').map((q) => q.id);
-      expect(fsIds).toEqual(forRole(fe).questions.map((q) => q.id));
+      expect(fsIds).toEqual(forRole(fe).questions.map((q) => q.id).filter((id) => !BACKEND_DUPES.includes(id)));
       expect(forRole(fs).byRound('backend').length).toBeGreaterThanOrEqual(36);
     },
   );
