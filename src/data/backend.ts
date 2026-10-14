@@ -167,14 +167,14 @@ export const backend: Question[] = [
     question: 'You need to rename a column and make it NOT NULL on a busy table without downtime. How do you roll it out?',
     answer: [
       'Never in one migration, because the old application version is still running during a deploy and would break the moment the column it reads disappears. Use expand, migrate, contract, with each step shipped and verified on its own.',
-      'Expand: add the new nullable column and deploy code that writes both columns. Migrate: backfill old rows in small batches, a few thousand at a time with pauses, so you do not hold long locks or flood replication. Then switch reads to the new column. To make it NOT NULL cheaply on Postgres 18, add the NOT NULL constraint itself as NOT VALID and then VALIDATE it, which scans without blocking writes. On older versions, add a CHECK (new_col IS NOT NULL) NOT VALID constraint, VALIDATE it, then SET NOT NULL, which Postgres can prove from the validated check without another scan, and drop the helper CHECK afterwards.',
+      'Expand: add the new nullable column and deploy code that writes both columns. Migrate: backfill old rows in small batches, a few thousand at a time with pauses, so you do not hold long locks or flood replication. Then switch reads to the new column. To make it NOT NULL cheaply on Postgres 18+, add the NOT NULL constraint itself as NOT VALID and then VALIDATE it, which scans without blocking writes. On older versions, add a CHECK (new_col IS NOT NULL) NOT VALID constraint, VALIDATE it, then SET NOT NULL, which Postgres can prove from the validated check without another scan, and drop the helper CHECK afterwards.',
       'Contract: once nothing reads the old column, remove the dual write and drop the column in a later release. Set a lock_timeout on every migration so a migration waiting behind a long query fails fast instead of queueing every write behind it.',
     ],
     keyPoints: [
       'Expand, migrate, contract across separate deploys',
       'Dual write while old and new code coexist',
       'Batched backfill to avoid long locks and replication lag',
-      'NOT NULL ... NOT VALID then VALIDATE on Postgres 18; before that, a helper CHECK, SET NOT NULL, then drop the CHECK',
+      'NOT NULL ... NOT VALID then VALIDATE on Postgres 18+; before that, a helper CHECK, SET NOT NULL, then drop the CHECK',
       'lock_timeout so a blocked migration fails fast',
     ],
     followUps: ['How do you roll back halfway through?', 'Which ALTER TABLE operations take an exclusive lock?'],

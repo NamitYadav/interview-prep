@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeToggle } from '../components/ThemeToggle';
@@ -8,12 +8,26 @@ beforeEach(() => {
   localStorage.clear();
   delete document.documentElement.dataset.theme;
 });
+afterEach(() => vi.unstubAllGlobals());
 
 describe('ThemeToggle', () => {
-  test('defaults to dark and applies it to the document', () => {
+  test('defaults to System, which resolves to gruvbox on a dark OS', () => {
     render(<ThemeToggle />);
-    expect(screen.getByRole('button', { name: 'Dark' })).toHaveAttribute('aria-pressed', 'true');
-    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(screen.getByRole('button', { name: 'System' })).toHaveAttribute('aria-pressed', 'true');
+    expect(document.documentElement.dataset.theme).toBe('gruvbox');
+  });
+
+  test('System resolves to gruvbox-light on a light OS', () => {
+    vi.stubGlobal('matchMedia', (q: string) => ({ matches: q.includes('light'), addEventListener() {}, removeEventListener() {} }));
+    render(<ThemeToggle />);
+    expect(document.documentElement.dataset.theme).toBe('gruvbox-light');
+  });
+
+  test('choosing System again clears the stored theme', async () => {
+    localStorage.setItem(THEME_KEY, 'light');
+    render(<ThemeToggle />);
+    await userEvent.click(screen.getByRole('button', { name: 'System' }));
+    expect(localStorage.getItem(THEME_KEY)).toBeNull();
   });
 
   test('switching to gruvbox applies and persists it', async () => {
@@ -21,7 +35,7 @@ describe('ThemeToggle', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Gruvbox' }));
     expect(document.documentElement.dataset.theme).toBe('gruvbox');
     expect(localStorage.getItem(THEME_KEY)).toBe('gruvbox');
-    expect(screen.getByRole('button', { name: 'Dark' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'System' })).toHaveAttribute('aria-pressed', 'false');
   });
 
   test('restores the persisted theme on mount', () => {
@@ -47,6 +61,6 @@ describe('ThemeToggle', () => {
   test('ignores an unknown stored theme', () => {
     localStorage.setItem(THEME_KEY, 'solarized');
     render(<ThemeToggle />);
-    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(document.documentElement.dataset.theme).toBe('gruvbox');
   });
 });

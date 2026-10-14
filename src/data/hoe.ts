@@ -721,17 +721,17 @@ export const hoe: Question[] = [
     category: 'Org & impact',
     question: "Where have you seen team structure shape the frontend architecture, and how would you use that here?",
     answer: [
-      "Name Conway's law and give a frontend example from your own work, for instance six teams in one single-page app with one release train, where every team waits for the slowest one and merge conflicts cluster in shared folders. The codebase took the shape of the communication paths, not the product.",
+      "Name Conway's law and give a frontend example from your own work, for instance a checkout flow split along backend-service teams, so cart, payment and delivery screens each belonged to a different team and every change to the journey needed all three in a room. The codebase took the shape of the communication paths, not the product.",
       "Then show you can use it deliberately: if you want independent parts of the frontend, the teams need clear ownership of those parts first. Splitting the code into packages or micro-frontends without splitting ownership only moves the coupling somewhere harder to see.",
-      "Use the Team Topologies vocabulary if it helps: product teams that each own a slice of the user journey, a platform team that offers the design system and build tooling as a service with a clear interface, and an enabling role, often a staff engineer, that helps teams adopt it and then steps back.",
+      "Use the Team Topologies vocabulary if it helps: stream-aligned teams that each own a slice of the user journey, a platform team that offers the design system and build tooling as a service with a clear interface, and an enabling role, often a staff engineer, that helps teams adopt it and then steps back.",
       "Close with your limits as an individual contributor: you do not reorganise teams, but you can bring evidence to the head of engineering, such as how long pull requests wait on other teams, how often deploys are blocked by someone else's change, and where incidents cross ownership lines, together with an architecture proposal that fits the team structure you are recommending.",
     ],
     keyPoints: [
       "Names Conway's law with a concrete frontend example",
       "Ownership must change before splitting the code helps",
-      "Uses product, platform and enabling roles accurately",
+      "Uses stream-aligned, platform and enabling roles accurately",
       "As an IC, brings evidence and a matching architecture proposal to leadership",
     ],
-    followUps: ["What is the smallest org change that would fix the release-train problem?", "When is a single shared frontend codebase still the right call for many teams?"],
+    followUps: ["What is the smallest org change that would fix the checkout example?", "When is a single shared frontend codebase still the right call for many teams?"],
   },
 ];

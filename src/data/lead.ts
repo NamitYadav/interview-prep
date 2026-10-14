@@ -586,14 +586,14 @@ export const lead: Question[] = [
     question: "Leadership asks whether the AI tooling budget is paying off for your team. How do you answer with evidence?",
     answer: [
       "Start by refusing the easy metrics: lines generated, suggestion acceptance rate and PR count measure activity, and they all go up whether or not anything improved. A team can open more PRs and ship slower.",
-      "Measure delivery outcomes instead, the DORA set: lead time for changes, deployment frequency, change failure rate, time to restore. Add the costs AI tends to shift rather than remove: review time per PR, rework and revert rate, and escaped defects.",
+      "Measure delivery outcomes instead, DORA's five metrics: change lead time, deployment frequency, change fail rate, failed deployment recovery time and deployment rework rate. Add the costs AI tends to shift rather than remove: review time per PR, revert rate and escaped defects.",
       "Get a baseline before any change, or the comparison is a story. If the rollout is already done, compare similar work over comparable periods, and be explicit about what else changed.",
-      "Pair the numbers with a developer survey, because perception is unreliable in both directions. A 2025 METR study found experienced open-source developers were slower with AI tools on their own repositories while believing they were faster. That is the case for measuring rather than asking.",
+      "Pair the numbers with a developer survey, because perception is unreliable in both directions. An early-2025 METR study found experienced open-source developers were slower with AI tools on their own repositories while believing they were faster; METR's February 2026 update says speed-ups are likely larger now but could not measure them reliably. What still holds is that perception and measurement diverged, which is the case for measuring rather than asking.",
       "Then answer the question that was asked: cost per seat and per token against the change in those outcomes, plus where it clearly helps, tests, migrations, unfamiliar code, and where it does not. My answer to leadership is a recommendation, keep, expand, narrow, with the evidence behind it, not a dashboard.",
     ],
     keyPoints: [
       "Rejects activity metrics like lines generated and PR count",
-      "Uses delivery outcomes: DORA metrics plus review time and rework",
+      "Uses delivery outcomes: the five DORA metrics plus review time and escaped defects",
       "Insists on a baseline or a fair comparison",
       "Pairs metrics with surveys, knowing perception and reality diverge",
       "Ends with a cost-versus-outcome recommendation, not a dashboard",

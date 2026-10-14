@@ -93,7 +93,7 @@ export function Home({ state, role, setRole }: { state: Persisted; role: RoleId;
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
       <header className="mb-6">
         <h1 tabIndex={-1} className="text-2xl font-semibold">Interview Prep</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">{activeRole.title} · Berlin / EU loop</p>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">{activeRole.title} loop</p>
         {hasProgress && (
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             {plural(ratedToday, 'question')} rated today · {ratedThisWeek} in the last 7 days

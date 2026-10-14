@@ -1,7 +1,7 @@
 export type RoundId = 'hr' | 'hm' | 'coding' | 'algo' | 'design' | 'case' | 'debrief' | 'hoe' | 'lead' | 'arch' | 'backend';
 export type Route = RoundId | 'weak' | 'notes' | 'stories' | 'mock' | 'search' | 'print';
 export type RoleId = 'senior' | 'staff' | 'lead' | 'architect' | 'fs-senior' | 'fs-staff';
-export interface Role { id: RoleId; title: string; blurb: string; rounds: RoundId[] }
+export interface Role { id: RoleId; title: string; rounds: RoundId[] }
 export interface Round { id: RoundId; title: string; blurb: string; targetSeconds: number }
 export interface Question {
   id: string; round: RoundId; category: string; question: string; code?: string; scratch?: true;

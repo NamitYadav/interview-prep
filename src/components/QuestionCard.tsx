@@ -159,7 +159,7 @@ export function QuestionCard({
   return (
     <article className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="mb-2 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
-        <span className="truncate rounded bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">{question.category}</span>
+        <span className="truncate rounded bg-zinc-100 px-2 py-0.5 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{question.category}</span>
         {meta && <span className="shrink-0">{meta}</span>}
       </div>
       <h2 ref={headingRef} tabIndex={-1} className="mb-4 max-w-prose text-lg font-medium outline-none">{question.question}</h2>

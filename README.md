@@ -1,8 +1,7 @@
 # Interview Prep
 
-Interactive mock-interview drill for frontend and full-stack engineer loops in
-Berlin / EU — Senior, Staff, Lead or Architect frontend, or Senior and Staff
-full-stack. Eleven rounds across the six loops, 461 curated questions with model
+Interactive mock-interview drill for frontend and full-stack engineer loops —
+Senior, Staff, Lead or Architect frontend, or Senior and Staff full-stack. Eleven rounds across the six loops, 461 curated questions with model
 answers, key points and likely follow-ups. Reveal, rate yourself, and weak
 questions come back first.
 
@@ -24,10 +23,12 @@ between roles; only the round list and the visible question set change.
 
 ## Rounds
 1. HR screen (compensation, negotiation, German employment basics)
-2. Hiring manager (live code review, web fundamentals, CSS & layout, accessibility, security,
-   regulated & payments FE, TypeScript, i18n, reliability, deployment & infrastructure,
-   AI-assisted engineering, situational, behavioral)
-3. Live coding (pairing, debugging, code review, build prompts, AI-allowed rounds)
+2. Hiring manager (live code review, web fundamentals, React & data, CSS & layout, accessibility,
+   performance, security, regulated & payments FE, TypeScript, i18n, testing & quality,
+   reliability, deployment & infrastructure, architecture & system design, AI-assisted
+   engineering, situational, behavioral)
+3. Live coding (pairing, debugging, code review, build prompts, data structures & traversal,
+   AI-allowed rounds)
 4. Algorithms (Codility-style tasks with hidden correctness and performance tests, and a
    90-minute timed test)
 5. Frontend system design (one prompt, 45 minutes)
@@ -177,8 +178,9 @@ week.
   anywhere. **Export** / **Import** to back up or move devices; **Reset progress**
   clears everything. If one saved entry is ever unreadable, only that entry is dropped on
   load; the original blob is kept aside under `interview-prep:v1:corrupt`.
-- **Theme**: Dark, Gruvbox, Gruvbox Light or Light, switchable from the top of any
-  page. Stored per device, outside the backup.
+- **Theme**: System (the default: Gruvbox or Gruvbox Light, following the OS), Dark,
+  Gruvbox, Gruvbox Light or Light, switchable from the top of any page. Stored per
+  device, outside the backup.
 - **Strict mode**: switchable from the top of any page. When on, running out of a
   round's target time auto-reveals the answer instead of waiting for you to click
   Reveal. Stored per device, outside the backup.
@@ -226,7 +228,7 @@ no browser — and `SMOKE_BROWSER` points it at any Firefox or Chromium binary.
 Vite · React 19 · TypeScript · Tailwind CSS 4 · GeistMono Nerd Font (self-hosted from
 public/fonts) · Vitest · GitHub Pages
 
-Two JS chunks for the app itself — the app and the React runtime, ~385KB gzipped
+Two JS chunks for the app itself — the app and the React runtime, ~425KB gzipped
 together, most of it the question bank's own text, not code — plus three runners the app
 only fetches on Run or Submit: the `sandbox.html` page that runs component starters in a
 sandboxed iframe, a self-contained Web Worker for the console-only ones, and a second
