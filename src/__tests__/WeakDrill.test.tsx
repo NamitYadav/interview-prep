@@ -66,3 +66,23 @@ describe('WeakDrill', () => {
     expect(screen.getByText('2 of 2')).toBeInTheDocument();
   });
 });
+
+describe('WeakDrill with real questions', () => {
+  // Backend is outside Staff's loop: a question you were actually asked still counts.
+  const withLogged: Persisted = {
+    ...weakOn('hr-001', 'log:a'),
+    log: { a: { question: 'Design a rate limiter for our API', round: 'backend', answer: '', at: 1 } },
+  };
+  test('a weak logged question joins the drill, whatever its round', () => {
+    render(<Harness initial={withLogged} />);
+    expect(screen.getByText(/2 of 2 still weak/i)).toBeInTheDocument();
+  });
+  test('says it covers real questions too', () => {
+    render(<Harness initial={withLogged} />);
+    expect(screen.getByText('Everything you rated weak in your loop, plus weak real questions.')).toBeInTheDocument();
+  });
+  test('a weak logged question with no text yet stays out', () => {
+    render(<Harness initial={{ ...withLogged, log: { a: { ...withLogged.log.a!, question: ' ' } } }} />);
+    expect(screen.getByText(/1 of 1 still weak/i)).toBeInTheDocument();
+  });
+});

@@ -203,3 +203,24 @@ describe('Home', () => {
     expect(screen.getByText('Live coding')).toBeInTheDocument();
   });
 });
+
+describe('Home real questions link', () => {
+  const link = () => screen.getByRole('link', { name: /real questions/i });
+  test('says None yet with an empty log', () => {
+    render(<Harness initial={EMPTY} />);
+    expect(link()).toHaveAttribute('href', '#log');
+    expect(link()).toHaveTextContent('None yet');
+  });
+  test('counts questions and weak ones', () => {
+    const entry = { question: 'Q', round: 'hm' as const, answer: '', at: 1 };
+    render(<Harness initial={{ ...EMPTY, log: { a: entry, b: entry }, progress: { 'log:a': { rating: 1, seen: 1, lastSeen: 1 } } }} />);
+    expect(link()).toHaveTextContent('2 questions · 1 weak');
+  });
+});
+
+test('the weak count includes weak real questions', () => {
+  const entry = { question: 'Q', round: 'backend' as const, answer: '', at: 1 };
+  const weak = { rating: 1 as const, seen: 1, lastSeen: 1 };
+  render(<Harness initial={{ ...EMPTY, log: { a: entry }, progress: { 'hr-001': weak, 'log:a': weak } }} />);
+  expect(screen.getByRole('link', { name: /weak drill/i })).toHaveTextContent('2 rated weak');
+});

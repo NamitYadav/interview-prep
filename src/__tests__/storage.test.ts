@@ -4,10 +4,11 @@ import { CORRUPT_KEY, STORAGE_KEY, backupFilename, load, parseBackup, save, save
 import { EMPTY } from './helpers';
 
 const valid: Persisted = {
-  version: 2,
+  version: 3,
   progress: { 'hr-001': { rating: 2, seen: 1, lastSeen: 5 } },
   notes: { 'hr-001': 'hi' },
   stories: { s1: { title: 'The migration', body: 'Situation...' } },
+  log: { l1: { question: 'Why Berlin?', round: 'hr', answer: '', at: 1_700_000_000_000 } },
 };
 
 const v1Backup = { version: 1, progress: { 'hr-001': { rating: 2, seen: 1, lastSeen: 5 } }, notes: { 'hr-001': 'hi' } };
@@ -24,7 +25,7 @@ describe('load', () => {
   });
   test('migrates a v1 backup, adding empty stories', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(v1Backup));
-    expect(load()).toEqual({ ...v1Backup, version: 2, stories: {} });
+    expect(load()).toEqual({ ...v1Backup, version: 3, stories: {}, log: {} });
   });
   test('moves corrupt JSON aside and returns EMPTY', () => {
     localStorage.setItem(STORAGE_KEY, '{not json');
@@ -35,7 +36,7 @@ describe('load', () => {
   // After a rollback the stored blob is from a newer app: moved aside and overwritten by
   // an empty v2, it was gone once the newer version came back.
   test('leaves a newer-version blob in place and refuses to save over it', () => {
-    const newer = JSON.stringify({ version: 3, progress: {} });
+    const newer = JSON.stringify({ version: 4, progress: {} });
     localStorage.setItem(STORAGE_KEY, newer);
     expect(load()).toEqual(EMPTY);
     expect(save(EMPTY)).toBe(false);
@@ -48,7 +49,7 @@ describe('load', () => {
   test('keeps the valid entries when one is malformed, with the original set aside', () => {
     const blob = JSON.stringify({ version: 2, progress: { a: { rating: 3, seen: 1, lastSeen: 1 }, b: { rating: 4, seen: 1, lastSeen: 1 } }, notes: { a: 'kept', b: 7 }, stories: {} });
     localStorage.setItem(STORAGE_KEY, blob);
-    expect(load()).toEqual({ version: 2, progress: { a: { rating: 3, seen: 1, lastSeen: 1 } }, notes: { a: 'kept' }, stories: {} });
+    expect(load()).toEqual({ version: 3, progress: { a: { rating: 3, seen: 1, lastSeen: 1 } }, notes: { a: 'kept' }, stories: {}, log: {} });
     expect(localStorage.getItem(CORRUPT_KEY)).toBe(blob);
   });
   test('treats wrong shape as corrupt', () => {
@@ -76,7 +77,7 @@ describe('load', () => {
   // Import and Reset are the user choosing to overwrite; the guard used to make both
   // silently never save, under a banner blaming storage.
   test('a newer-version blob explains itself, and unblockSave lets an explicit overwrite through', () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 3, progress: {} }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 4, progress: {} }));
     load();
     expect(saveBlockedReason()).toMatch(/newer version/);
     unblockSave();
@@ -107,11 +108,11 @@ describe('parseBackup', () => {
     expect(parseBackup(JSON.stringify(valid))).toEqual(valid);
   });
   test('migrates a v1 backup forward', () => {
-    expect(parseBackup(JSON.stringify(v1Backup))).toEqual({ ...v1Backup, version: 2, stories: {} });
+    expect(parseBackup(JSON.stringify(v1Backup))).toEqual({ ...v1Backup, version: 3, stories: {}, log: {} });
   });
   test.each([
     ['not json', 'Not valid JSON'],
-    [JSON.stringify({ version: 3, progress: {}, notes: {} }), 'Unsupported backup version'],
+    [JSON.stringify({ version: 4, progress: {}, notes: {} }), 'Unsupported backup version'],
     [JSON.stringify({ version: 1, progress: [], notes: {} }), 'progress must be an object'],
     [JSON.stringify({ version: 1, progress: { a: { rating: 4, seen: 1, lastSeen: 1 } }, notes: {} }), 'Invalid progress entry for a'],
     // 1e999 overflows to Infinity on JSON.parse — must be rejected, not accepted as a
@@ -130,6 +131,38 @@ describe('parseBackup', () => {
 test('backupFilename uses the local date', () => {
   // 00:30 local is still the previous day in UTC anywhere east of Greenwich.
   expect(backupFilename(new Date(2026, 8, 8, 0, 30))).toBe('interview-prep-backup-2026-09-08.json');
+});
+
+describe('real-questions log', () => {
+  const entry = { question: 'Why Berlin?', round: 'hr', answer: '', at: 1_700_000_000_000 };
+  test('v1 and v2 backups load with an empty log', () => {
+    const v2 = { version: 2, progress: {}, notes: {}, stories: {} };
+    for (const backup of [v1Backup, v2]) {
+      const parsed = parseBackup(JSON.stringify(backup));
+      expect(parsed.version).toBe(3);
+      expect(parsed.log).toEqual({});
+    }
+  });
+  test('a v3 log round-trips', () => {
+    expect(parseBackup(JSON.stringify(valid))).toEqual(valid);
+  });
+  test('an invalid log round is refused on import and dropped on load', () => {
+    const blob = JSON.stringify({ ...valid, log: { good: entry, bad: { ...entry, round: 'nope' } } });
+    expect(() => parseBackup(blob)).toThrow('Invalid log entry for bad');
+    localStorage.setItem(STORAGE_KEY, blob);
+    expect(load().log).toEqual({ good: entry });
+  });
+  test('a future date still imports', () => {
+    const future = { ...entry, at: Date.now() + 30 * 86_400_000 };
+    expect(parseBackup(JSON.stringify({ ...valid, log: { f: future } })).log.f).toEqual(future);
+  });
+  test('a v4 blob blocks saving', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 4 }));
+    load();
+    expect(saveBlockedReason()).not.toBeNull();
+    localStorage.clear();
+    load();
+  });
 });
 
 describe('backward compatibility', () => {

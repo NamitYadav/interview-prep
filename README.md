@@ -158,6 +158,9 @@ between roles; only the round list and the visible question set change.
   least-recently-rehearsed first, so the stale ones surface. New story drops you straight
   into its title. Mark one rehearsed when
   you have said it out loud, or pull one up mid-question via "Use this".
+- **Real questions** — the questions real interviewers asked you, each with your own
+  answer, grouped by day. "Drill these" runs them through the usual Weak/OK/Solid loop,
+  and weak ones also join the Weak drill.
 
 ## Readiness
 Set a **Loop date** on the home screen and every round card shows how many
@@ -174,7 +177,7 @@ week.
 `Space` reveal · `1` / `2` / `3` rate Weak / OK / Solid · `N` skip · `B` back.
 
 ## Your data
-- Ratings, notes and stories stay in your browser (localStorage). Nothing is sent
+- Ratings, notes, stories and real questions stay in your browser (localStorage). Nothing is sent
   anywhere. **Export** / **Import** to back up or move devices; **Reset progress**
   clears everything. If one saved entry is ever unreadable, only that entry is dropped on
   load; the original blob is kept aside under `interview-prep:v1:corrupt`.

@@ -8,10 +8,11 @@ import { ImportReset, LAST_EXPORT_KEY } from '../components/ExportImport';
 import { STORAGE_KEY, load, saveBlockedReason } from '../lib/storage';
 
 const seeded: Persisted = {
-  version: 2,
+  version: 3,
   progress: { 'hr-001': { rating: 3, seen: 1, lastSeen: 1 } },
   notes: { 'hr-001': 'my story' },
   stories: {},
+  log: {},
 };
 
 function Harness({ initial }: { initial: Persisted }) {
@@ -65,7 +66,7 @@ describe('ExportImport', () => {
 
   test('reset lifts a save guard set by load()', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 3, progress: {} }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 4, progress: {} }));
     load();
     render(<Harness initial={seeded} />);
     await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
@@ -75,7 +76,7 @@ describe('ExportImport', () => {
   // After a rollback the in-memory counts are all 0; the confirm said it deleted nothing.
   test('the reset confirm warns when it would overwrite data load() could not open', async () => {
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 3, progress: {} }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 4, progress: {} }));
     load();
     render(<Harness initial={seeded} />);
     await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
@@ -124,6 +125,21 @@ describe('ExportImport', () => {
     expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/0 rated, 1 notes, 0 stories/);
   });
 
+  test('the import confirm counts logged questions', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    render(<Harness initial={seeded} />);
+    const backup = { ...seeded, log: { a: { question: 'Q', round: 'hm', answer: '', at: 1 } } };
+    await userEvent.upload(screen.getByLabelText(/import backup file/i), file(JSON.stringify(backup)));
+    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/0 stories, 0 logged questions\) with this backup \(1 rated, 1 notes, 0 stories, 1 logged question\)/);
+  });
+
+  test('the reset confirm names logged questions', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    render(<Harness initial={{ ...seeded, log: { a: { question: 'Q', round: 'hm', answer: '', at: 1 } } }} />);
+    await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
+    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/1 rating, 1 note, 0 stories and 1 logged question\b/);
+  });
+
   test('a parse failure never prompts', async () => {
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     render(<Harness initial={seeded} />);
@@ -144,7 +160,7 @@ describe('ExportImport', () => {
     render(<Harness initial={withStories} />);
     await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
     expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/stories/i);
-    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/1 rating, 1 note and 2 stories/);
+    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/1 rating, 1 note, 2 stories and 0 logged questions/);
   });
 
   test('the reset confirm reads naturally at one and at none', async () => {
@@ -152,12 +168,12 @@ describe('ExportImport', () => {
     const one: Persisted = { ...seeded, stories: { s1: { title: 'Migration', body: '...' } } };
     const { unmount } = render(<Harness initial={one} />);
     await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
-    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/1 rating, 1 note and 1 story\b/);
+    expect(confirmSpy.mock.calls[0]?.[0]).toMatch(/1 rating, 1 note, 1 story and 0 logged questions/);
     unmount();
 
-    render(<Harness initial={{ version: 2, progress: {}, notes: {}, stories: {} }} />);
+    render(<Harness initial={{ version: 3, progress: {}, notes: {}, stories: {}, log: {} }} />);
     await userEvent.click(screen.getByRole('button', { name: /reset progress/i }));
-    expect(confirmSpy.mock.calls[1]?.[0]).toMatch(/0 ratings, 0 notes and 0 stories/);
+    expect(confirmSpy.mock.calls[1]?.[0]).toMatch(/0 ratings, 0 notes, 0 stories and 0 logged questions/);
   });
 
   // Reset cleared interview-prep:v1 and nothing else, so the user carried on mid-lap

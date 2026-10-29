@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
-import type { Persisted, Rating } from '../types';
+import type { Persisted, Rating, RoundId } from '../types';
 import { STORAGE_KEY, emptyState, load, save, saveBlockedReason } from '../lib/storage';
 
 export type Action =
@@ -9,6 +9,9 @@ export type Action =
   | { type: 'saveStory'; id: string; title?: string; body?: string }
   | { type: 'rehearseStory'; id: string; now: number }
   | { type: 'deleteStory'; id: string }
+  | { type: 'createLogged'; id: string; round: RoundId; now: number }
+  | { type: 'saveLogged'; id: string; question?: string; round?: RoundId; answer?: string; at?: number }
+  | { type: 'deleteLogged'; id: string }
   | { type: 'import'; data: Persisted }
   | { type: 'reset' };
 
@@ -70,6 +73,37 @@ export function reducer(state: Persisted, action: Action): Persisted {
       const stories = { ...state.stories };
       delete stories[action.id];
       return { ...state, stories };
+    }
+    case 'createLogged': {
+      if (state.log[action.id]) return state;
+      return { ...state, log: { ...state.log, [action.id]: { question: '', round: action.round, answer: '', at: action.now } } };
+    }
+    case 'saveLogged': {
+      // Merge-only, like saveStory and for the same reasons: each field commits on its
+      // own debounce, and a flush landing after 'deleteLogged' must not bring it back.
+      const existing = state.log[action.id];
+      if (!existing) return state;
+      return {
+        ...state,
+        log: {
+          ...state.log,
+          [action.id]: {
+            ...existing,
+            ...(action.question !== undefined && { question: action.question }),
+            ...(action.round !== undefined && { round: action.round }),
+            ...(action.answer !== undefined && { answer: action.answer }),
+            ...(action.at !== undefined && { at: action.at }),
+          },
+        },
+      };
+    }
+    case 'deleteLogged': {
+      // Its rating goes too, or it would keep counting as weak with nothing left to drill.
+      const log = { ...state.log };
+      delete log[action.id];
+      const progress = { ...state.progress };
+      delete progress[`log:${action.id}`];
+      return { ...state, log, progress };
     }
     case 'import':
       return action.data;

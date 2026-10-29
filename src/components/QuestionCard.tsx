@@ -10,6 +10,7 @@ import { useRecorder } from '../hooks/useRecorder';
 import { formatTime } from '../lib/format';
 import type { Score } from '../lib/grade';
 import { RATINGS, RatingRadios } from './RatingRadios';
+import { LOG_PREFIX } from '../lib/log';
 
 // All of them is Solid, fewer than half is Weak, the rest is OK — one hit out of four
 // used to read "suggested: OK", which is more generous than anyone grades themselves.
@@ -18,6 +19,8 @@ const suggestedRating = (hits: number, total: number): Rating | undefined =>
 
 // Sized to sit beside Reveal; the red recording state layers its colors on top.
 const secondaryButton = 'rounded border border-zinc-300 px-3 py-2 text-sm hover:border-emerald-500 dark:border-zinc-700';
+
+const noop = () => {};
 
 const PLACEHOLDER_SPLIT = /(\[[^\]]+\])/;
 const isPlaceholder = (s: string) => /^\[[^\]]+\]$/.test(s);
@@ -41,8 +44,12 @@ export const gradingPrompt = (q: Question, answer: string): string => [
   `I'm practising for a ${rounds.find((r) => r.id === q.round)?.title ?? q.round} interview round for an engineering role in Berlin. Grade my answer like a strict interviewer.`,
   '', `Question: ${q.question}`,
   '', 'My answer:', answer.trim(),
-  '', 'A strong answer covers:', ...q.keyPoints.map((k) => `- ${k}`),
-  '', 'Tell me which of those I covered, what is wrong or vague, and rate it Weak, OK or Solid. Then rewrite my answer in three tight bullets. Finally ask me one follow-up question and wait for my reply.',
+  // A logged question has no key points, only the answer you wrote yourself.
+  ...(q.keyPoints.length > 0
+    ? ['', 'A strong answer covers:', ...q.keyPoints.map((k) => `- ${k}`),
+      '', 'Tell me which of those I covered, what is wrong or vague, and rate it Weak, OK or Solid.']
+    : ['', 'Judge it on its own merits; there is no model answer. Tell me what is wrong or vague, and rate it Weak, OK or Solid.']),
+  'Then rewrite my answer in three tight bullets. Finally ask me one follow-up question and wait for my reply.',
 ].join('\n');
 
 export function QuestionCard({
@@ -55,7 +62,9 @@ export function QuestionCard({
   shortcuts?: boolean;
   checked?: Set<number>; onCheckedChange?: (next: Set<number>) => void; focusOnMount?: boolean;
   stories?: Stories; onRehearse?: (id: string) => void;
-  onReveal: () => void; onNote: (text: string) => void; onRate: (r: Rating) => void;
+  /** Absent for a logged question: its own answer is where you write about it. */
+  onNote?: (text: string) => void;
+  onReveal: () => void; onRate: (r: Rating) => void;
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const answerRef = useRef<HTMLDivElement>(null);
@@ -80,7 +89,7 @@ export function QuestionCard({
   };
   const showCountdown = strictMode && !revealed && targetSeconds !== undefined && remainingMs !== null;
 
-  const note_ = useDebouncedField(note, onNote);
+  const note_ = useDebouncedField(note, onNote ?? noop);
   const recorder = useRecorder();
 
   // A per-question draft like the scratch pad, so a reload (or a phone discarding the
@@ -298,7 +307,7 @@ export function QuestionCard({
             </section>
           )}
           <section className="space-y-2">
-            <h3 className="mb-1 font-semibold">Model answer</h3>
+            <h3 className="mb-1 font-semibold">{question.id.startsWith(LOG_PREFIX) ? 'What you logged' : 'Model answer'}</h3>
             {question.answer.map((p, i) => <p key={i}>{withPlaceholders(p)}</p>)}
           </section>
           {question.deeper && question.deeper.length > 0 && (
@@ -309,6 +318,7 @@ export function QuestionCard({
               </div>
             </section>
           )}
+          {(question.keyPoints.length > 0 || graded) && (
           <section>
             <h3 className="mb-1 font-semibold">Key points</h3>
             <p className="mb-1 text-xs text-zinc-500 dark:text-zinc-400">Check off what you actually said out loud.</p>
@@ -337,6 +347,7 @@ export function QuestionCard({
               </p>
             )}
           </section>
+          )}
           <RatingRadios rating={rating} onRate={onRate} showKeys={shortcuts} />
           {question.followUps && question.followUps.length > 0 && (
             <section>
@@ -344,6 +355,7 @@ export function QuestionCard({
               <ul className="list-disc space-y-1 pl-5">{question.followUps.map((f, i) => <li key={i}>{f}</li>)}</ul>
             </section>
           )}
+          {onNote && (
           <section>
             <label htmlFor={`note-${question.id}`} className="mb-1 block font-semibold">Your note</label>
             <textarea
@@ -356,6 +368,7 @@ export function QuestionCard({
               className="w-full rounded border border-zinc-300 bg-transparent p-2 dark:border-zinc-700"
             />
           </section>
+          )}
         </div>
       )}
     </article>

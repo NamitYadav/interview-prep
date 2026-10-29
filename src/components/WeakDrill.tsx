@@ -4,14 +4,18 @@ import type { Persisted, RoleId } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { forRole } from '../data';
 import { Practice } from './Practice';
+import { loggedQuestions } from '../lib/log';
 
 export function WeakDrill({
   state, dispatch, strictMode, shortcuts = true, role,
 }: { state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean; shortcuts?: boolean; role: RoleId }) {
   const { questions } = forRole(role);
   // Frozen on entry: re-filtering as you rate would pull the current question out
-  // from under Practice mid-drill. Re-enter the drill to pick up a fresh set.
-  const [drill] = useState(() => questions.filter((q) => state.progress[q.id]?.rating === 1));
+  // from under Practice mid-drill. Re-enter the drill to pick up a fresh set. Real
+  // questions join whatever their round: switching role shouldn't hide what you were asked.
+  const [drill] = useState(() =>
+    [...questions, ...loggedQuestions(state.log)].filter((q) => state.progress[q.id]?.rating === 1),
+  );
   const remaining = drill.filter((q) => state.progress[q.id]?.rating === 1).length;
 
   return (
@@ -19,7 +23,7 @@ export function WeakDrill({
       <BackLink />
       <h1 tabIndex={-1} className="text-2xl font-semibold">Weak drill</h1>
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-        Everything you rated weak, across every round in your loop.
+        Everything you rated weak in your loop, plus weak real questions.
       </p>
 
       {drill.length === 0 ? (

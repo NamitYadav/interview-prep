@@ -6,6 +6,7 @@ import { rounds } from '../data';
 import { formatTime } from '../lib/format';
 import { lapKey, laps, writeLap } from '../lib/lap';
 import { draftKey, drafts } from '../lib/drafts';
+import { LOG_PREFIX } from '../lib/log';
 import { QuestionCard } from './QuestionCard';
 
 // Single-character shortcuts on `window` are only safe while nothing else on the page
@@ -351,7 +352,7 @@ export function Practice({
         stories={state.stories}
         onRehearse={(id) => dispatch({ type: 'rehearseStory', id, now: Date.now() })}
         onReveal={() => setRevealed(true)}
-        onNote={(text) => dispatch({ type: 'note', id: current.id, text })}
+        onNote={current.id.startsWith(LOG_PREFIX) ? undefined : (text) => dispatch({ type: 'note', id: current.id, text })}
         onRate={rate}
       />
       <div className="flex justify-between">

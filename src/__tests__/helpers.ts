@@ -2,7 +2,7 @@ import type { Persisted, Question } from '../types';
 import { createGrader } from '../sandbox/graderCore';
 import type { FromGrader, ToGrader } from '../sandbox/protocol';
 
-export const EMPTY: Persisted = { version: 2, progress: {}, notes: {}, stories: {} };
+export const EMPTY: Persisted = { version: 3, progress: {}, notes: {}, stories: {}, log: {} };
 
 // A graded question with one case of each kind, shared by the pad and card tests.
 export const algoQ: Question = {

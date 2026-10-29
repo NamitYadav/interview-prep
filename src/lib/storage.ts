@@ -1,11 +1,12 @@
-import type { Persisted, ProgressEntry, Story } from '../types';
+import type { LoggedQuestion, Persisted, ProgressEntry, Story } from '../types';
+import { ROUND_IDS } from '../data';
 
 export const STORAGE_KEY = 'interview-prep:v1';
 export const CORRUPT_KEY = 'interview-prep:v1:corrupt';
 
 // A fresh object every call — load() must never hand callers a shared reference,
 // or an in-place mutation would pollute every future empty load.
-export const emptyState = (): Persisted => ({ version: 2, progress: {}, notes: {}, stories: {} });
+export const emptyState = (): Persisted => ({ version: 3, progress: {}, notes: {}, stories: {}, log: {} });
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -27,10 +28,17 @@ const isStory = (v: unknown): v is Story =>
   typeof v.body === 'string' &&
   isOptionalFiniteNumber(v.lastRehearsed);
 
-/** Validates an unknown value as Persisted. Throws Error with a user-facing message. Migrates v1 backups forward. */
+const isLogged = (v: unknown): v is LoggedQuestion =>
+  isRecord(v) &&
+  typeof v.question === 'string' &&
+  typeof v.answer === 'string' &&
+  (ROUND_IDS as readonly unknown[]).includes(v.round) &&
+  isFiniteNumber(v.at);
+
+/** Validates an unknown value as Persisted. Throws Error with a user-facing message. Migrates v1 and v2 backups forward. */
 export function validate(raw: unknown): Persisted {
   if (!isRecord(raw)) throw new Error('Backup must be a JSON object');
-  if (raw.version !== 1 && raw.version !== 2) throw new Error('Unsupported backup version');
+  if (raw.version !== 1 && raw.version !== 2 && raw.version !== 3) throw new Error('Unsupported backup version');
   if (!isRecord(raw.progress)) throw new Error('progress must be an object');
   if (!isRecord(raw.notes)) throw new Error('notes must be an object');
   for (const [id, entry] of Object.entries(raw.progress)) {
@@ -39,16 +47,22 @@ export function validate(raw: unknown): Persisted {
   for (const [id, note] of Object.entries(raw.notes)) {
     if (typeof note !== 'string') throw new Error(`Invalid note for ${id}`);
   }
-  const stories = raw.version === 2 ? raw.stories : {};
+  const stories = raw.version === 1 ? {} : raw.stories;
   if (!isRecord(stories)) throw new Error('stories must be an object');
   for (const [id, story] of Object.entries(stories)) {
     if (!isStory(story)) throw new Error(`Invalid story for ${id}`);
   }
+  const log = raw.version === 3 ? raw.log : {};
+  if (!isRecord(log)) throw new Error('log must be an object');
+  for (const [id, entry] of Object.entries(log)) {
+    if (!isLogged(entry)) throw new Error(`Invalid log entry for ${id}`);
+  }
   return {
-    version: 2,
+    version: 3,
     progress: raw.progress as Persisted['progress'],
     notes: raw.notes as Persisted['notes'],
     stories: stories as Persisted['stories'],
+    log: log as Persisted['log'],
   };
 }
 
@@ -62,7 +76,8 @@ export function parseBackup(text: string): Persisted {
   const data = validate(raw);
   // A lastSeen more than a day ahead is a broken clock or a hand-edited file, and it would
   // count as "rated today" for good. Import only: load() must not bin a whole store your
-  // own clock wrote.
+  // own clock wrote. A logged question's `at` has no such check: it comes from a date
+  // input, and a future date only moves where it sorts.
   for (const [id, entry] of Object.entries(data.progress)) {
     if (entry.lastSeen > Date.now() + 86_400_000) throw new Error(`Invalid progress entry for ${id}`);
   }
@@ -71,7 +86,7 @@ export function parseBackup(text: string): Persisted {
 
 // Set by load() when saving would destroy something still on disk, and holding the
 // banner that says why. A blob from a newer version of the app (a deploy rolled back)
-// was moved aside and overwritten by an empty v2, so it was lost for good once the newer
+// was moved aside and overwritten by an empty store, so it was lost for good once the newer
 // version returned. A corrupt blob that could not be copied aside (quota full) was
 // overwritten by the very next save. Until a reload, or an explicit Import or Reset —
 // the user choosing to overwrite — save() leaves it alone.
@@ -91,7 +106,7 @@ export function load(storage: Storage = localStorage): Persisted {
   let raw: unknown;
   try {
     raw = JSON.parse(text);
-    if (isRecord(raw) && typeof raw.version === 'number' && raw.version > 2) {
+    if (isRecord(raw) && typeof raw.version === 'number' && raw.version > 3) {
       saveBlocked = "Your saved data is from a newer version of the app — reload to use it; changes here won't be saved.";
       return emptyState();
     }
@@ -118,14 +133,15 @@ export function load(storage: Storage = localStorage): Persisted {
 // bad rating. Keep every entry that still validates; the original stays under CORRUPT_KEY.
 // Load only — an import of a bad file should be refused, not quietly trimmed.
 function salvage(raw: unknown): Persisted | null {
-  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2)) return null;
+  if (!isRecord(raw) || (raw.version !== 1 && raw.version !== 2 && raw.version !== 3)) return null;
   const keep = <T>(v: unknown, ok: (x: unknown) => x is T): Record<string, T> =>
     isRecord(v) ? (Object.fromEntries(Object.entries(v).filter(([, x]) => ok(x))) as Record<string, T>) : {};
   return {
-    version: 2,
+    version: 3,
     progress: keep(raw.progress, isEntry),
     notes: keep(raw.notes, (x): x is string => typeof x === 'string'),
-    stories: keep(raw.version === 2 ? raw.stories : undefined, isStory),
+    stories: keep(raw.version === 1 ? undefined : raw.stories, isStory),
+    log: keep(raw.version === 3 ? raw.log : undefined, isLogged),
   };
 }
 

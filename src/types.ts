@@ -1,5 +1,5 @@
 export type RoundId = 'hr' | 'hm' | 'coding' | 'algo' | 'design' | 'case' | 'debrief' | 'hoe' | 'lead' | 'arch' | 'backend';
-export type Route = RoundId | 'weak' | 'notes' | 'stories' | 'mock' | 'search' | 'print';
+export type Route = RoundId | 'weak' | 'notes' | 'stories' | 'log' | 'mock' | 'search' | 'print';
 export type RoleId = 'senior' | 'staff' | 'lead' | 'architect' | 'fs-senior' | 'fs-staff';
 export interface Role { id: RoleId; title: string; rounds: RoundId[] }
 export interface Round { id: RoundId; title: string; blurb: string; targetSeconds: number }
@@ -45,4 +45,7 @@ export type Progress = Record<string, ProgressEntry>;
 export type Notes = Record<string, string>;
 export interface Story { title: string; body: string; lastRehearsed?: number }
 export type Stories = Record<string, Story>;
-export interface Persisted { version: 2; progress: Progress; notes: Notes; stories: Stories }
+/** A question a real interviewer asked, kept with your own answer. */
+export interface LoggedQuestion { question: string; round: RoundId; answer: string; at: number }
+export type Log = Record<string, LoggedQuestion>;
+export interface Persisted { version: 3; progress: Progress; notes: Notes; stories: Stories; log: Log }

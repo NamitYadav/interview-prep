@@ -52,7 +52,7 @@ describe('reducer', () => {
   });
 
   test('import replaces state', () => {
-    const data = { version: 2 as const, progress: { x: { rating: 1 as const, seen: 1, lastSeen: 1 } }, notes: {}, stories: {} };
+    const data = { version: 3 as const, progress: { x: { rating: 1 as const, seen: 1, lastSeen: 1 } }, notes: {}, stories: {}, log: {} };
     expect(reducer(EMPTY, { type: 'import', data })).toEqual(data);
   });
   test('reset returns EMPTY', () => {
@@ -71,11 +71,36 @@ describe('reducer', () => {
     (reset1.notes as Record<string, string>).x = 'mutated';
     (reset1.progress as Record<string, unknown>).x = { rating: 1, seen: 1, lastSeen: 1 };
 
-    expect(EMPTY).toEqual({ version: 2, progress: {}, notes: {}, stories: {} });
+    expect(EMPTY).toEqual({ version: 3, progress: {}, notes: {}, stories: {}, log: {} });
 
     const reset2 = reducer(s, { type: 'reset' });
-    expect(reset2).toEqual({ version: 2, progress: {}, notes: {}, stories: {} });
+    expect(reset2).toEqual({ version: 3, progress: {}, notes: {}, stories: {}, log: {} });
     expect(reset2).not.toBe(reset1);
+  });
+});
+
+describe('logged questions', () => {
+  const created = reducer(EMPTY, { type: 'createLogged', id: 'q', round: 'hr', now: 5 });
+  test('createLogged adds a blank entry once', () => {
+    expect(created.log.q).toEqual({ question: '', round: 'hr', answer: '', at: 5 });
+    expect(reducer(created, { type: 'createLogged', id: 'q', round: 'hm', now: 9 })).toBe(created);
+  });
+  test('saveLogged merges one field and never creates', () => {
+    const s = reducer(created, { type: 'saveLogged', id: 'q', answer: 'I said X' });
+    expect(s.log.q).toEqual({ question: '', round: 'hr', answer: 'I said X', at: 5 });
+    expect(reducer(EMPTY, { type: 'saveLogged', id: 'nope', question: 'x' })).toBe(EMPTY);
+  });
+  test('saveLogged after deleteLogged is a no-op', () => {
+    const deleted = reducer(created, { type: 'deleteLogged', id: 'q' });
+    expect(reducer(deleted, { type: 'saveLogged', id: 'q', answer: 'x' })).toBe(deleted);
+  });
+  test('deleteLogged removes the entry and its rating', () => {
+    let s = reducer(created, { type: 'rate', id: 'log:q', rating: 1, now: 6 });
+    s = reducer(s, { type: 'rate', id: 'hr-001', rating: 2, now: 6 });
+    s = reducer(s, { type: 'deleteLogged', id: 'q' });
+    expect(s.log.q).toBeUndefined();
+    expect(s.progress['log:q']).toBeUndefined();
+    expect(s.progress['hr-001']).toBeDefined();
   });
 });
 
@@ -222,7 +247,7 @@ describe('useAppState', () => {
   });
 
   test('a save refused over a newer-version blob says so, not "storage unavailable"', () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 3, progress: {} }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 4, progress: {} }));
     vi.useFakeTimers();
     try {
       const { result } = renderHook(() => useAppState());

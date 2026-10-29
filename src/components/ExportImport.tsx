@@ -70,7 +70,7 @@ export function ImportReset({ state, dispatch }: { state: Persisted; dispatch: D
       setError(null);
       setImported(null);
       const summary = (p: Persisted) =>
-        `${Object.keys(p.progress).length} rated, ${Object.keys(p.notes).length} notes, ${Object.keys(p.stories).length} stories`;
+        `${Object.keys(p.progress).length} rated, ${Object.keys(p.notes).length} notes, ${Object.keys(p.stories).length} stories, ${plural(Object.keys(p.log).length, 'logged question')}`;
       if (!window.confirm(`Replace your current data (${summary(state)}) with this backup (${summary(data)})?${overwritesBlocked()} This cannot be undone.`)) {
         return;
       }
@@ -94,13 +94,14 @@ export function ImportReset({ state, dispatch }: { state: Persisted; dispatch: D
   };
 
   const reset = () => {
-    // Name everything this destroys. It wipes stories too — emptyState() clears all
-    // three — and the old copy mentioned only ratings and notes, so someone clearing
+    // Name everything this destroys. It wipes stories and logged questions too —
+    // emptyState() clears them all — and the old copy mentioned only ratings and notes, so someone clearing
     // ratings to start a fresh cycle lost every STAR story they had written.
     const counts = [
       plural(Object.keys(state.progress).length, 'rating'),
       plural(Object.keys(state.notes).length, 'note'),
       plural(Object.keys(state.stories).length, 'story', 'stories'),
+      plural(Object.keys(state.log).length, 'logged question'),
     ];
     // Laps and drafts are named too, and actually cleared. Clearing only the ratings
     // left the user resuming mid-lap through a set where nothing is rated any more,

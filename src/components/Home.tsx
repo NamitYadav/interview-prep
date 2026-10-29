@@ -7,6 +7,7 @@ import { useLoopDate } from '../hooks/prefs';
 import { ExportButton, useLastExport } from './ExportImport';
 import { ProgressBar, plural, statsCaption } from './ProgressBar';
 import { Select } from './Select';
+import { LOG_PREFIX, loggedQuestions } from '../lib/log';
 
 // Every card in a grid shares this shape so a short blurb never leaves the card
 // shorter than its neighbors: min-h reserves two lines' worth of space up front, and
@@ -41,10 +42,13 @@ const EXPORT_STALE_MS = 7 * 86_400_000;
 
 export function Home({ state, role, setRole }: { state: Persisted; role: RoleId; setRole: (r: RoleId) => void }) {
   const { role: activeRole, rounds: roleRounds, questions: roleQuestions, byRound } = forRole(role);
-  const weak = roleQuestions.filter((q) => state.progress[q.id]?.rating === 1).length;
+  // Weak real questions count here too, so the link agrees with the drill it opens.
+  const weak = [...roleQuestions, ...loggedQuestions(state.log)].filter((q) => state.progress[q.id]?.rating === 1).length;
   const noted = roleQuestions.filter((q) => (state.notes[q.id] ?? '').trim().length > 0).length;
   const stories = Object.values(state.stories);
   const neverRehearsed = stories.filter((s) => s.lastRehearsed === undefined).length;
+  const loggedCount = Object.keys(state.log).length;
+  const loggedWeak = Object.keys(state.log).filter((id) => state.progress[LOG_PREFIX + id]?.rating === 1).length;
 
   // Captured once at mount rather than read fresh each render — Date.now() is
   // impure, and a millisecond-stale "now" makes no visible difference to a
@@ -170,6 +174,10 @@ export function Home({ state, role, setRole }: { state: Persisted; role: RoleId;
         <a href="#stories" className={drillLink}>
           <span className="font-medium">My stories</span>
           <span className={drillMeta}>{plural(stories.length, 'story', 'stories')} · {neverRehearsed} never rehearsed</span>
+        </a>
+        <a href="#log" className={drillLink}>
+          <span className="font-medium">Real questions</span>
+          <span className={drillMeta}>{loggedCount === 0 ? 'None yet' : `${plural(loggedCount, 'question')} · ${loggedWeak} weak`}</span>
         </a>
         <a href="#search" className={drillLink}>
           <span className="font-medium">Search</span>

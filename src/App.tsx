@@ -10,6 +10,7 @@ import { RoundView } from './components/RoundView';
 import { WeakDrill } from './components/WeakDrill';
 import { NotesView } from './components/NotesView';
 import { StoriesView } from './components/StoriesView';
+import { LogView } from './components/LogView';
 import { MockSession } from './components/MockSession';
 import { SearchView } from './components/SearchView';
 import { PrintView } from './components/PrintView';
@@ -22,7 +23,7 @@ const APP_NAME = 'Interview Prep';
 const STALE_TAB_MESSAGE = 'Another tab changed your progress. Reload to see it — saving from here will overwrite that change.';
 
 const VIEW_TITLES: Record<Exclude<Route, RoundId>, string> = {
-  weak: 'Weak drill', notes: 'Notes', stories: 'Stories',
+  weak: 'Weak drill', notes: 'Notes', stories: 'Stories', log: 'Real questions',
   mock: 'Mock session', search: 'Search', print: 'Print',
 };
 
@@ -114,6 +115,7 @@ export default function App() {
         {route === 'weak' && <WeakDrill state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />}
         {route === 'notes' && <NotesView state={state} role={role} />}
         {route === 'stories' && <StoriesView state={state} dispatch={dispatch} />}
+        {route === 'log' && <LogView state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />}
         {route === 'mock' && <MockSession state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} role={role} />}
         {route === 'search' && <SearchView state={state} dispatch={dispatch} role={role} />}
         {route === 'print' && <PrintView state={state} role={role} />}

@@ -14,7 +14,7 @@ import { roles } from './roles';
 
 export const ROUND_IDS = ['hr', 'hm', 'coding', 'algo', 'design', 'case', 'debrief', 'hoe', 'lead', 'arch', 'backend'] as const satisfies readonly RoundId[];
 
-export const ROUTES = [...ROUND_IDS, 'weak', 'notes', 'stories', 'mock', 'search', 'print'] as const satisfies readonly Route[];
+export const ROUTES = [...ROUND_IDS, 'weak', 'notes', 'stories', 'log', 'mock', 'search', 'print'] as const satisfies readonly Route[];
 
 export const rounds: Round[] = [
   { id: 'hr', title: 'HR screen', blurb: 'Motivation, logistics, compensation framing, German employment basics.', targetSeconds: 90 },

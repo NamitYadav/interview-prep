@@ -77,6 +77,12 @@ describe('document title', () => {
     expect(document.title).toBe('Weak drill · Interview Prep');
   });
 
+  test('the log route has its own title', () => {
+    window.location.hash = '#log';
+    render(<App />);
+    expect(document.title).toBe('Real questions · Interview Prep');
+  });
+
   test('navigating updates it', async () => {
     render(<App />);
     await act(async () => {

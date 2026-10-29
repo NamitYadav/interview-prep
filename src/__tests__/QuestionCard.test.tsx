@@ -535,3 +535,27 @@ describe('QuestionCard copy for Claude', () => {
     expect(await screen.findByText(/Couldn't copy/)).toBeInTheDocument();
   });
 });
+
+describe('QuestionCard without key points', () => {
+  const own: Question = { ...base, id: 'log:a', keyPoints: [] };
+  test('shows no checklist or suggestion', () => {
+    renderCard(own, true);
+    expect(screen.queryByRole('heading', { name: 'Key points' })).toBeNull();
+    expect(screen.queryByRole('checkbox')).toBeNull();
+    expect(screen.queryByText(/key points hit/)).toBeNull();
+  });
+  test('its grading prompt asks for a judgement on its own merits', () => {
+    const prompt = gradingPrompt(own, 'x');
+    expect(prompt).not.toContain('A strong answer covers');
+    expect(prompt).toContain('there is no model answer');
+  });
+  test('a logged answer is not called a model answer', () => {
+    renderCard(own, true);
+    expect(screen.queryByRole('heading', { name: 'Model answer' })).toBeNull();
+    expect(screen.getByRole('heading', { name: 'What you logged' })).toBeInTheDocument();
+  });
+  test('without onNote there is no note field', () => {
+    render(<QuestionCard question={own} revealed note="" onReveal={noop} onRate={noop} checked={new Set()} onCheckedChange={noop} />);
+    expect(screen.queryByLabelText('Your note')).toBeNull();
+  });
+});

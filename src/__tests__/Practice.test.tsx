@@ -7,6 +7,7 @@ import { EMPTY } from './helpers';
 import { reducer } from '../hooks/useAppState';
 import { Practice } from '../components/Practice';
 import { lapKey, laps } from '../lib/lap';
+import { toQuestion } from '../lib/log';
 
 // Practice now persists lap position, so each test needs a clean slate.
 beforeEach(() => localStorage.clear());
@@ -764,4 +765,16 @@ describe('keyboard shortcuts can be turned off — WCAG 2.2 SC 2.1.4', () => {
     await userEvent.keyboard('{Enter}');
     expect(screen.getByText('Second question?')).toBeInTheDocument();
   });
+});
+
+test('a logged question shows no note field', async () => {
+  const logged = [toQuestion('a', { question: 'Asked for real?', round: 'hm', answer: 'Yes.', at: 1 })];
+  function LogHarness() {
+    const [state, dispatch] = useReducer(reducer, EMPTY);
+    return <Practice questions={logged} state={state} dispatch={dispatch} strictMode={false} role="staff" />;
+  }
+  render(<LogHarness />);
+  await userEvent.click(screen.getByRole('button', { name: /reveal/i }));
+  expect(screen.getByText('Yes.')).toBeInTheDocument();
+  expect(screen.queryByLabelText('Your note')).toBeNull();
 });
