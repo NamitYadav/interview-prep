@@ -16,7 +16,7 @@ export function PrintView({ state, role }: { state: Persisted; role: RoleId }) {
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6 print:max-w-none print:p-0">
       <div className="mb-4 flex items-center justify-between print:hidden">
-        <BackLink className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline" />
+        <BackLink className="-my-2 inline-block py-2 text-sm text-zinc-500 dark:text-zinc-400 hover:underline" />
         <button
           type="button"
           onClick={() => window.print()}

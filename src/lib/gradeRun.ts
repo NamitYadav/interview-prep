@@ -1,5 +1,7 @@
 import type { FromGrader, LogLevel, ToGrader } from '../sandbox/protocol';
 import { judge, type BuiltCase, type CaseResult } from './grade';
+import graderUrl from '../sandbox/grader.ts?worker&url';
+import { startPadWorker, type PadWorker } from '../sandbox/sealedWorker';
 
 // A pad whose top level never returns (`while (true)` outside the function) would otherwise
 // leave the run waiting on `loaded` forever.
@@ -20,7 +22,7 @@ interface GradeCallbacks {
 // inside it: on timeout the worker is terminated, the case recorded as a timeout, and a fresh
 // worker loads the pad again for the next case. Returns a cancel function.
 export function gradeRun(code: string, fn: string, cases: BuiltCase[], cb: GradeCallbacks): () => void {
-  let worker: Worker | null = null;
+  let worker: PadWorker | null = null;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let i = 0;
   let stopped = false;
@@ -44,7 +46,7 @@ export function gradeRun(code: string, fn: string, cases: BuiltCase[], cb: Grade
   };
 
   const start = () => {
-    const w = new Worker(new URL('../sandbox/grader.ts', import.meta.url), { type: 'module' });
+    const w = startPadWorker(graderUrl);
     worker = w;
     w.onmessage = (e: MessageEvent<unknown>) => {
       // A terminated worker can still have a message in flight; only the live one counts.

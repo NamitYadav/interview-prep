@@ -461,15 +461,16 @@ class NotifierFactory {
     answer: [
       'Lead with the ARIA contract, not the styling: the input gets role="combobox", aria-expanded, aria-controls pointing at the listbox id, and aria-activedescendant pointing at the currently highlighted option id — this is what makes it a combobox to assistive tech, not the visual look.',
       'The listbox itself uses role="listbox" with role="option" children; focus stays on the input the whole time (a well-known combobox convention) while ArrowDown/ArrowUp move a highlighted-index state and aria-activedescendant, not actual DOM focus.',
-      'Wire the keys explicitly: ArrowDown/Up move the active index (clamped, or wrapping — state your choice), Enter selects the active option and closes the list, Escape closes without selecting, and typing further filters and reopens.',
-      'Close the loop on mouse/touch parity: clicking an option must select it the same way Enter does, and closing on outside-click or blur should not fire a "select nothing" side effect that clears a valid typed query.',
+      'Wire the keys explicitly: ArrowDown/Up move the active index (clamped, or wrapping — state your choice) and set aria-selected="true" on the active option, with aria-autocomplete="list" on the input to say the list filters as you type; Enter selects the active option and closes the list, Escape closes without selecting, and typing further filters and reopens.',
+      'Close the loop on mouse/touch parity: clicking an option must select it the same way Enter does — and call preventDefault in the option\'s onMouseDown, or the input blurs first, your close-on-blur unmounts the list, and the click never lands. Closing on outside-click or blur should not fire a "select nothing" side effect that clears a valid typed query.',
       'If the clock runs out, stop short honestly rather than finishing the attributes without the behaviour. An aria-activedescendant pointing at an id you never render, or a listbox whose arrow keys do nothing, is worse than plain markup, because assistive tech announces a contract the component does not honour — say "the rest of the pattern is X, which I would rather implement properly than half-do" and leave the markup unclaimed.',
     ],
     keyPoints: [
-      'Uses the correct ARIA roles/attributes: combobox, listbox, option, aria-activedescendant',
+      'Uses the correct ARIA roles/attributes: combobox, listbox, option, aria-activedescendant, aria-selected on the active option, aria-autocomplete="list"',
       'Keeps real DOM focus on the input; highlighting is state-driven, not focus-driven',
       'Implements ArrowDown/Up, Enter, Escape with clearly stated behavior',
       'Mouse selection and keyboard selection converge on the same select handler',
+      'Prevents default on option mousedown so the input does not blur and close the list before the click',
     ],
     followUps: ['How would you announce the number of results to a screen reader as they change?', 'What changes if multiple selection is required?'],
   },
@@ -576,18 +577,20 @@ function TransactionsTable({ rows }: { rows: Transaction[] }) {
     scratch: true,
     preview: '<AmountForm />',
     question: 'Build an amount input — an amount field plus a currency select — submitted with a React 19 form Action. The action validates that the amount parses to integer minor units, and the form shows pending state and a field-level error. Talk me through your approach.',
-    code: `type FormState = { error?: string; amountMinor?: number };
+    code: `type FormState = { error?: string; amountMinor?: number; values?: { amount: string; currency: string } };
 
 async function submitAmount(prev: FormState, formData: FormData): Promise<FormState> {
   // TODO: parse the amount string to integer minor units for the chosen currency
   // TODO: reject empty input, floats, and anything that does not parse
-  // TODO: return { error } rather than throwing, so the form can render it
+  // TODO: return { error, values } rather than throwing, so the form can render it
+  // TODO: echo the submitted values back: React resets uncontrolled fields after the action returns
   return {};
 }
 
 function AmountForm() {
   // TODO: const [state, formAction, isPending] = useActionState(submitAmount, {})
   // TODO: <form action={formAction}> with a labelled amount input and a currency select
+  // TODO: defaultValue={state.values?.amount} so a failed submit does not wipe what was typed
   // TODO: aria-invalid on the input, aria-describedby pointing at the error element id
   return null;
 }`,
@@ -595,16 +598,18 @@ function AmountForm() {
       'Lead with the signature, because it is what the question is actually about: const [state, formAction, isPending] = useActionState(action, initialState), where the action has the shape (previousState, formData) => nextState and formAction goes straight onto the form as action={formAction}. That one line replaces the hand-rolled trio of an isLoading boolean, an error state, and a preventDefault onSubmit — and because it is a real form submission rather than a click handler, the pending flag is managed for you and cannot get stuck true when an early return skips the reset.',
       'Put the validation on the action boundary, not in the input onChange. The field is free text and people type money in their own locale: "1.234,56" is one thousand two hundred thirty-four and fifty-six in German, and something else entirely read as English. So parse deliberately — pick the separators from the locale, strip the grouping separator, normalise the decimal one, then reject anything remaining that is not digits plus at most one separator, and reject more decimal places than the currency allows. Do the conversion as integer arithmetic on the digit string, not by multiplying a parsed number.',
       'Say out loud the thing you would never do: parseFloat on money. 19.99 * 100 evaluates to 1998.9999999999998, so a naive round trip through a float loses or gains a minor unit depending on the value, and on a payments path that surfaces weeks later as a reconciliation difference nobody can explain. The amount is an integer number of minor units from the moment it leaves the input, and the currency decides the exponent — two for EUR, zero for JPY, three for a handful of others.',
-      'Return failures as state rather than throwing: the action returns { error: "Enter an amount like 12,50" } and the component renders it. Then wire the accessibility so the message is actually reachable — a real label tied to the input, aria-invalid set from whether state.error exists, and aria-describedby pointing at the id of the element holding the message, so a screen reader reads the error when focus lands on the field rather than leaving it as red text next to a control that claims to be fine. Gate the submit button on isPending, not useOptimistic: on a money path an optimistic balance that reverses is worse than a second of spinner.',
+      'Return failures as state rather than throwing: the action returns { error: "Enter an amount like 12,50", values } and the component renders it. Echo the values back and render defaultValue={state.values.amount} (or control the input): an action that returns normally still resets uncontrolled fields, wiping the typed amount. Then make the message reachable: a real label tied to the input, aria-invalid set from whether state.error exists, and aria-describedby pointing at the id of the element holding the message, so a screen reader reads the error when focus lands on the field rather than leaving it as red text next to a control that claims to be fine. Gate submit on isPending, not useOptimistic.',
     ],
     deeper: [
+      'On keeping the typed value after a failed submit: React resets uncontrolled fields once the action finishes, and a validation failure returned as state counts as finishing, so the reset happens exactly when the user most needs their input. Either return the raw FormData values in state and render them as defaultValue — the reset restores fields to their default, so it restores what was typed — or control the input with useState and read from state instead of FormData — the controlled input is not reset.',
       'Separate the two properly if they push. isPending is the honest "the server has not answered yet" signal, and it is the one that gates the submit control. useOptimistic is a different tool: it renders the expected outcome immediately and rolls back when the action fails, which is right for a like button or a reorder and wrong for anything that moves money, because the rollback is indistinguishable from a second transaction to a user watching the number.',
     ],
     keyPoints: [
       'Names the useActionState signature and why it beats hand-rolled loading and error flags',
       'Parses the amount locale-aware and converts to integer minor units without a float',
       'Says parseFloat on money is out, and takes the exponent from the currency rather than assuming 100',
-      'Returns the error as action state and wires aria-invalid plus aria-describedby to the message',
+      'Returns the error and the submitted values as action state, so the post-action form reset does not wipe the typed amount',
+      'Wires aria-invalid plus aria-describedby to the error message',
       'Distinguishes isPending from useOptimistic and says which one a money path gets',
     ],
     followUps: ['How would you keep the typed value in the field after a failed submit?', 'Where does the same validation live so the client and the server cannot disagree about it?'],

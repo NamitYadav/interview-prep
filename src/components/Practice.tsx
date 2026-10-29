@@ -359,11 +359,11 @@ export function Practice({
           type="button"
           onClick={back}
           disabled={historyPos === 0}
-          className="text-sm text-zinc-500 disabled:opacity-40 dark:text-zinc-400 hover:enabled:underline"
+          className="-my-2 py-2 text-sm text-zinc-500 disabled:opacity-40 dark:text-zinc-400 hover:enabled:underline"
         >
           {shortcuts && <kbd className="mr-1 text-xs [@media(hover:none)]:hidden">B</kbd>} Back
         </button>
-        <button type="button" onClick={skip} className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">
+        <button type="button" onClick={skip} className="-my-2 py-2 text-sm text-zinc-500 dark:text-zinc-400 hover:underline">
           Skip {shortcuts && <kbd className="ml-1 text-xs [@media(hover:none)]:hidden">N</kbd>}
         </button>
       </div>

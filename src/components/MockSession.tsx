@@ -206,7 +206,7 @@ export function MockSession({
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{drill.length} questions. Rate as you go, finish whenever.</p>
       <Practice questions={drill} state={state} dispatch={dispatch} strictMode={strictMode} shortcuts={shortcuts} ordered onLapComplete={finishSession} role={role} />
       <div className="mt-3 flex justify-end">
-        <button type="button" onClick={finishSession} className="text-sm text-zinc-500 dark:text-zinc-400 hover:underline">
+        <button type="button" onClick={finishSession} className="-my-2 py-2 text-sm text-zinc-500 dark:text-zinc-400 hover:underline">
           Finish session
         </button>
       </div>

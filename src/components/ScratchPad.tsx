@@ -6,12 +6,15 @@ import { draftKey } from '../lib/drafts';
 import type { FromSandbox, LogLevel, ToSandbox } from '../sandbox/protocol';
 import { buildCases, score, type CaseResult, type Score } from '../lib/grade';
 import { gradeRun } from '../lib/gradeRun';
+import { startPadWorker, type PadWorker } from '../sandbox/sealedWorker';
+import workerUrl from '../sandbox/worker.ts?worker&url';
 import { GradeReport, reportSummary } from './GradeReport';
 import { padButton as button, ratingText } from './controlStyles';
 
 // Same host as the app, so it works in dev, `vite preview` and on GitHub Pages alike.
 // `allow-scripts allow-forms` without `allow-same-origin` makes the frame's origin opaque:
-// the pad's code cannot read the app's localStorage or DOM. Forms are allowed because the
+// the pad's code cannot read the app's localStorage or DOM. Console-only pads run in a
+// worker sealed the same way (src/sandbox/sealedWorker.ts). Forms are allowed because the
 // AmountForm starter (coding-034) is a React 19 form Action, which needs the `submit` event.
 const SANDBOX_URL = `${import.meta.env.BASE_URL}sandbox.html`;
 
@@ -72,7 +75,7 @@ export function ScratchPad({
   // unless they install one.
   const inWorker = !question.preview && !question.needsDom && typeof Worker !== 'undefined';
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const workerRef = useRef<Worker | null>(null);
+  const workerRef = useRef<PadWorker | null>(null);
   // Every Run reloads the frame (key bump) and posts once it says ready. One mechanism for
   // Run and Stop: no leaked globals, no React root to unmount, no stray timers between
   // attempts. Reloading a cached same-host page costs tens of milliseconds. The worker
@@ -155,8 +158,11 @@ export function ScratchPad({
   const runInWorker = (code: string) => {
     stopWorker();
     setStatus('running');
-    const worker = new Worker(new URL('../sandbox/worker.ts', import.meta.url), { type: 'module' });
-    worker.onmessage = (e: MessageEvent<unknown>) => receive(e.data);
+    const worker = startPadWorker(workerUrl);
+    // A stopped worker can still have a message in flight; only the live one counts.
+    worker.onmessage = (e) => {
+      if (workerRef.current === worker) receive(e.data);
+    };
     // Uncaught throws inside the pad's code are reported by the worker itself and never
     // reach here; this is the script failing to load at all.
     worker.onerror = () => {

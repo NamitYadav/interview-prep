@@ -32,6 +32,28 @@ describe('useDebouncedField', () => {
     }
   });
 
+  test('closing or hiding the tab flushes a pending change', () => {
+    vi.useFakeTimers();
+    const visibility = vi.spyOn(document, 'visibilityState', 'get');
+    try {
+      const onCommit = vi.fn();
+      const { result } = renderHook(() => useDebouncedField('', onCommit));
+      act(() => result.current.onChange('closing'));
+      act(() => window.dispatchEvent(new Event('pagehide')));
+      expect(onCommit).toHaveBeenLastCalledWith('closing');
+
+      act(() => result.current.onChange('hidden'));
+      visibility.mockReturnValue('hidden');
+      act(() => document.dispatchEvent(new Event('visibilitychange')));
+      expect(onCommit).toHaveBeenLastCalledWith('hidden');
+      act(() => vi.advanceTimersByTime(300));
+      expect(onCommit).toHaveBeenCalledTimes(2);
+    } finally {
+      visibility.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
   test('blur flushes a pending change immediately', () => {
     vi.useFakeTimers();
     try {

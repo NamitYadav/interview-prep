@@ -253,6 +253,19 @@ describe('ScratchPad worker runner', () => {
     expect(screen.getByRole('status')).toBeEmptyDOMElement();
   });
 
+  test('a stopped run cannot write into the next one', () => {
+    render(<ScratchPad question={q} />);
+    fireEvent.click(screen.getByRole('button', { name: /run/i }));
+    const stale = latest();
+    fireEvent.click(screen.getByRole('button', { name: /run/i }));
+    act(() => {
+      stale.onmessage?.({ data: { type: 'log', level: 'log', text: 'from the old run' } } as MessageEvent<unknown>);
+      stale.onmessage?.({ data: { type: 'done' } } as MessageEvent<unknown>);
+    });
+    expect(screen.queryByText('from the old run')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Running…');
+  });
+
   // `while (true) console.log(i)` hung the tab before Stop could be clicked.
   test('output keeps the latest lines under one truncation marker', () => {
     render(<ScratchPad question={q} />);

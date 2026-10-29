@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 // Local draft state for a text field backed by a debounced dispatch: typing feels
 // instant (no re-render round trip through the reducer on every keystroke), the
@@ -36,6 +37,28 @@ export function useDebouncedField(value: string, onCommit: (v: string) => void, 
     if (timerRef.current === null) return;
     clearTimeout(timerRef.current);
     onCommitRef.current(draftRef.current);
+  }, []);
+
+  // Closing the tab, or a phone discarding a backgrounded one, fires neither blur nor
+  // unmount. flushSync renders the commit before the handler returns, so useAppState sees
+  // it while the page is still alive; its save skips the debounce once the page is hidden.
+  useEffect(() => {
+    const flush = () => {
+      if (timerRef.current === null) return;
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+      lastCommitted.current = draftRef.current;
+      flushSync(() => onCommitRef.current(draftRef.current));
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') flush();
+    };
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, []);
 
   const onChange = (text: string) => {

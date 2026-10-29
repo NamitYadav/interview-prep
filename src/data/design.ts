@@ -122,9 +122,13 @@ export const design: Question[] = [
       'Puts the socket in a root-level sync provider, not in the panel, so closing the tray cannot kill the badge',
       'Push messages patch the server cache rather than feeding a second store, and the unread count is a derived selector, never its own counter',
       'Server-side monotonic ordering to avoid race conditions on mark-as-read',
+      'Holds one push connection per browser, not per tab: a leader tab elected with the Web Locks API (or a SharedWorker) owns the socket and fans updates out over BroadcastChannel',
       'Names what is instrumented (connect success, fallback rate, badge divergence) and the rollback trigger',
     ],
-    followUps: ['How would you test the cross-tab sync without spinning up a real server?', 'What would you do differently for a notification that requires an action, like an approval?'],
+    followUps: ['How would you test the cross-tab sync without spinning up a real server?', 'What would you do differently for a notification that requires an action, like an approval?', 'Twenty open tabs means twenty sockets. How do you get that down to one?'],
+    deeper: [
+      "One connection per browser rather than per tab: every tab requests the same named lock through the Web Locks API, the tab that gets it opens the socket and rebroadcasts each message over BroadcastChannel, and the others just listen. When the leader tab closes, the browser releases the lock and the next waiting tab takes over and reconnects, with no heartbeat logic of your own. A SharedWorker that owns the socket is the alternative; check its support on your mobile browsers before relying on it alone.",
+    ],
   },
   {
     id: 'design-006',
@@ -555,7 +559,7 @@ export const design: Question[] = [
       'Names what stays a library rather than a remote (design system, auth shell, analytics, flag client)',
       'Ties the migration to measured deploys-per-team and lead time, with a stop-and-consolidate trigger',
     ],
-    roles: ['staff', 'fs-staff', 'architect'],
+    roles: ['staff', 'fs-staff'],
     followUps: ['How do you stop two remotes on different React versions from shipping two copies of React to the user?', 'What do you do when one team stops upgrading the shared design-system singleton?'],
   },
   {

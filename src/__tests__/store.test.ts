@@ -3,6 +3,7 @@ import { act, renderHook } from '@testing-library/react';
 import { STORAGE_KEY, load } from '../lib/storage';
 import { EMPTY } from './helpers';
 import { SAVE_FAILED_MESSAGE, reducer, useAppState } from '../hooks/useAppState';
+import { useDebouncedField } from '../hooks/useDebouncedField';
 
 beforeEach(() => localStorage.clear());
 
@@ -131,15 +132,49 @@ describe('useAppState', () => {
 
   test('backgrounding the tab (visibilitychange -> hidden) flushes a pending write', () => {
     vi.useFakeTimers();
-    const visibilitySpy = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    const visibilitySpy = vi.spyOn(document, 'visibilityState', 'get');
     try {
       const { result } = renderHook(() => useAppState());
       act(() => result.current.dispatch({ type: 'rate', id: 'a', rating: 1, now: 1 }));
       expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+      visibilitySpy.mockReturnValue('hidden');
       act(() => document.dispatchEvent(new Event('visibilitychange')));
       expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).progress.a).toBeDefined();
     } finally {
       visibilitySpy.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  // A text field flushing on pagehide dispatches after useAppState's own flush may have run.
+  test('a change that lands while the page is hidden is written at once', () => {
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    try {
+      const { result } = renderHook(() => useAppState());
+      act(() => result.current.dispatch({ type: 'note', id: 'hm-001', text: 'last words' }));
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).notes['hm-001']).toBe('last words');
+    } finally {
+      visibility.mockRestore();
+    }
+  });
+
+  test('a note typed just before the tab closes is saved', () => {
+    vi.useFakeTimers();
+    const visibility = vi.spyOn(document, 'visibilityState', 'get');
+    try {
+      const { result } = renderHook(() => {
+        const app = useAppState();
+        const field = useDebouncedField(app.state.notes['hm-001'] ?? '', (text) => app.dispatch({ type: 'note', id: 'hm-001', text }));
+        return field;
+      });
+      act(() => result.current.onChange('typed then closed'));
+      // Closing a tab hides it, then fires pagehide; no timer runs after that.
+      visibility.mockReturnValue('hidden');
+      act(() => document.dispatchEvent(new Event('visibilitychange')));
+      act(() => window.dispatchEvent(new Event('pagehide')));
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).notes['hm-001']).toBe('typed then closed');
+    } finally {
+      visibility.mockRestore();
       vi.useRealTimers();
     }
   });

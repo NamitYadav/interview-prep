@@ -101,6 +101,13 @@ export function useAppState() {
   // from "nothing changed since the last save" and skip a redundant write in the latter case.
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
+    // A hidden page may be closing: a change that lands now (a text field flushing on
+    // pagehide) is written at once, since a debounce timer would never fire. No banner
+    // either way; the next save once visible reports a failure.
+    if (document.visibilityState === 'hidden') {
+      save(state);
+      return;
+    }
     timerRef.current = setTimeout(() => {
       timerRef.current = null;
       setSaveFailed(saveError(save(state)));

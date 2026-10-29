@@ -148,7 +148,7 @@ export const hr: Question[] = [
     ],
     followUps: ['Have you relocated internationally before?', 'Do you have family considerations affecting the timeline?'],
     deeper: [
-      'JAEG 2026: €77,400 gross a year; the 2027 figure is still pending.',
+      'JAEG 2026: €77,400 gross a year. JAEG 2027 provisionally €84,150 (special €80,550); Bundesrat still to approve.',
     ],
   },
   {
@@ -438,6 +438,7 @@ export const hr: Question[] = [
     ],
     deeper: [
       'The asymmetry is the statutory default at longer tenure rather than a loophole: §622(2) BGB lengthens only the employer\'s side as your years of service go up, while your own notice stays at the four-week baseline unless the contract says otherwise. Worth asking for explicitly at signing — a long mutual notice is the thing that later costs you a role you want, because the next employer has to wait it out.',
+      'If family is on the horizon, know the statutory floor before asking what they add: Elternzeit is up to three years per parent, job-protected; Elterngeld pays 65–67% of prior net income, as Basiselterngeld for 12 months plus 2 partner months, or stretched as ElterngeldPlus.',
     ],
     keyPoints: [
       'States the vacation norm (28-30 days) against the statutory minimum (20 on a five-day week)',
@@ -500,7 +501,7 @@ export const hr: Question[] = [
       'If unsure, the practical staff-level answer is to stay on GKV (or a strong open GKV-equivalent) unless you have done the specific math for your situation, since the switch is easy to make later but expensive to reverse.',
     ],
     deeper: [
-      'JAEG 2026: €77,400 gross a year; the 2027 figure is still pending.',
+      'JAEG 2026: €77,400 gross a year. JAEG 2027 provisionally €84,150 (special €80,550); Bundesrat still to approve.',
       'The timing rule catches people out. If you are already in GKV, crossing the JAEG does not free you on the spot: Versicherungsfreiheit begins at the end of the calendar year in which your regular annual income exceeds the threshold, and only if it also exceeds the following year\'s JAEG — which rises annually. Someone arriving from abroad and starting employment above the threshold is generally outside compulsory insurance from the start of that employment instead. Confirm which of the two cases you are in before assuming PKV is available on day one.',
     ],
     keyPoints: [

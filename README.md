@@ -1,7 +1,7 @@
 # Interview Prep
 
 Interactive mock-interview drill for frontend and full-stack engineer loops —
-Senior, Staff, Lead or Architect frontend, or Senior and Staff full-stack. Eleven rounds across the six loops, 461 curated questions with model
+Senior, Staff, Lead or Architect frontend, or Senior and Staff full-stack. Eleven rounds across the six loops, 462 curated questions with model
 answers, key points and likely follow-ups. Reveal, rate yourself, and weak
 questions come back first.
 
@@ -228,12 +228,13 @@ no browser — and `SMOKE_BROWSER` points it at any Firefox or Chromium binary.
 Vite · React 19 · TypeScript · Tailwind CSS 4 · GeistMono Nerd Font (self-hosted from
 public/fonts) · Vitest · GitHub Pages
 
-Two JS chunks for the app itself — the app and the React runtime, ~425KB gzipped
+Two JS chunks for the app itself — the app and the React runtime, ~430KB gzipped
 together, most of it the question bank's own text, not code — plus three runners the app
 only fetches on Run or Submit: the `sandbox.html` page that runs component starters in a
 sandboxed iframe, a self-contained Web Worker for the console-only ones, and a second
 Web Worker, the grader, that runs the algorithm tasks' hidden tests one case at a time
-so the page can time each and terminate a runaway. All carry Sucrase to strip types and
+so the page can time each and terminate a runaway. Both workers start inside an
+opaque-origin frame, so pad code never runs with the app's origin. All carry Sucrase to strip types and
 compile JSX; React is shared between the two pages, and the compiler is never downloaded
 by the app. Measured, not optimized:
 further code-splitting would trim the initial load, but this is a single-user app run

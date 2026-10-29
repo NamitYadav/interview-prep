@@ -130,7 +130,7 @@ export const hoe: Question[] = [
     answer: [
       'Name where it genuinely helps today: fast first drafts of boilerplate and tests, exploring an unfamiliar part of a codebase quickly, drafting documentation, and reviewing a diff for an initial pass of obvious issues — all cases where a human still reviews and owns the result.',
       'Name where it is genuinely risky and be specific, not alarmist: security-sensitive code accepted without the same review rigor as human-written code, subtle logic errors that look plausible and pass a quick glance, and over-reliance eroding a junior engineer\'s ability to build real understanding over time.',
-      'Describe governance as a small number of concrete rules rather than a blanket ban or free-for-all: the same review bar applies regardless of authorship, no AI-authored change to a security-sensitive path skips the same scrutiny, and a stated expectation that any engineer can explain and defend any line they submit, AI-assisted or not.',
+      'Describe governance as a small number of concrete rules rather than a blanket ban or free-for-all: an approved-tools list, each with a data-handling decision behind it (which code and data may leave the company, to which vendor, under what retention terms), named sensitive paths such as auth and payments where AI-assisted changes need a reviewer from the owning team, and one owner who revisits the rules each quarter, since the tools change faster than policy.',
       'Add the two constraints that stop this being a purely cultural policy. First, measure adoption at team level and not per named engineer: usage data tied to individuals is employee personal data, and where a works council exists it falls under §87(1) Nr. 6 BetrVG and needs Betriebsrat agreement before it is collected. Second, the EU AI Act now sits over this. Article 4 has asked providers and deployers to ensure AI literacy among staff using these tools since February 2025 — the 2026 Digital Omnibus shifted that duty toward Member States and the Commission encouraging it, so check the current text — and AI used to evaluate or manage workers is Annex III high-risk. The adopted Digital Omnibus on AI fixed those high-risk obligations to apply from 2 December 2027, so say the direction confidently and note the date has already moved once, because being confidently wrong on a date is worse than being approximately right.',
     ],
     deeper: [
@@ -141,7 +141,7 @@ export const hoe: Question[] = [
       'Names concrete, current cases where AI assistance genuinely helps',
       'Names concrete, specific risks rather than a vague or alarmist take',
       'States governance as a small number of enforceable rules, not a blanket policy',
-      'Insists on equal review rigor and personal accountability regardless of authorship',
+      'Backs the rules with an approved-tools list, a data-handling decision per tool and named sensitive paths',
       'Keeps adoption measurement team-level and names §87(1) Nr. 6 BetrVG as the reason individual usage tracking needs agreement first',
       'Names the EU AI Act duties (Article 4 AI literacy, hedged on how the Omnibus reshaped it; Annex III high-risk workplace use from 2 December 2027) and knows the dates have moved once',
     ],

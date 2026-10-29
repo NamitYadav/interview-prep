@@ -31,7 +31,8 @@ describe('App', () => {
     vi.useFakeTimers();
     try {
       render(<App />);
-      await vi.advanceTimersByTimeAsync(500);
+      // act, not a bare advance: the failed save's state update must render before the check.
+      await act(() => vi.advanceTimersByTimeAsync(500));
       expect(screen.getByRole('status')).toHaveTextContent(/not being saved/i);
     } finally {
       vi.useRealTimers();

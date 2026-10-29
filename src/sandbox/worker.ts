@@ -6,8 +6,9 @@ import type { FromSandbox, ToSandbox } from './protocol';
 // Same compile step, same console shim, same message shape as src/sandbox/main.tsx, minus
 // the React root — there is nothing to render. What the worker buys over the frame: it is
 // terminable everywhere (`worker.terminate()` ends a `while (true)` in Firefox and Safari
-// too, where the opaque-origin frame shares the tab's process and freezes it), and it is a
-// same-origin script the service worker precaches, so Run works offline. Starters that need
+// too, where the opaque-origin frame shares the tab's process and freezes it), and the
+// service worker precaches it, so Run works offline. It is started sealed, with an opaque
+// origin, by src/sandbox/sealedWorker.ts. Starters that need
 // the DOM (`needsDom`) or a preview keep using the frame.
 //
 // React's exports are exposed as globals the same way the frame does, so a starter that
