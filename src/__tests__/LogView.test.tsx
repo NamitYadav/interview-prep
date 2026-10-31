@@ -141,6 +141,40 @@ describe('LogView', () => {
     expect(screen.getByLabelText('Question')).not.toHaveFocus();
   });
 
+  test('re-dating keeps the time of day, so the entry keeps its place in the day', () => {
+    render(<Harness initial={{ ...EMPTY, log: { a: logged('Early', day(21, 9)), b: logged('Late', day(22, 15)) } }} />);
+    const late = screen.getByDisplayValue('Late').closest('li')!;
+    const date = within(late).getByLabelText('Date');
+    fireEvent.change(date, { target: { value: '2026-10-21' } });
+    fireEvent.blur(date);
+    expect(screen.getAllByLabelText('Question').map((t) => (t as HTMLTextAreaElement).value)).toEqual(['Late', 'Early']);
+  });
+
+  test('Enter on a new date keeps focus on the moved card', () => {
+    render(<Harness initial={{ ...EMPTY, log: { a: logged('Q', day(22)) } }} />);
+    const input = screen.getByLabelText('Date');
+    input.focus();
+    fireEvent.change(input, { target: { value: '2026-10-21' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(screen.getByLabelText('Date')).toHaveValue('2026-10-21');
+    expect(screen.getByLabelText('Date')).toHaveFocus();
+  });
+
+  test('tabbing from a new date to the answer lands on the answer after the move', () => {
+    render(<Harness initial={{ ...EMPTY, log: { a: logged('Q', day(22)) } }} />);
+    const input = screen.getByLabelText('Date');
+    fireEvent.change(input, { target: { value: '2026-10-21' } });
+    fireEvent.blur(input, { relatedTarget: screen.getByLabelText('Your answer') });
+    expect(screen.getByLabelText('Your answer')).toHaveFocus();
+  });
+
+  test('a picked date is saved when the tab is hidden before blur', () => {
+    render(<Harness initial={{ ...EMPTY, log: { a: logged('Q', day(22)) } }} />);
+    fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2026-10-21' } });
+    act(() => { window.dispatchEvent(new Event('pagehide')); });
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('21');
+  });
+
   test('a new entry takes the round last picked here, not the newest date', async () => {
     render(<Harness initial={{ ...EMPTY, log: { a: logged('Today, HR', Date.now(), 'hr') } }} />);
     await userEvent.click(screen.getByRole('button', { name: '+ Add question' }));

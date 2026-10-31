@@ -216,6 +216,11 @@ describe('Home real questions link', () => {
     render(<Harness initial={{ ...EMPTY, log: { a: entry, b: entry }, progress: { 'log:a': { rating: 1, seen: 1, lastSeen: 1 } } }} />);
     expect(link()).toHaveTextContent('2 questions · 1 weak');
   });
+  test('a weak entry with its question cleared is not counted weak, as in the Weak drill', () => {
+    const entry = { question: '  ', round: 'hm' as const, answer: '', at: 1 };
+    render(<Harness initial={{ ...EMPTY, log: { a: entry }, progress: { 'log:a': { rating: 1, seen: 1, lastSeen: 1 } } }} />);
+    expect(link()).toHaveTextContent('1 question · 0 weak');
+  });
 });
 
 test('the weak count includes weak real questions', () => {

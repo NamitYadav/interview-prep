@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type Dispatch } from 'react';
+import { flushSync } from 'react-dom';
 import { BackLink } from './BackLink';
 import { Practice } from './Practice';
 import { RATINGS } from './RatingRadios';
@@ -6,15 +7,19 @@ import { rounds } from '../data';
 import type { LoggedQuestion, Persisted, RoleId, RoundId } from '../types';
 import type { Action } from '../hooks/useAppState';
 import { useDebouncedField } from '../hooks/useDebouncedField';
-import { LOG_PREFIX, fromLocalDay, localDay, loggedQuestions } from '../lib/log';
+import { LOG_PREFIX, fromLocalDay, localDay, loggedQuestions, onDay } from '../lib/log';
 
+// A card's controls in DOM order; focus is restored by position after a remount.
+const FOCUSABLE = 'textarea, select, input, button';
 const field = 'w-full rounded border border-zinc-300 bg-transparent px-2 py-1 dark:border-zinc-700';
 
 export function LogView({
   state, dispatch, strictMode, shortcuts = true, role,
 }: { state: Persisted; dispatch: Dispatch<Action>; strictMode: boolean; shortcuts?: boolean; role: RoleId }) {
   const [drilling, setDrilling] = useState(false);
-  const [focusId, setFocusId] = useState<string | null>(null);
+  // Which card and control to focus once it renders: a new card's question, or the control
+  // focus was on (or heading to) when re-dating moved the card into another day's section.
+  const [focus, setFocus] = useState<{ id: string; index: number } | null>(null);
 
   // Newest first; one day is usually one interview, so its questions sit together.
   const entries = Object.entries(state.log).sort(([, a], [, b]) => b.at - a.at);
@@ -43,7 +48,7 @@ export function LogView({
             onClick={() => {
               const id = crypto.randomUUID();
               dispatch({ type: 'createLogged', id, round: lastRound, now: Date.now() });
-              setFocusId(id);
+              setFocus({ id, index: 0 });
             }}
             className="shrink-0 rounded bg-zinc-900 px-3 py-2 text-sm text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
           >
@@ -85,10 +90,10 @@ export function LogView({
                       rating={state.progress[LOG_PREFIX + id]?.rating}
                       dispatch={dispatch}
                       onRoundPicked={setPickedRound}
-                      focusQuestion={id === focusId}
-                      // Cleared once used: a card that later remounts (re-dated into
-                      // another day) must not take focus back to its question.
-                      onFocused={() => setFocusId(null)}
+                      focusIndex={focus?.id === id ? focus.index : null}
+                      // Cleared once used: a card that later remounts must not take focus again.
+                      onFocused={() => setFocus(null)}
+                      onMoved={(index) => setFocus({ id, index })}
                     />
                   ))}
               </ul>
@@ -119,35 +124,56 @@ function LogDrill({
 const isPlausibleDay = (day: string): boolean => /^\d{4}-\d{2}-\d{2}$/.test(day) && Number(day.slice(0, 4)) >= 1970;
 
 function LoggedEditor({
-  id, entry, rating, dispatch, onRoundPicked, focusQuestion, onFocused,
+  id, entry, rating, dispatch, onRoundPicked, focusIndex, onFocused, onMoved,
 }: {
   id: string; entry: LoggedQuestion; rating?: 1 | 2 | 3; dispatch: Dispatch<Action>;
-  onRoundPicked: (round: RoundId) => void; focusQuestion: boolean; onFocused: () => void;
+  onRoundPicked: (round: RoundId) => void; focusIndex: number | null; onFocused: () => void;
+  onMoved: (index: number) => void;
 }) {
-  const questionRef = useRef<HTMLTextAreaElement>(null);
+  const cardRef = useRef<HTMLLIElement>(null);
   // Captured once, as Home does: a day-scale bound doesn't need a fresh clock per render.
   const [today] = useState(() => localDay(Date.now()));
   useEffect(() => {
-    if (!focusQuestion) return;
-    questionRef.current?.focus();
+    if (focusIndex === null) return;
+    cardRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE)[focusIndex]?.focus();
     onFocused();
-  }, [focusQuestion, onFocused]);
+  }, [focusIndex, onFocused]);
   // A date typed key by key passes through partial values (year 0002, then 0020...).
   // Saving each one moved the card to another day, remounting it mid-typing, so the
   // date commits on blur or Enter, and only when it is a real date.
   const [dateDraft, setDateDraft] = useState<string | null>(null);
-  const commitDate = () => {
-    if (dateDraft !== null && isPlausibleDay(dateDraft)) dispatch({ type: 'saveLogged', id, at: fromLocalDay(dateDraft) });
+  // `next` is where focus is going (the input itself on Enter). A new day moves the card into
+  // another section, which remounts it, so focus is handed back by position if it stays in the card.
+  const commitDate = (next: Element | null) => {
+    if (dateDraft !== null && isPlausibleDay(dateDraft) && dateDraft !== localDay(entry.at)) {
+      dispatch({ type: 'saveLogged', id, at: onDay(entry.at, dateDraft) });
+      const index = next ? [...(cardRef.current?.querySelectorAll(FOCUSABLE) ?? [])].indexOf(next) : -1;
+      if (index >= 0) onMoved(index);
+    }
     setDateDraft(null);
   };
+  // A date picked on a phone may never blur before the tab closes; flush it like the text fields.
+  const commitDateRef = useRef(commitDate);
+  useEffect(() => { commitDateRef.current = commitDate; });
+  useEffect(() => {
+    const flush = () => flushSync(() => commitDateRef.current(null));
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') flush();
+    };
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, []);
   // Each field commits only itself; the reducer merges against the stored entry.
   const question = useDebouncedField(entry.question, (text) => dispatch({ type: 'saveLogged', id, question: text }));
   const answer = useDebouncedField(entry.answer, (text) => dispatch({ type: 'saveLogged', id, answer: text }));
 
   return (
-    <li className="space-y-2 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+    <li ref={cardRef} className="space-y-2 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
       <textarea
-        ref={questionRef}
         value={question.draft}
         onChange={(e) => question.onChange(e.target.value)}
         onBlur={question.onBlur}
@@ -173,9 +199,9 @@ function LoggedEditor({
           value={dateDraft ?? localDay(entry.at)}
           max={today}
           onChange={(e) => setDateDraft(e.target.value)}
-          onBlur={commitDate}
+          onBlur={(e) => commitDate(e.relatedTarget)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') commitDate();
+            if (e.key === 'Enter') commitDate(e.currentTarget);
           }}
           aria-label="Date"
           className="rounded border border-zinc-300 bg-transparent px-2 py-1 dark:border-zinc-700"

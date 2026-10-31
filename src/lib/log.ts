@@ -18,10 +18,19 @@ export const localDay = (ts: number): string => {
 // A date-time with no offset parses as local time; a bare date would parse as UTC.
 export const fromLocalDay = (day: string): number => new Date(`${day}T00:00`).getTime();
 
+// Re-dating keeps the time of day, so the entry keeps its place among that day's questions.
+// Set on the Date rather than added as an offset: a 25-hour DST day would push 23:30 into the next day.
+export const onDay = (at: number, day: string): number => {
+  const from = new Date(at);
+  const to = new Date(fromLocalDay(day));
+  to.setHours(from.getHours(), from.getMinutes(), from.getSeconds(), from.getMilliseconds());
+  return to.getTime();
+};
+
 export function toQuestion(id: string, entry: LoggedQuestion): Question {
   const lines = entry.answer
     .split('\n')
-    .map((l) => l.replace(/^\s*[-•]\s*/, '').trim())
+    .map((l) => l.replace(/^\s*(?:[-•]\s+|•)/, '').trim()) // "- x" only: keep -webkit-…, --gap, -1
     .filter(Boolean);
   return {
     id: LOG_PREFIX + id,

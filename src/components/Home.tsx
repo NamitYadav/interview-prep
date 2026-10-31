@@ -7,7 +7,7 @@ import { useLoopDate } from '../hooks/prefs';
 import { ExportButton, useLastExport } from './ExportImport';
 import { ProgressBar, plural, statsCaption } from './ProgressBar';
 import { Select } from './Select';
-import { LOG_PREFIX, loggedQuestions } from '../lib/log';
+import { loggedQuestions } from '../lib/log';
 
 // Every card in a grid shares this shape so a short blurb never leaves the card
 // shorter than its neighbors: min-h reserves two lines' worth of space up front, and
@@ -48,7 +48,8 @@ export function Home({ state, role, setRole }: { state: Persisted; role: RoleId;
   const stories = Object.values(state.stories);
   const neverRehearsed = stories.filter((s) => s.lastRehearsed === undefined).length;
   const loggedCount = Object.keys(state.log).length;
-  const loggedWeak = Object.keys(state.log).filter((id) => state.progress[LOG_PREFIX + id]?.rating === 1).length;
+  // Through loggedQuestions, like the weak count above: a blanked-out question isn't drilled.
+  const loggedWeak = loggedQuestions(state.log).filter((q) => state.progress[q.id]?.rating === 1).length;
 
   // Captured once at mount rather than read fresh each render — Date.now() is
   // impure, and a millisecond-stale "now" makes no visible difference to a
